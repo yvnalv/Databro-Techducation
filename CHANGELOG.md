@@ -1,5 +1,28 @@
 # DataBro Changelog
 
+## [2026-07-29 10:30:00 UTC]
+
+CHG-0002 — Scaffold backend modular monolith and frontend monorepo
+
+- Backend (.NET 9, SDK pinned to 9.0.309 via `global.json`): created `DataBro.sln` with the
+  `Platform` shared kernel (Entity, AggregateRoot, Result/Error, integration-event building blocks),
+  the `Identity`/`Content`/`Media`/`Search` modules each across Domain/Application/Infrastructure/Api
+  layers, an API host that composes every module (health endpoint + per-module endpoints), and a
+  NetArchTest architecture-fitness test project.
+- Enforced boundaries: a scoped `src/Modules/Directory.Build.props` grants the ASP.NET Core framework
+  reference only to Infrastructure/Api, keeping Domain/Application free of web/framework dependencies.
+  Four architecture tests pass (Domain purity, no cross-module dependencies).
+- Verified: full solution builds with 0 warnings/0 errors; architecture tests green; the running host
+  serves `/health` and each module's `/_ping` endpoint.
+- Frontend (pnpm workspace monorepo): `apps/site` (public, SSG/ISR) and `apps/app` (authenticated
+  Nuxt 4 apps), plus shared packages `@databro/ui` (Tailwind preset/tokens), `@databro/api-client`
+  (typed envelope client), and `@databro/types` (API + content-block schema). Shared packages
+  typecheck clean and the `site` app builds end-to-end.
+- Extended `.gitignore` for .NET (`bin`/`obj`) and Node/Nuxt (`node_modules`/`.nuxt`/`.output`)
+  artifacts.
+
+---
+
 ## [2026-07-29 00:00:00 UTC]
 
 CHG-0001 — Initial project documentation
