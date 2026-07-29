@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\DataBro.Platform\DataBro.Platform.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\DataBro.Modules.Identity.Api\DataBro.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\DataBro.Modules.Identity.Infrastructure\DataBro.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Content\DataBro.Modules.Content.Api\DataBro.Modules.Content.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Content\DataBro.Modules.Content.Infrastructure\DataBro.Modules.Content.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Media\DataBro.Modules.Media.Api\DataBro.Modules.Media.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Media\DataBro.Modules.Media.Infrastructure\DataBro.Modules.Media.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Search\DataBro.Modules.Search.Api\DataBro.Modules.Search.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Search\DataBro.Modules.Search.Infrastructure\DataBro.Modules.Search.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+<Project>
+  <!-- Inherit the root Directory.Build.props (TFM, nullable, implicit usings, etc.). -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!-- Only the composition-facing layers get the ASP.NET Core framework reference.
+       Domain and Application stay free of web/framework dependencies. -->
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Infrastructure')) Or $(MSBuildProjectName.EndsWith('.Api'))">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>

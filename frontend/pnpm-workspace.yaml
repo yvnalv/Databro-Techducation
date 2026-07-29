@@ -1,0 +1,8 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Dependencies allowed to run install/build scripts (pnpm blocks these by default).
+onlyBuiltDependencies:
+  - esbuild
+  - vue-demi
