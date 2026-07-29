@@ -1,0 +1,33 @@
+{
+  // Stop VS Code from watching machine-generated folders (dependencies & build output).
+  // These are gitignored; this only affects editor performance/indexing, not git.
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.nuxt/**": true,
+    "**/.output/**": true,
+    "**/.nitro/**": true,
+    "**/.pnpm-store/**": true,
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/.git/**": true
+  },
+  // Keep search results focused on source.
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.nuxt": true,
+    "**/.output": true,
+    "**/.nitro": true,
+    "**/bin": true,
+    "**/obj": true,
+    "**/dist": true,
+    "**/pnpm-lock.yaml": true
+  },
+  // Trim noise from the file tree (folders still exist on disk; git ignores them anyway).
+  "files.exclude": {
+    "**/.nuxt": true,
+    "**/.output": true,
+    "**/bin": true,
+    "**/obj": true
+  },
+  "typescript.tsdk": "frontend/node_modules/typescript/lib"
+}
