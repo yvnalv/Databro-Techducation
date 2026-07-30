@@ -84,8 +84,32 @@ Trade-offs to know before you pick this one:
 * The container writes its .NET build output to a `/artifacts` volume, never to the host's
   `bin`/`obj` — those hold Windows paths that are meaningless inside a Linux container. The same
   applies to `node_modules`, which are masked by anonymous volumes.
+* **After changing frontend dependencies, rebuild and recreate**, or the containers keep the
+  `node_modules` baked into the old image:
+  ```powershell
+  docker compose --profile apps down      # also drops the anonymous node_modules volumes
+  docker compose --profile apps build
+  ./scripts/dev-up.ps1 -Apps
+  ```
 
 Both options read the same `.env`, so the two never disagree about ports or credentials.
+
+### The API has two addresses, and both are needed
+
+In a containerised run the Nuxt apps reach the API at **two different addresses**, because SSR and
+the browser are on different networks:
+
+| | Config key | Value in Docker |
+|---|---|---|
+| Browser (hydration, client fetches) | `NUXT_PUBLIC_API_BASE_URL` | `http://localhost:5158` |
+| Nuxt server (SSR, prerender) | `NUXT_API_INTERNAL_BASE_URL` | `http://api:8080` |
+
+Inside the site container `localhost` is *the site container*, so using the public URL for SSR fails
+with a connection refused. Running everything on the host needs only the public URL — leave the
+internal one empty and it falls back.
+
+This is exactly the class of bug the containerised profile exists to catch: it cannot reproduce on
+the host, because there `localhost` happens to be right for both.
 
 ---
 

@@ -12,7 +12,12 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // Server-only: how the Nuxt server reaches the API during SSR. Inside a container `localhost`
+    // is this container, not the API. Empty means "same as public" (both running on the host).
+    apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL ?? "",
+
     public: {
+      // Browser-visible, so this must be an address the browser can reach.
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? "http://localhost:5158",
     },
   },

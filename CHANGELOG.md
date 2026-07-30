@@ -1,5 +1,28 @@
 # DataBro Changelog
 
+## [2026-07-30 16:10:00 UTC]
+
+CHG-0009 — Fix SSR API resolution in the containerised stack
+
+- The Nuxt apps reached the API at a single configured URL. That is wrong in a containerised run:
+  `NUXT_PUBLIC_API_BASE_URL` is browser-facing (`http://localhost:5158`), but inside the site
+  container `localhost` is the site container itself, so every server-rendered page would fail with a
+  connection refused. Split it: a server-only `apiInternalBaseUrl` (`http://api:8080` in Docker) used
+  during SSR/prerender, falling back to the public URL when unset — which is the correct behaviour on
+  the host, where one address serves both.
+- The bug was latent until CHG-0007: before the site fetched anything, `/` was a static placeholder
+  that returned 200 either way. It cannot reproduce on the host at all, since there `localhost` is
+  right for both callers.
+- Compose: `site` and `app` now wait on the API's healthcheck rather than merely its start, and `site`
+  gets `NUXT_PUBLIC_SITE_URL` so canonical URLs are correct in the containerised run.
+- Documented in LOCAL_DEVELOPMENT.md (both addresses, plus how to rebuild after a dependency change so
+  containers do not keep the `node_modules` baked into the previous image) and
+  FRONTEND_ARCHITECTURE.md.
+- Verified: the full `apps` profile serves the homepage, article, category, tag and Indonesian pages
+  with data fetched server-side, correct 404s, and no internal container URL leaking into the HTML.
+
+---
+
 ## [2026-07-30 15:30:00 UTC]
 
 CHG-0008 — Taxonomy: categories, tags, and crawlable pagination

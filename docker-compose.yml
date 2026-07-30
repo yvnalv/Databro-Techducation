@@ -110,10 +110,15 @@ services:
     container_name: databro-site
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       # Browser-visible, so it must be the host-published API port, not the service name.
       NUXT_PUBLIC_API_BASE_URL: http://localhost:${API_PORT:-5158}
+      # Server-side (SSR/prerender) the API is a sibling container: `localhost` here would be the
+      # site container itself. These are genuinely two different addresses for the same API.
+      NUXT_API_INTERNAL_BASE_URL: http://api:8080
+      NUXT_PUBLIC_SITE_URL: http://localhost:${SITE_PORT:-3000}
     ports:
       - "${SITE_PORT:-3000}:3000"
     volumes:
@@ -137,9 +142,11 @@ services:
     container_name: databro-app
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       NUXT_PUBLIC_API_BASE_URL: http://localhost:${API_PORT:-5158}
+      NUXT_API_INTERNAL_BASE_URL: http://api:8080
     ports:
       - "${APP_PORT:-3001}:3000"
     volumes:

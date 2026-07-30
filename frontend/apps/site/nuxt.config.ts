@@ -14,7 +14,14 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // Server-only: how the Nuxt server reaches the API during SSR/prerender. Separate from the
+    // public URL because they are genuinely different addresses in a containerised run - inside
+    // the site container `localhost` is the site container itself, not the API. Empty means
+    // "same as public", which is correct when both run on the host.
+    apiInternalBaseUrl: process.env.NUXT_API_INTERNAL_BASE_URL ?? "",
+
     public: {
+      // Browser-visible, so this must be an address the browser can reach.
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? "http://localhost:5158",
       // Absolute origin of the public site. Canonical URLs, OpenGraph and JSON-LD must be
       // absolute (docs/SEO.md) - a relative canonical is worse than none at all.

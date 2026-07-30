@@ -58,6 +58,11 @@ both apps use is copied.** See [ADR-0005](DECISIONS.md).
 * **Pinia** for client state.
 * Server data via Nuxt's data-fetching (`useAsyncData`/`useFetch`) hitting the read API; caching keys
   aligned with backend cache/ISR invalidation.
+* The API base URL is **two values, not one**: `public.apiBaseUrl` for the browser and a server-only
+  `apiInternalBaseUrl` for SSR/prerender. They differ whenever the Nuxt server and the browser sit on
+  different networks — a containerised run being the obvious case, where `localhost` inside the site
+  container is the site container itself. `useApiClient` picks by `import.meta.server`, and the
+  internal value falls back to the public one when unset.
 
 ## 7. Internationalization
 

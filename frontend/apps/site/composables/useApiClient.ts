@@ -11,7 +11,14 @@ import { createApiClient, ApiClientError, type ApiClient } from "@databro/api-cl
  */
 export function useApiClient(): ApiClient {
   const config = useRuntimeConfig();
-  return createApiClient({ baseUrl: config.public.apiBaseUrl });
+
+  // During SSR the request comes from the server, which may reach the API at a different address
+  // than the browser does (container network vs. published host port). Falls back to the public
+  // URL when no internal address is configured.
+  const baseUrl =
+    (import.meta.server && config.apiInternalBaseUrl) || config.public.apiBaseUrl;
+
+  return createApiClient({ baseUrl });
 }
 
 /**
