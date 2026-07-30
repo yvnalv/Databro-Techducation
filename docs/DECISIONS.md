@@ -15,6 +15,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0005](adr/0005-two-app-frontend-monorepo.md) | Two-app frontend in a pnpm monorepo | Accepted |
 | [0006](adr/0006-postgres-fts-search.md) | PostgreSQL full-text search for Phase 1 | Accepted |
 | [0007](adr/0007-unify-article-lesson.md) | Unify Article and Lesson on one content engine | Accepted |
+| [0008](adr/0008-cross-module-contracts-in-platform.md) | Cross-module read contracts live in Platform | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 
@@ -23,6 +24,10 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 * Payment provider specifics and entitlement model — Phase 3.
 * Search upgrade trigger and OpenSearch adoption — when FTS limits are hit.
 * Newsletter provider — end of Phase 1 / Phase 2.
+* Syntax highlighting strategy for code blocks (build-time e.g. Shiki vs. client-side) — decide with
+  the design system; the renderer already emits the `language-*` convention either way.
+* Inline rich-text marks (bold/italic/link) inside a paragraph block — the `marks` field is reserved
+  but unspecified; it must be a structured renderer, never raw HTML.
 
 ## Process
 

@@ -11,7 +11,8 @@
     "./tailwind-preset": "./src/tailwind-preset.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@databro/types": "workspace:*"
@@ -20,7 +21,12 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.11",
+    "happy-dom": "^20.11.1",
     "typescript": "^5.6.3",
-    "vue": "^3.5.13"
+    "vitest": "^4.1.10",
+    "vue": "^3.5.13",
+    "vue-tsc": "^2.2.12"
   }
 }

@@ -3,6 +3,8 @@ packages:
   - "packages/*"
 
 # Dependencies allowed to run install/build scripts (pnpm blocks these by default).
-onlyBuiltDependencies:
-  - esbuild
-  - vue-demi
+# esbuild downloads its platform binary; vue-demi patches itself for the installed Vue major.
+# pnpm 11 renamed this from `onlyBuiltDependencies` to a per-package boolean map.
+allowBuilds:
+  esbuild: true
+  vue-demi: true

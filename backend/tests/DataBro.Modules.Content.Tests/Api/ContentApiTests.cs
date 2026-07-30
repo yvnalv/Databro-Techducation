@@ -43,7 +43,7 @@ public class ContentApiTests(ContentApiFactory factory) : IClassFixture<ContentA
 
         var publish = await ReadAsync(await editor.PostAsync($"/api/v1/authoring/articles/{id}/publish", null));
         Assert.Equal(HttpStatusCode.OK, publish.Status);
-        Assert.Equal("Published", publish.Root.GetProperty("data").GetProperty("status").GetString());
+        Assert.Equal("published", publish.Root.GetProperty("data").GetProperty("status").GetString());
 
         var afterPublish = await ReadAsync(await anon.GetAsync($"/api/v1/articles/{slug}"));
         Assert.Equal(HttpStatusCode.OK, afterPublish.Status);
@@ -74,7 +74,58 @@ public class ContentApiTests(ContentApiFactory factory) : IClassFixture<ContentA
         var myId = me.Root.GetProperty("data").GetProperty("id").GetGuid();
 
         var create = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/articles", DraftPayload($"author-{Guid.NewGuid():N}")));
-        Assert.Equal(myId, create.Root.GetProperty("data").GetProperty("authorId").GetGuid());
+        Assert.Equal(myId, create.Root.GetProperty("data").GetProperty("author").GetProperty("id").GetGuid());
+    }
+
+    // ---- Cross-module author resolution (ADR-0008). Content stores only an author id; the
+    // display name is resolved through Identity's IUserDirectory implementation. ----
+
+    [Fact]
+    public async Task Public_read_resolves_the_author_display_name_through_the_user_directory()
+    {
+        var editor = await EditorClientAsync();
+        var anon = AnonymousClient();
+        var slug = $"byline-{Guid.NewGuid():N}";
+
+        var create = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/articles", DraftPayload(slug)));
+        var id = create.Root.GetProperty("data").GetProperty("id").GetGuid();
+        (await editor.PostAsync($"/api/v1/authoring/articles/{id}/publish", null)).EnsureSuccessStatusCode();
+
+        var published = await ReadAsync(await anon.GetAsync($"/api/v1/articles/{slug}"));
+        var author = published.Root.GetProperty("data").GetProperty("author");
+
+        // CreateAuthenticatedClientAsync registers the user with the role name as the display name.
+        Assert.Equal(Roles.Editor, author.GetProperty("displayName").GetString());
+        Assert.NotEqual(Guid.Empty, author.GetProperty("id").GetGuid());
+    }
+
+    [Fact]
+    public async Task List_endpoint_resolves_authors_for_every_item()
+    {
+        var editor = await EditorClientAsync();
+        var anon = AnonymousClient();
+        var slug = $"list-byline-{Guid.NewGuid():N}";
+
+        var create = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/articles", DraftPayload(slug)));
+        var id = create.Root.GetProperty("data").GetProperty("id").GetGuid();
+        (await editor.PostAsync($"/api/v1/authoring/articles/{id}/publish", null)).EnsureSuccessStatusCode();
+
+        var list = await ReadAsync(await anon.GetAsync("/api/v1/articles"));
+        var mine = list.Root.GetProperty("data").EnumerateArray()
+            .Single(a => a.GetProperty("slug").GetString() == slug);
+
+        Assert.Equal(Roles.Editor, mine.GetProperty("author").GetProperty("displayName").GetString());
+    }
+
+    [Fact]
+    public async Task Status_and_visibility_cross_the_wire_lowercase()
+    {
+        var editor = await EditorClientAsync();
+        var create = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/articles", DraftPayload($"casing-{Guid.NewGuid():N}")));
+        var data = create.Root.GetProperty("data");
+
+        Assert.Equal("draft", data.GetProperty("status").GetString());
+        Assert.Equal("public", data.GetProperty("visibility").GetString());
     }
 
     [Fact]

@@ -1,7 +1,9 @@
 import type { Config } from "tailwindcss";
 import preset from "@databro/ui/tailwind-preset";
 
-export default <Partial<Config>>{
+const config: Partial<Config> = {
   presets: [preset],
   content: [],
 };
+
+export default config;

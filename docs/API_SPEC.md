@@ -106,6 +106,25 @@ DELETE /api/v1/media/{id}
 * Request/response DTOs are the source of truth for `packages/types` and `packages/api-client`.
 * OpenAPI/Swagger is generated from the API and published for internal use.
 
+### Wire conventions for the Article contract
+
+These are contract-level guarantees, not incidental serializer behaviour:
+
+* **Enums cross the wire lowercase.** `status` is `draft|scheduled|published|unpublished|archived`
+  and `visibility` is `public|premium`, matching the TypeScript unions in `@databro/types`. Parsing
+  inbound values stays case-insensitive.
+* **`author` is a resolved object, not an id.** `{ id, displayName, avatarUrl }`. Content stores only
+  an author id and resolves the name through the shared `IUserDirectory` contract (ADR-0008).
+* **`author` is nullable.** It is null when the author can no longer be resolved (e.g. a deleted
+  account). Clients render their own localized fallback — the API does not emit user-facing English.
+  A missing author must never break an article page.
+* `avatarUrl` is always null until the Media module lands; resolving a `MediaId` to a URL is Media's
+  responsibility.
+
+`packages/api-client` deliberately exposes **only endpoints that exist**. Category/tag filtering and
+`search` are listed above as the Phase 1 target surface but are not implemented yet, so they are
+absent from the client rather than shipped as methods that 404 at runtime.
+
 ## 7. Rate limiting & abuse
 
 * Auth endpoints and search are rate-limited (Redis). See [SECURITY.md](SECURITY.md).

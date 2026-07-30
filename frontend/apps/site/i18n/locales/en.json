@@ -1,0 +1,37 @@
+{
+  "site": {
+    "name": "DataBro",
+    "tagline": "Learn AI, Data Science & Software Engineering.",
+    "description": "Educational articles, learning paths, and hands-on courses in AI, Data Science, Machine Learning, LLM Engineering, Data Engineering, Python, SQL, and Software Engineering."
+  },
+  "nav": {
+    "home": "Home",
+    "articles": "Articles",
+    "skipToContent": "Skip to content",
+    "languageLabel": "Language"
+  },
+  "articles": {
+    "listTitle": "Articles",
+    "listEmpty": "No articles have been published yet.",
+    "readingTime": "{minutes} min read",
+    "publishedOn": "Published {date}",
+    "byAuthor": "By {name}",
+    "unknownAuthor": "DataBro",
+    "backToArticles": "Back to articles"
+  },
+  "premium": {
+    "badge": "Premium",
+    "previewNotice": "This is a preview. The full article is available to members.",
+    "callToAction": "Get access"
+  },
+  "error": {
+    "notFoundTitle": "Page not found",
+    "notFoundMessage": "The page you are looking for does not exist or is no longer published.",
+    "genericTitle": "Something went wrong",
+    "genericMessage": "We could not load this page. Please try again.",
+    "backHome": "Back to home"
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  }
+}

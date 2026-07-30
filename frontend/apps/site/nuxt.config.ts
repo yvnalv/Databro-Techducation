@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-01-01",
   ssr: true,
 
-  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
+  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxtjs/i18n"],
 
   // Workspace TS packages are transpiled by Vite.
   build: {
@@ -16,6 +16,28 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? "http://localhost:5158",
+      // Absolute origin of the public site. Canonical URLs, OpenGraph and JSON-LD must be
+      // absolute (docs/SEO.md) - a relative canonical is worse than none at all.
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    },
+  },
+
+  // English default, Bahasa Indonesia secondary (CLAUDE.md rule 19). `prefix_except_default`
+  // keeps canonical English URLs clean while giving /id/* its own indexable namespace.
+  i18n: {
+    strategy: "prefix_except_default",
+    defaultLocale: "en",
+    locales: [
+      { code: "en", language: "en-US", file: "en.json", name: "English" },
+      { code: "id", language: "id-ID", file: "id.json", name: "Bahasa Indonesia" },
+    ],
+    detectBrowserLanguage: {
+      // A crawler must get the same HTML for a URL every time, so never redirect on
+      // Accept-Language. The cookie only remembers an explicit user choice.
+      useCookie: true,
+      cookieKey: "databro_locale",
+      redirectOn: "no prefix",
+      alwaysRedirect: false,
     },
   },
 

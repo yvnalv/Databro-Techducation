@@ -1,4 +1,5 @@
 using DataBro.Modules.Content.Domain;
+using DataBro.Platform.Abstractions;
 
 namespace DataBro.Modules.Content.Application;
 
@@ -30,22 +31,36 @@ internal static class ArticleMapping
     public static SeoDto ToDto(this SeoMetadata seo) =>
         new(seo.MetaTitle, seo.MetaDescription, seo.CanonicalUrl, seo.Robots, seo.OgImageMediaId);
 
-    public static ArticleSummaryDto ToSummaryDto(this Article a) =>
-        new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToString(), a.Visibility.ToString(),
-            a.Locale, a.AuthorId, a.ReadingTimeMinutes, a.PublishedAt);
+    /// <summary>
+    /// Enum values cross the wire lowercase so the JSON contract lines up with the TypeScript
+    /// unions in @databro/types. Parsing back in is already case-insensitive.
+    /// </summary>
+    private static string ToWire<TEnum>(this TEnum value) where TEnum : struct, Enum =>
+        value.ToString().ToLowerInvariant();
 
-    public static ArticleDto ToDto(this Article a)
+    private static AuthorDto? Resolve(this IReadOnlyDictionary<Guid, UserSummary> authors, Guid authorId) =>
+        authors.TryGetValue(authorId, out var user)
+            ? new AuthorDto(user.Id, user.DisplayName, user.AvatarUrl)
+            : null;
+
+    public static ArticleSummaryDto ToSummaryDto(
+        this Article a, IReadOnlyDictionary<Guid, UserSummary> authors) =>
+        new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
+            a.Locale, authors.Resolve(a.AuthorId), a.ReadingTimeMinutes, a.PublishedAt);
+
+    public static ArticleDto ToDto(this Article a, IReadOnlyDictionary<Guid, UserSummary> authors)
     {
         // Public read serves the published snapshot; authoring views fall back to the draft.
         var content = (a.PublishedBlocks ?? a.DraftBlocks).ToDto();
         return new ArticleDto(
-            a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToString(), a.Visibility.ToString(),
-            a.Locale, a.AuthorId, a.CategoryId, a.CurrentVersion, a.ReadingTimeMinutes,
+            a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
+            a.Locale, authors.Resolve(a.AuthorId), a.CategoryId, a.CurrentVersion, a.ReadingTimeMinutes,
             content, a.Seo.ToDto(), a.PublishedAt, a.ScheduledFor);
     }
 
-    public static ArticleDto ToDraftDto(this Article a) =>
-        new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToString(), a.Visibility.ToString(),
-            a.Locale, a.AuthorId, a.CategoryId, a.CurrentVersion, a.ReadingTimeMinutes,
+    public static ArticleDto ToDraftDto(
+        this Article a, IReadOnlyDictionary<Guid, UserSummary> authors) =>
+        new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
+            a.Locale, authors.Resolve(a.AuthorId), a.CategoryId, a.CurrentVersion, a.ReadingTimeMinutes,
             a.DraftBlocks.ToDto(), a.Seo.ToDto(), a.PublishedAt, a.ScheduledFor);
 }

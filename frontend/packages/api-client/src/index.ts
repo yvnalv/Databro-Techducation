@@ -45,7 +45,21 @@ export class ApiClient {
     if (token) headers.set("Authorization", `Bearer ${token}`);
 
     const response = await this.fetchImpl(`${this.baseUrl}${path}`, { ...init, headers });
-    const body = (await response.json()) as ApiResponse<TData>;
+
+    // Not every failure comes back in the envelope: ASP.NET's auth middleware returns a bare 401,
+    // and an infrastructure fault can return HTML. Surface those as ApiClientError too rather
+    // than letting a JSON parse error escape.
+    const raw = await response.text();
+    let body: ApiResponse<TData>;
+    try {
+      body = JSON.parse(raw) as ApiResponse<TData>;
+    } catch {
+      throw new ApiClientError(
+        response.status === 401 ? "unauthenticated" : "unexpected_response",
+        response.statusText || `Request to ${path} failed.`,
+        response.status,
+      );
+    }
 
     if (!body.success) {
       throw new ApiClientError(
@@ -59,21 +73,18 @@ export class ApiClient {
     return body.data;
   }
 
-  // ---- Public read surface (Phase 1) ----
+  // ---- Public read surface ----
+  // Only endpoints the API actually serves. Category/tag filtering arrives with the taxonomy
+  // slice and search with the Search module; adding them here early would ship methods that
+  // 404 at runtime.
 
-  listArticles(params?: { category?: string; tag?: string; q?: string }): Promise<ArticleSummary[]> {
-    const query = new URLSearchParams(
-      Object.entries(params ?? {}).filter(([, v]) => v != null) as [string, string][],
-    ).toString();
-    return this.request<ArticleSummary[]>(`/api/v1/articles${query ? `?${query}` : ""}`);
+  listArticles(params?: { limit?: number }): Promise<ArticleSummary[]> {
+    const query = params?.limit != null ? `?limit=${params.limit}` : "";
+    return this.request<ArticleSummary[]>(`/api/v1/articles${query}`);
   }
 
   getArticle(slug: string): Promise<Article> {
     return this.request<Article>(`/api/v1/articles/${encodeURIComponent(slug)}`);
-  }
-
-  search(q: string): Promise<ArticleSummary[]> {
-    return this.request<ArticleSummary[]>(`/api/v1/search?q=${encodeURIComponent(q)}`);
   }
 }
 

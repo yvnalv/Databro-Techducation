@@ -23,13 +23,20 @@ export const tokens = {
 } as const;
 
 // Typed loosely to avoid a hard dependency on tailwindcss types at the package level.
+//
+// `tokens` is `as const` so consumers get literal types, which also makes its arrays `readonly`.
+// Tailwind's Config wants mutable ones, so the preset is built from copies - otherwise every
+// consuming app needs a cast to assign this to `Partial<Config>`.
 const preset = {
   theme: {
     extend: {
       colors: {
-        brand: tokens.colors.brand,
+        brand: { ...tokens.colors.brand },
       },
-      fontFamily: tokens.fontFamily,
+      fontFamily: {
+        sans: [...tokens.fontFamily.sans],
+        mono: [...tokens.fontFamily.mono],
+      },
     },
   },
 };

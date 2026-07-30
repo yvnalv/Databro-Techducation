@@ -17,9 +17,11 @@ export default defineNuxtConfig({
     },
   },
 
-  // Authenticated app: nothing here is publicly indexed.
+  // Authenticated app: nothing here is publicly indexed. `robots: false` was not a real Nuxt
+  // route rule (it belongs to a robots module that is not installed), so it silently did
+  // nothing. X-Robots-Tag is the actual mechanism and covers non-HTML responses too.
   routeRules: {
-    "/**": { robots: false },
+    "/**": { headers: { "X-Robots-Tag": "noindex, nofollow" } },
   },
 
   app: {

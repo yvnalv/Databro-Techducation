@@ -1,0 +1,5 @@
+{
+  // Nuxt generates the real configuration into .nuxt on `nuxt prepare` (run as a postinstall).
+  // This file only points `nuxt typecheck` and the IDE at it.
+  "extends": "./.nuxt/tsconfig.json"
+}

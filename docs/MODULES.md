@@ -35,7 +35,9 @@ Authentication, authorization, user profiles.
 Owns: `users`, `roles`, `user_roles`, `permissions`, `role_permissions`, `refresh_tokens`,
 `external_logins`, `email_verifications`.
 
-Exposes (contracts): `ICurrentUserService`, `IUserProfileReadService` (id → display name/avatar/bio).
+Exposes (contracts): `IUserDirectory` — ids → `UserSummary(Id, DisplayName, AvatarUrl)`, batched.
+Declared in `Platform.Abstractions` and implemented here (ADR-0008); `ICurrentUser` (also in
+`Platform`) is implemented by `HttpCurrentUser` over the JWT.
 
 Emits: `UserRegistered`, `UserEmailVerified`.
 
@@ -54,7 +56,8 @@ this in P2). See [CONTENT_MODEL.md](CONTENT_MODEL.md).
 
 Owns: `articles`, `article_versions`, `categories`, `tags`, `article_tags`, `redirects`.
 
-Consumes (contracts): `IUserProfileReadService` (author byline), `IMediaReadService` (asset URLs).
+Consumes (contracts): `IUserDirectory` (author byline — implemented), `IMediaReadService` (asset URLs
+— not yet; image blocks render a placeholder until Media exists).
 
 Emits: `ArticlePublished`, `ArticleUnpublished`, `ArticleUpdated`, `ArticleDeleted`.
 
@@ -161,4 +164,8 @@ Exposes (contract): `IEntitlementService`.
 
 * No cross-module table access — ever.
 * Cross-module reads via published contracts; cross-module reactions via integration events.
+* **Contract interfaces are declared in `Platform.Abstractions`, not in the owning module** — a module
+  cannot reference another module's assembly, so a contract defined inside its owner would be
+  unconsumable (ADR-0008). The owner supplies the implementation via DI.
+* Contracts are batch-shaped and tolerate partial results: a missing referent must degrade, not throw.
 * Each module's events are its public API; treat them as versioned contracts.

@@ -1,7 +1,12 @@
 import type { Config } from "tailwindcss";
 import preset from "@databro/ui/tailwind-preset";
 
-export default <Partial<Config>>{
+const config: Partial<Config> = {
   presets: [preset],
-  content: [],
+  // The Nuxt module already scans this app. The shared UI package must be listed explicitly:
+  // its classes live outside the app root, so without this the block renderer's styles are
+  // purged from the production build and article bodies render unstyled.
+  content: ["../../packages/ui/src/**/*.{vue,ts}"],
 };
+
+export default config;

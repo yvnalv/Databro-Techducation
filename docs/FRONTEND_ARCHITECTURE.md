@@ -61,16 +61,31 @@ both apps use is copied.** See [ADR-0005](DECISIONS.md).
 
 ## 7. Internationalization
 
-* UI chrome via an i18n layer; `en` and `id` dictionaries stay structurally identical (same keys both
+* UI chrome via `@nuxtjs/i18n`; `en` and `id` dictionaries stay structurally identical (same keys both
   sides). No hardcoded user-facing strings.
+* Strategy is `prefix_except_default`: English keeps clean canonical URLs, `/id/*` gets its own
+  indexable namespace, and `hreflang` alternates link the two as translations rather than duplicates.
+* Browser-language detection **never redirects** (`alwaysRedirect: false`, cookie only). A crawler must
+  receive the same HTML for a URL on every request.
+* Localized paths come from `localePath(path, locale)`, so the URL strategy is defined once in
+  `nuxt.config` and never duplicated in SEO code.
 * Article **bodies** are per-locale Content Units (see [CONTENT_MODEL.md](CONTENT_MODEL.md)), separate
   from chrome i18n.
 
 ## 8. SEO responsibilities (site)
 
-* Per-page canonical, meta, OpenGraph/Twitter tags, and JSON-LD (`Article`).
+* Per-page canonical, meta, OpenGraph/Twitter tags, and JSON-LD (`Article`) — implemented in the
+  `useArticleSeo` composable so every content page emits the full surface by construction.
+* An author-set `seo.canonicalUrl` wins; otherwise the site's own localized URL is canonical.
 * Consumes `sitemap.xml`, `robots.txt`, RSS from the backend/platform.
 * Honors 301 redirects from the `redirects` table on changed slugs.
+* **Status codes are part of SEO.** A missing or unpublished slug must return a real `404`, never a
+  soft 404 (200 with an error body) and never a `503` — a 503 tells crawlers "retry later" and keeps a
+  dead URL indexed. `useAsyncData` re-wraps handler errors, so `toNuxtError` is applied *inside* the
+  handler where the original status is still intact.
+* **Premium articles stay fully indexable** (rule 9). Metadata, canonical and preview are public; the
+  gated region is declared to search engines via JSON-LD `isAccessibleForFree: false` plus
+  `hasPart.cssSelector`, which is the documented way to paywall without looking like cloaking.
 * See [SEO.md](SEO.md).
 
 ## 9. Build & deploy
@@ -83,5 +98,15 @@ both apps use is copied.** See [ADR-0005](DECISIONS.md).
 
 * TypeScript strict mode across all workspaces.
 * Components are presentational where possible; data-fetching lives in composables/pages.
+* Both apps use Nuxt 4 with `srcDir` at the app root (`apps/site/pages`, not `apps/site/app/pages`).
+  This is Nuxt's supported fallback when no `app/` directory exists, and it avoids paths like
+  `apps/app/app/pages`. Chosen deliberately — keep it consistent across both apps.
+* Each app needs a `tsconfig.json` extending `./.nuxt/tsconfig.json`, or `nuxt typecheck` silently
+  fails to find a config and never checks the app.
+* An app that renders content blocks must add `../../packages/ui/src/**/*.{vue,ts}` to its Tailwind
+  `content` globs, or the renderer's classes are purged from the production build.
+* Pinned for Nuxt 4 compatibility: Tailwind **v3** (`@nuxtjs/tailwindcss@6` does not support v4's
+  separate PostCSS plugin) and Pinia **v3** / `@pinia/nuxt@0.11` (0.9 + Pinia 2.3 crash Nuxt 4.5's
+  payload serializer while rendering the error page).
 * No business logic in the frontend that belongs in the backend domain (e.g. entitlement decisions are
   server-authoritative; the client only reflects them).

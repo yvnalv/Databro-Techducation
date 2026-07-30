@@ -100,10 +100,15 @@ export interface SeoMetadata {
   ogImageMediaId?: string;
 }
 
+/**
+ * Resolved byline. The backend stores only an author id and resolves the display name through
+ * the cross-module IUserDirectory contract (ADR-0008), so this is null when the author can no
+ * longer be resolved - render a localized fallback rather than assuming it is present.
+ */
 export interface AuthorSummary {
   id: string;
   displayName: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
 }
 
 export interface ArticleSummary {
@@ -111,17 +116,19 @@ export interface ArticleSummary {
   slug: string;
   title: string;
   summary: string;
+  status: ArticleStatus;
   visibility: Visibility;
   locale: string;
-  author: AuthorSummary;
+  author: AuthorSummary | null;
   readingTimeMinutes: number;
   publishedAt?: string;
 }
 
 export interface Article extends ArticleSummary {
-  status: ArticleStatus;
   content: ContentDocument;
   seo: SeoMetadata;
-  categorySlug?: string;
-  tags: string[];
+  currentVersion: number;
+  scheduledFor?: string;
+  /** Taxonomy is not implemented yet; the API emits a raw id and no tags. */
+  categoryId?: string | null;
 }

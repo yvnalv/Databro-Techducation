@@ -1,5 +1,53 @@
 # DataBro Changelog
 
+## [2026-07-30 14:35:00 UTC]
+
+CHG-0007 — Public site render: block renderer, SEO surface, and the first cross-module contract
+
+- **ADR-0008 — cross-module read contracts live in `Platform`.** Rendering a byline needed Identity's
+  display name from inside Content, which the `Application_should_not_depend_on_other_modules` fitness
+  test forbids. Added `IUserDirectory` (+ `UserSummary`) to `Platform.Abstractions`, implemented by
+  Identity's Infrastructure and consumed by `ArticleService`. Batch-shaped to prevent N+1 on list
+  endpoints; partial results are legal so a deleted author cannot break an article page.
+- **Reconciled the API contract with `@databro/types`**, which had drifted from the backend on six
+  fields. `author` is now a resolved `{ id, displayName, avatarUrl }` object instead of a raw
+  `authorId`; `status`/`visibility` cross the wire lowercase to match the TypeScript unions;
+  `tags`/`categorySlug` removed until taxonomy exists. `api-client` dropped `search()` and the
+  category/tag filters — endpoints that do not exist yet.
+- **Block renderer in `@databro/ui`**: `ContentRenderer` + a typed `Record<BlockType, Component>`
+  registry covering all ten Phase 1 block types, so adding a `BlockType` member fails the build until
+  a renderer exists. Lives in the shared package because `site` and the future CMS preview must never
+  drift. Unknown types degrade (hidden for readers, placeholder in preview) because content outlives
+  renderers. `SUPPORTED_BLOCK_TYPES` is now derived from the registry rather than hand-maintained.
+- **Renderer security:** block text is interpolated, never `v-html` — block data is author-supplied
+  and arrives straight from JSONB. Embeds are host-allowlisted (YouTube/Vimeo/CodePen), normalized to
+  the provider's documented embed URL, https-only, sandboxed, and degraded to a `nofollow noopener`
+  link when unrecognised; `paragraph.marks` stays unimplemented pending a structured mark renderer.
+- **Site pages:** article and list pages, layout chrome, and an error page. A missing or unpublished
+  slug now returns a real `404` — `useAsyncData` re-wraps handler throws, so the API status was being
+  lost and surfaced as `503`, which would have told crawlers to retry and kept dead URLs indexed.
+- **SEO (`useArticleSeo`)**: canonical (author-set wins), hreflang alternates derived from
+  `localePath` so the URL strategy is not duplicated, OpenGraph/Twitter, and JSON-LD `Article`.
+  Premium articles stay fully indexable with `isAccessibleForFree: false` + `hasPart.cssSelector`
+  declaring the gated region.
+- **i18n**: `@nuxtjs/i18n` on both apps with structurally identical `en`/`id` dictionaries;
+  `prefix_except_default` strategy, and browser-language detection never redirects so a crawler always
+  gets the same HTML for a URL.
+- Fixed along the way: both Nuxt apps lacked a `tsconfig.json`, so `nuxt typecheck` had been silently
+  checking nothing; `apps/app` used a `robots: false` route rule that was never a real Nuxt option
+  (replaced with `X-Robots-Tag`); Tailwind now scans `packages/ui` or the renderer's classes are purged
+  from production builds; pinned Tailwind v3 (v4 is incompatible with `@nuxtjs/tailwindcss@6`) and
+  upgraded Pinia to v3 / `@pinia/nuxt@0.11` (0.9 crashed Nuxt 4.5's payload serializer while rendering
+  the error page); pnpm 11 renamed `onlyBuiltDependencies` to `allowBuilds`.
+- Added `scripts/dev-seed-article.ps1`, which publishes a demo article using every block type plus a
+  deliberately unknown one.
+- Verified end to end against live data: 39 backend tests, 22 renderer tests, clean typecheck across
+  all five workspaces, all ten block types rendering in SSR HTML, the full SEO surface asserted,
+  `404`/`200` status codes correct in both locales, and the production build prerendering with
+  renderer classes surviving the Tailwind purge.
+
+---
+
 ## [2026-07-30 13:55:00 UTC]
 
 CHG-0006 — Containerised local development environment

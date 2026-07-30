@@ -36,9 +36,30 @@ number. Prioritize the areas where bugs hurt most.
 ## 4. Frontend testing
 
 * Component/unit tests (Vitest + Vue Test Utils) for `packages/ui` (esp. content-block renderers — they
-  must render every block type safely, including unknown-type fallback).
-* Type safety via `vue-tsc` in CI.
+  must render every block type safely, including unknown-type fallback). **Implemented:**
+  `pnpm --filter @databro/ui test`.
+  * Renderer tests cover more than "does it render": text is escaped rather than treated as markup,
+    heading levels are clamped, a hostile `code.language` cannot break out of the class attribute,
+    and the embed allowlist rejects lookalike hosts, non-https schemes and malformed ids. These are
+    security assertions, not cosmetics — block data is author-supplied and arrives straight from JSONB.
+* Type safety via `vue-tsc` in CI. Each Nuxt app needs a `tsconfig.json` extending
+  `./.nuxt/tsconfig.json`, or `nuxt typecheck` exits without checking anything and the gate is
+  silently vacuous.
 * E2E (Playwright) for read journeys (article page renders, search) and, later, auth flows.
+
+## 4b. Verifying against a running stack
+
+`dotnet test` and the Vitest suites run against ephemeral/fake dependencies. Two scripts exercise the
+stack you are actually running (see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md)):
+
+* `scripts/dev-smoke.ps1` — register → grant Editor → login → 401 unauthenticated → create draft →
+  404 unpublished → publish → public read → unpublish → 404.
+* `scripts/dev-seed-article.ps1` — publishes a demo article using every block type plus a deliberately
+  unknown one, so the renderer can be checked against real data rather than fixtures.
+
+Status codes are part of the contract, not an implementation detail: a missing or unpublished slug
+must return a real `404`. A soft 404 (200 + error body) or a `503` both leave dead URLs indexed, so
+they are asserted explicitly.
 
 ## 5. Non-functional checks
 

@@ -54,12 +54,27 @@ Rules:
 
 Two mechanisms:
 
-1. **Application-service contracts** — a module exposes a public interface (e.g.
-   `IArticleReadService`) that other modules call in-process. The consumer depends on the contract,
-   not the implementation.
+1. **Application-service contracts** — a synchronous read/command interface one module implements for
+   others to call in-process. The **interface is declared in `Platform.Abstractions`, not in the
+   owning module** (ADR-0008): the architecture-fitness test forbids any `DataBro.Modules.X` →
+   `DataBro.Modules.Y` reference, so a contract living inside the owning module could not be consumed
+   without breaking the boundary it exists to protect. The owning module registers its implementation
+   through DI; consumers never learn which module satisfies the contract.
+
+   Implemented: `IUserDirectory` (Identity → any module needing a display name; used by Content for
+   article bylines).
+
+   Contract shape rules: batch-oriented, so list endpoints cannot degrade into N+1 lookups; and
+   tolerant of partial results, so a missing referent degrades rather than failing the caller.
 2. **Integration events** — a module publishes a domain-meaningful event (e.g. `ArticlePublished`)
    through an in-process mediator. Subscribers in other modules react (e.g. `Search` reindexes,
-   `Notification` queues an email).
+   `Notification` queues an email). *Not yet implemented — `IIntegrationEvent` is currently a marker
+   interface with no dispatcher.*
+
+Choosing between them: use a **contract** when the caller needs data now and correctness depends on it
+being current (a byline on a page being rendered). Use an **event** when the effect may be eventually
+consistent (reindexing, cache invalidation, email). A contract that is called on a hot cached read
+path is a candidate for later replacement by an event-fed denormalized copy — see ADR-0008.
 
 Reliability:
 

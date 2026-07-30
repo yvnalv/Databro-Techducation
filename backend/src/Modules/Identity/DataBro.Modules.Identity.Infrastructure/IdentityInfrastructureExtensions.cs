@@ -3,6 +3,7 @@ using System.Text;
 using DataBro.Modules.Identity.Application;
 using DataBro.Modules.Identity.Infrastructure.Auth;
 using DataBro.Modules.Identity.Infrastructure.Authorization;
+using DataBro.Modules.Identity.Infrastructure.Directory;
 using DataBro.Modules.Identity.Infrastructure.Persistence;
 using DataBro.Modules.Identity.Infrastructure.Security;
 using DataBro.Modules.Identity.Infrastructure.Seeding;
@@ -80,6 +81,11 @@ public static class IdentityInfrastructureExtensions
 
         services.AddSingleton<JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+
+        // Identity's outward-facing contract for other modules (ADR-0008). Registered against the
+        // shared Platform abstraction so consumers never reference this module.
+        services.AddScoped<IUserDirectory, UserDirectory>();
+
         services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 

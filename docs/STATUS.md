@@ -7,15 +7,18 @@ Last updated: 2026-07-30.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **Content + Identity live and secured → taxonomy/search/site next**.
+**Phase 1 — Foundation & Content.** Sub-stage: **content renders publicly end to end → taxonomy,
+search, and media next**.
 
 ## Done
 
-* Locked the load-bearing architecture decisions (ADR-0001 … ADR-0007).
+* Locked the load-bearing architecture decisions (ADR-0001 … ADR-0008).
 * Authored the foundational documentation set (CLAUDE.md + docs/).
 * Scaffolded the **backend** Modular Monolith and **frontend** pnpm monorepo.
-* **Local dev infra:** `docker-compose.yml` (PostgreSQL on host port **5439**, Redis, MinIO) +
-  `.env.example` / gitignored `.env`.
+* **Local dev environment:** `docker-compose.yml` — infra by default (PostgreSQL on host port
+  **5439**, Redis, MinIO) plus an opt-in `apps` profile that containerises the API and both Nuxt apps
+  with hot reload. Helper scripts in `scripts/` (`dev-up`, `dev-grant-role`, `dev-smoke`). See
+  [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 * **EF Core foundation:** EF 9.0.18 + Npgsql 9.0.4 pinned; `Platform.Persistence` (audit interceptor,
   soft-delete filter, client-generated keys, clock) keeps EF out of the domain-facing `Platform`.
 * **Content vertical slice (working):** `Article` aggregate with JSONB blocks + versioning,
@@ -25,11 +28,17 @@ Last updated: 2026-07-30.
 
 ## In progress
 
-* Foundations solid: Content (validated + tested) and Identity (auth/RBAC, secured authoring).
-  Picking up taxonomy, search, and the public site render next.
+* The full read path is proven: author in the API → published → rendered on `site` with complete SEO
+  output. Picking up taxonomy, search, and media next.
 
 ## Recently done
 
+* **Public site render:** block renderer registry in `@databro/ui` (all ten Phase 1 block types +
+  unknown-type fallback), article and list pages on `site`, full SEO head (canonical, hreflang,
+  OG/Twitter, JSON-LD `Article`), real 404s, premium preview, and `en`/`id` i18n. Verified end to end
+  against live data.
+* **First cross-module contract (ADR-0008):** `IUserDirectory` in `Platform`, implemented by Identity,
+  consumed by Content to resolve author bylines without a module-to-module reference.
 * **Identity module:** ASP.NET Core Identity + JWT (access + rotating refresh), RBAC with permission
   claims and `perm:` authorization policies, secured Content authoring (401/403), real
   `HttpCurrentUser` for audit + author-of-record. Roles seeded; dev auto-migration initializers.
@@ -39,20 +48,37 @@ Last updated: 2026-07-30.
 
 1. Content: categories & tags (taxonomy), scheduled publishing, and slug-change 301 redirects.
 2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-3. Surface the published article on the `site` app (SSG/ISR) using `@databro/api-client`.
-4. PostgreSQL FTS search; SEO metadata/redirects; Media upload to MinIO/Spaces.
-5. CI pipeline (build/test + architecture-fitness gate).
+3. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
+4. CI pipeline (build/test + architecture-fitness gate).
+5. Design system pass over the site (deferred deliberately — see below).
 
 ## Known gaps / deferred
 
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
+* **Visual design is deliberately minimal** on the site — semantic markup with structural utility
+  classes only. The design system is a separate discussion.
+* **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
+  paywall declaration are in place, but the full body still renders: there is no entitlement check to
+  gate on until Billing (Phase 3). Reserved, not enforced.
+* **Syntax highlighting is not wired.** Code blocks emit the standard `language-*` markup so a
+  highlighter drops in later without touching page code.
+* `paragraph.marks` (inline rich text) reserved but unimplemented — it must be a structured renderer,
+  never raw HTML.
+* Redis and Hangfire are provisioned but nothing in the backend uses them yet.
+* Media module is still a scaffold, so image blocks render an accessible placeholder.
 
 ## Testing status
 
-* `dotnet test` — 36 passing: architecture-fitness (4) + Content & Identity unit/integration (32).
+* `dotnet test` — 39 passing: architecture-fitness (4) + Content & Identity unit/integration (35).
+* `pnpm --filter @databro/ui test` — 22 passing: block renderer + embed allowlist (Vitest).
+* `pnpm typecheck` — clean across all five workspaces.
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).
+* `scripts/dev-smoke.ps1` — 10-step end-to-end check against a running stack; passes in both run
+  modes (host-run API and fully containerised).
+* `scripts/dev-seed-article.ps1` — publishes a demo article exercising every block type (plus an
+  unknown one) so the renderer can be checked against real data.
 
 ## Open questions / to be ADR'd later
 

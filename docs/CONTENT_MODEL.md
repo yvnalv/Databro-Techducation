@@ -52,15 +52,30 @@ embeddings — without a heavyweight block-per-row schema.
 | `table` | simple table | `headers[]`, `rows[][]` |
 
 Reserved for later phases: `quiz-ref` (P2), `exercise` (P3), `interactive-playground` (P3),
-`file-download`, `math` (KaTeX). Finalize the P1 catalog before building the editor —
-see [STATUS.md](STATUS.md) open questions.
+`file-download`, `math` (KaTeX).
+
+**The Phase 1 catalog above is implemented and closed.** All ten types have renderers in
+`packages/ui/src/blocks`, and the registry is typed `Record<BlockType, Component>` so adding a member
+to `BlockType` fails the build until a renderer exists. Two fields remain reserved but unimplemented:
+`paragraph.marks` (see below) and `code.runnable` (Playground, Phase 3).
 
 ### Block invariants
 
 * Every block has a unique, stable `id` (survives edits — enables per-block analytics/anchors).
-* `image`/media blocks reference Media by `mediaId` (no embedded URLs — Media owns the URL).
-* `embed` providers are allowlisted (security — no arbitrary iframes).
-* Unknown block types are ignored gracefully by the renderer (forward compatibility).
+* `image`/media blocks reference Media by `mediaId` (no embedded URLs — Media owns the URL). Until
+  Media exists, the renderer emits an accessible placeholder carrying the `alt` text rather than
+  dropping the block.
+* `embed` providers are allowlisted (security — no arbitrary iframes). The allowlist normalizes each
+  URL into the provider's documented embed form, requires https, and degrades anything unrecognised
+  to a `nofollow noopener` link. Framed content is sandboxed. See
+  `packages/ui/src/blocks/embed-providers.ts`.
+* **Block text is never rendered as HTML.** Block data is author-supplied and reaches the renderer
+  straight out of JSONB, so interpolating it as markup would make the CMS a stored-XSS vector.
+  `paragraph.marks` is therefore reserved but deliberately unimplemented: rich text will arrive as a
+  structured mark renderer, never as a raw HTML string.
+* Unknown block types degrade gracefully (forward compatibility): content outlives renderers, so a
+  published document may carry a type added after the current bundle shipped. The public site hides
+  them; the CMS preview shows a placeholder (`ContentRenderer` prop `showUnknownBlocks`).
 
 ## 4. Versioning & publishing
 
@@ -107,10 +122,32 @@ Rules:
 
 * The `site` app receives `published_blocks` as JSON and renders each block via a registered Vue
   component keyed by `type`.
-* Renderers must be pure/deterministic and safe: text marks and embeds are sanitized; only allowlisted
-  embed providers render.
+* Renderers must be pure/deterministic and safe: text is interpolated (never `v-html`), and only
+  allowlisted embed providers render.
 * The same renderer package (`packages/ui`) is used by the CMS preview in `app` — one renderer, no
   drift between preview and production.
+
+### Implementation
+
+`@databro/ui` exports `ContentRenderer` (takes a `ContentDocument`) and the `blockRegistry` it
+resolves against.
+
+| Prop | Purpose |
+|---|---|
+| `document` | The `ContentDocument` to render. |
+| `showUnknownBlocks` | `false` on `site`, `true` for CMS preview. |
+| `resolveMediaUrl` | Resolves an `ImageBlock.mediaId` to a URL. Supplied when Media lands; until then images render a placeholder. |
+
+`resolveMediaUrl` and the renderer options are supplied via provide/inject rather than prop-drilling,
+so the eight block components that need neither stay decoupled from both.
+
+Two integration notes that are easy to get wrong:
+
+* Block headings render as `h2`–`h4` (clamped) with slugified anchor ids. The article title owns the
+  page's only `h1`, so the document outline stays well-formed.
+* An app consuming the renderer must add `packages/ui/src` to its Tailwind `content` globs. The
+  package sits outside the app root, so without it the block styles are purged from the production
+  build.
 
 ## 8. Why not Markdown/MDX or normalized rows
 

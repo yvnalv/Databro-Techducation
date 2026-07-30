@@ -1,0 +1,37 @@
+{
+  "site": {
+    "name": "DataBro",
+    "tagline": "Belajar AI, Data Science & Software Engineering.",
+    "description": "Artikel edukatif, jalur belajar, dan kursus praktik di bidang AI, Data Science, Machine Learning, LLM Engineering, Data Engineering, Python, SQL, dan Software Engineering."
+  },
+  "nav": {
+    "home": "Beranda",
+    "articles": "Artikel",
+    "skipToContent": "Lompat ke konten",
+    "languageLabel": "Bahasa"
+  },
+  "articles": {
+    "listTitle": "Artikel",
+    "listEmpty": "Belum ada artikel yang diterbitkan.",
+    "readingTime": "Baca {minutes} menit",
+    "publishedOn": "Diterbitkan {date}",
+    "byAuthor": "Oleh {name}",
+    "unknownAuthor": "DataBro",
+    "backToArticles": "Kembali ke artikel"
+  },
+  "premium": {
+    "badge": "Premium",
+    "previewNotice": "Ini adalah pratinjau. Artikel lengkap tersedia untuk anggota.",
+    "callToAction": "Dapatkan akses"
+  },
+  "error": {
+    "notFoundTitle": "Halaman tidak ditemukan",
+    "notFoundMessage": "Halaman yang Anda cari tidak ada atau sudah tidak diterbitkan.",
+    "genericTitle": "Terjadi kesalahan",
+    "genericMessage": "Kami tidak dapat memuat halaman ini. Silakan coba lagi.",
+    "backHome": "Kembali ke beranda"
+  },
+  "footer": {
+    "rights": "Seluruh hak cipta dilindungi."
+  }
+}

@@ -35,9 +35,19 @@ Internet ── Nginx (TLS, routing) ──┬── site (Nuxt SSG/ISR)
 
 ## 3. Containerization
 
-* Each deployable (`api`, `site`, `app`) has a multi-stage Dockerfile producing a minimal image.
-* Local: `docker-compose.yml` brings up the full stack (API, DB, Redis, MinIO) for development.
+* Each deployable has a multi-stage Dockerfile with both a `dev` and a `runtime` target:
+  `backend/Dockerfile` (`api`) and `frontend/Dockerfile` (`site` and `app`, selected by the `APP`
+  build arg — one file, because both are built from the same pnpm workspace).
+* `runtime` is what deploys: the API publishes to `mcr.microsoft.com/dotnet/aspnet` and runs as
+  `$APP_UID`; the Nuxt apps ship the Nitro node-server output and run as `node`. Neither runs as root.
+* `dev` targets exist only for local work (`dotnet watch` / `nuxt dev` over bind-mounted source) and
+  are never deployed. See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
+* Local: `docker-compose.yml` brings up infrastructure by default; the `apps` profile adds the API and
+  both Nuxt apps.
 * Images built in CI, tagged by commit SHA, pushed to a registry.
+
+Migrations are applied on startup **in Development only** (per-module `IHostedService` initializers),
+so a fresh clone self-provisions. Deployed environments never auto-migrate — see §4.
 
 ## 4. CI/CD (GitHub Actions)
 
