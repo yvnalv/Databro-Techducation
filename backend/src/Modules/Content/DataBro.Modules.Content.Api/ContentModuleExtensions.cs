@@ -1,5 +1,7 @@
 using DataBro.Modules.Content.Application;
 using DataBro.Modules.Content.Infrastructure;
+using DataBro.Platform.Authorization;
+using DataBro.Platform.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -38,29 +40,38 @@ public static class ContentModuleExtensions
             ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
     }
 
-    // ---- Authoring surface. Auth (Author/Editor/Admin) is enforced once Identity lands. ----
+    // ---- Authoring surface. Requires RBAC permissions (docs/SECURITY.md): authors draft/edit,
+    // editors publish. Authorization is enforced via perm:{Permission} policies. ----
     private static void MapAuthoringEndpoints(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/authoring/articles").WithTags("Content.Authoring");
 
         group.MapPost("", async (CreateArticleRequest request, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.CreateDraftAsync(request, ct)))
-            .AddEndpointFilter<ValidationFilter<CreateArticleRequest>>();
+            .AddEndpointFilter<ValidationFilter<CreateArticleRequest>>()
+            .RequireAuthorization(Perm(Permissions.ContentCreate));
 
         group.MapGet("", async (ArticleService service, int? limit, CancellationToken ct) =>
-            ApiEnvelope.Ok(await service.ListAllAsync(limit ?? 50, ct)));
+            ApiEnvelope.Ok(await service.ListAllAsync(limit ?? 50, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
 
         group.MapGet("/{id:guid}", async (Guid id, ArticleService service, CancellationToken ct) =>
-            ApiEnvelope.OkOrNotFound(await service.GetByIdAsync(id, ct)));
+            ApiEnvelope.OkOrNotFound(await service.GetByIdAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
 
         group.MapPatch("/{id:guid}", async (Guid id, UpdateArticleRequest request, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.UpdateDraftAsync(id, request, ct)))
-            .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
+            .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>()
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
 
         group.MapPost("/{id:guid}/publish", async (Guid id, ArticleService service, CancellationToken ct) =>
-            ApiEnvelope.From(await service.PublishAsync(id, ct)));
+            ApiEnvelope.From(await service.PublishAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
 
         group.MapPost("/{id:guid}/unpublish", async (Guid id, ArticleService service, CancellationToken ct) =>
-            ApiEnvelope.From(await service.UnpublishAsync(id, ct)));
+            ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
     }
+
+    private static string Perm(string permission) => $"perm:{permission}";
 }

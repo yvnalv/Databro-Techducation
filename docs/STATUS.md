@@ -3,11 +3,11 @@
 Snapshot of where the project is, what's next, and what's open. Update this with every meaningful
 milestone.
 
-Last updated: 2026-07-29.
+Last updated: 2026-07-30.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **Content engine live end-to-end → hardening + Identity**.
+**Phase 1 — Foundation & Content.** Sub-stage: **Content + Identity live and secured → taxonomy/search/site next**.
 
 ## Done
 
@@ -25,21 +25,33 @@ Last updated: 2026-07-29.
 
 ## In progress
 
-* Content module — validation + tests done; categories/tags and scheduling still to do.
+* Foundations solid: Content (validated + tested) and Identity (auth/RBAC, secured authoring).
+  Picking up taxonomy, search, and the public site render next.
+
+## Recently done
+
+* **Identity module:** ASP.NET Core Identity + JWT (access + rotating refresh), RBAC with permission
+  claims and `perm:` authorization policies, secured Content authoring (401/403), real
+  `HttpCurrentUser` for audit + author-of-record. Roles seeded; dev auto-migration initializers.
+* **Shared `Platform.Web`** kernel (envelope + validation filter); Content refactored onto it.
 
 ## Next up (proposed order)
 
 1. Content: categories & tags (taxonomy), scheduled publishing, and slug-change 301 redirects.
 2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-3. Implement Identity (registration, email verification, login, JWT + refresh, RBAC) and enforce
-   authoring authorization; replace `NullCurrentUser`/`SystemAuthorId`.
-4. Surface the published article on the `site` app (SSG/ISR) using `@databro/api-client`.
-5. PostgreSQL FTS search; SEO metadata/redirects; Media upload to MinIO/Spaces.
-6. CI pipeline (build/test + architecture-fitness gate).
+3. Surface the published article on the `site` app (SSG/ISR) using `@databro/api-client`.
+4. PostgreSQL FTS search; SEO metadata/redirects; Media upload to MinIO/Spaces.
+5. CI pipeline (build/test + architecture-fitness gate).
+
+## Known gaps / deferred
+
+* Email transport not wired — email verification not yet enforced on login
+  (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
+* Social login (Google/GitHub) not yet implemented.
 
 ## Testing status
 
-* `dotnet test` — 29 passing: architecture-fitness (4) + Content unit & Testcontainers integration (25).
+* `dotnet test` — 36 passing: architecture-fitness (4) + Content & Identity unit/integration (32).
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).
 
 ## Open questions / to be ADR'd later

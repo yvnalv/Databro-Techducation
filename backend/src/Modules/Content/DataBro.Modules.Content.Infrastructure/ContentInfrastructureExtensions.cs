@@ -22,8 +22,10 @@ public static class ContentInfrastructureExtensions
             ?? throw new InvalidOperationException("Missing connection string 'Postgres'.");
 
         // Platform defaults (registered once; safe if another module also registers them).
+        // ICurrentUser is scoped — the Identity module replaces NullCurrentUser with the JWT-backed
+        // HttpCurrentUser when present.
         services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddSingleton<ICurrentUser, NullCurrentUser>();
+        services.TryAddScoped<ICurrentUser, NullCurrentUser>();
         services.AddScoped<AuditingInterceptor>();
 
         services.AddDbContext<ContentDbContext>((sp, options) =>
@@ -38,6 +40,8 @@ public static class ContentInfrastructureExtensions
         services.AddScoped<ArticleService>();
 
         services.AddValidatorsFromAssemblyContaining<ArticleService>(ServiceLifetime.Singleton);
+
+        services.AddHostedService<Persistence.ContentInitializer>();
 
         return services;
     }

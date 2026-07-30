@@ -1,30 +1,32 @@
 using DataBro.Platform.Results;
 using Microsoft.AspNetCore.Http;
+using HttpResults = Microsoft.AspNetCore.Http.Results;
 
-namespace DataBro.Modules.Content.Api;
+namespace DataBro.Platform.Web;
 
 /// <summary>
 /// Wraps results in the standard API envelope (docs/API_SPEC.md, docs/ERROR_HANDLING.md).
-/// A shared web kernel will replace this once a second module needs it.
+/// Shared by every module's minimal-API endpoints.
 /// </summary>
-internal static class ApiEnvelope
+public static class ApiEnvelope
 {
-    public static IResult Ok(object? data) => Results.Ok(new { success = true, data });
+    public static IResult Ok(object? data) => HttpResults.Ok(new { success = true, data });
 
     public static IResult Fail(Error error) =>
-        Results.Json(
+        HttpResults.Json(
             new { success = false, error = new { code = error.Code, message = error.Message } },
             statusCode: StatusFor(error.Code));
 
     public static IResult From<T>(Result<T> result) =>
         result.IsSuccess ? Ok(result.Value) : Fail(result.Error);
 
-    public static IResult OkOrNotFound(object? data) =>
-        data is null
-            ? Fail(Error.NotFound("Resource not found."))
-            : Ok(data);
+    public static IResult FromEmpty(Result result) =>
+        result.IsSuccess ? Ok(new { }) : Fail(result.Error);
 
-    private static int StatusFor(string code) => code switch
+    public static IResult OkOrNotFound(object? data) =>
+        data is null ? Fail(Error.NotFound("Resource not found.")) : Ok(data);
+
+    public static int StatusFor(string code) => code switch
     {
         "not_found" => StatusCodes.Status404NotFound,
         "validation_failed" => StatusCodes.Status400BadRequest,

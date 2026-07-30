@@ -15,6 +15,9 @@ builder.Services
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // ---- Platform endpoints ----
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
    .WithTags("Platform");

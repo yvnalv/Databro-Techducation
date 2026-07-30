@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DataBro.Modules.Content.Application\DataBro.Modules.Content.Application.csproj" />
     <ProjectReference Include="..\DataBro.Modules.Content.Infrastructure\DataBro.Modules.Content.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\DataBro.Platform.Web\DataBro.Platform.Web.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

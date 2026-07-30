@@ -1,14 +1,15 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using HttpResults = Microsoft.AspNetCore.Http.Results;
 
-namespace DataBro.Modules.Content.Api;
+namespace DataBro.Platform.Web;
 
 /// <summary>
 /// Minimal-API endpoint filter that runs FluentValidation on the request body and short-circuits
 /// with the standard validation envelope (docs/ERROR_HANDLING.md) before the handler runs.
 /// </summary>
-internal sealed class ValidationFilter<T> : IEndpointFilter where T : class
+public sealed class ValidationFilter<T> : IEndpointFilter where T : class
 {
     public async ValueTask<object?> InvokeAsync(
         EndpointFilterInvocationContext context,
@@ -26,7 +27,7 @@ internal sealed class ValidationFilter<T> : IEndpointFilter where T : class
                     .Select(e => new { field = e.PropertyName, message = e.ErrorMessage })
                     .ToArray();
 
-                return Results.Json(
+                return HttpResults.Json(
                     new
                     {
                         success = false,

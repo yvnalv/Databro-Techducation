@@ -1,5 +1,32 @@
 # DataBro Changelog
 
+## [2026-07-30 09:30:00 UTC]
+
+CHG-0005 — Identity module: authentication, RBAC, and secured authoring
+
+- Built the Identity module on ASP.NET Core Identity (EF Core, `identity` schema): registration with
+  email-confirmation token, password login, JWT access tokens + hashed rotating refresh tokens, and a
+  `/api/v1/me` profile endpoint. Email transport and social login are stubbed for a later slice
+  (`RequireConfirmedEmail=false`, no-op email sender logs the token).
+- RBAC: roles (Reader/Author/Editor/Admin) with a role→permission grant map; permissions issued as JWT
+  claims. Permission-based authorization via on-demand `perm:{Permission}` policies (custom policy
+  provider + handler). Roles seeded on startup.
+- Moved the permission-name vocabulary to `Platform.Authorization.Permissions` (shared) so modules
+  require permissions without depending on Identity; the grant map stays in Identity.
+- Extracted a shared `Platform.Web` kernel (response envelope + validation filter) and refactored the
+  Content module onto it (removing the duplicated helpers).
+- Secured the Content authoring endpoints with permissions (create/edit → Author, publish/unpublish →
+  Editor); anonymous → 401, insufficient permission → 403. The author-of-record now comes from the
+  JWT via a real `HttpCurrentUser` (replaces `NullCurrentUser`), which also populates audit fields.
+- Dev convenience: per-module startup initializers apply pending migrations in Development only, so a
+  fresh clone self-provisions after `docker compose up`.
+- Tests: added Identity auth integration tests (register/login/refresh rotation/me) and updated the
+  Content tests to authenticate; added authz-boundary cases (401/403) and author-of-record. Whole
+  suite green: build 0/0; 36 tests pass (4 architecture + 32 Content/Identity). Verified end-to-end
+  against the local Dockerized Postgres.
+
+---
+
 ## [2026-07-30 06:00:00 UTC]
 
 CHG-0004 — Harden the Content module: validation and tests

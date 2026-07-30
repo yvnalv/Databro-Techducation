@@ -5,9 +5,9 @@ using DataBro.Platform.Results;
 namespace DataBro.Modules.Content.Application;
 
 /// <summary>Use cases for the Content module's Article aggregate (thin controllers call this).</summary>
-public sealed class ArticleService(IArticleRepository repository, IClock clock)
+public sealed class ArticleService(IArticleRepository repository, IClock clock, ICurrentUser currentUser)
 {
-    // Placeholder author until Identity lands; author of record comes from the JWT later.
+    // Fallback author if a request is somehow unauthenticated (authoring endpoints require auth).
     private static readonly Guid SystemAuthorId = new("00000000-0000-0000-0000-0000000000a1");
 
     public async Task<Result<ArticleDto>> CreateDraftAsync(CreateArticleRequest request, CancellationToken ct = default)
@@ -39,7 +39,7 @@ public sealed class ArticleService(IArticleRepository repository, IClock clock)
             slug,
             request.Title,
             request.Summary,
-            request.AuthorId ?? SystemAuthorId,
+            currentUser.UserId ?? request.AuthorId ?? SystemAuthorId,
             request.Content.ToDomain(),
             request.Locale,
             visibility,
