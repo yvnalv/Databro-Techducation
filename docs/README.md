@@ -8,6 +8,7 @@ This is the documentation index. The master project instructions live in the roo
 * New to the project? Read [../CLAUDE.md](../CLAUDE.md), then [PRD.md](PRD.md), then
   [ARCHITECTURE.md](ARCHITECTURE.md).
 * Want current state / what's next? See [STATUS.md](STATUS.md).
+* Setting up your machine? See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 
 ## Index
 
@@ -31,6 +32,7 @@ This is the documentation index. The master project instructions live in the roo
 * [BUSINESS_RULES.md](BUSINESS_RULES.md) — documented business rules.
 * [CODING_STANDARDS.md](CODING_STANDARDS.md) — C#/TS conventions.
 * [TESTING.md](TESTING.md) — testing strategy.
+* [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) — running the stack locally and verifying a change.
 * [DEPLOYMENT.md](DEPLOYMENT.md) — environments and delivery.
 * [GLOSSARY.md](GLOSSARY.md) — ubiquitous language.
 

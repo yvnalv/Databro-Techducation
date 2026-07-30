@@ -1,5 +1,35 @@
 # DataBro Changelog
 
+## [2026-07-30 13:55:00 UTC]
+
+CHG-0006 — Containerised local development environment
+
+- Extended `docker-compose.yml` with an opt-in `apps` profile that runs the API and both Nuxt apps
+  alongside the existing infra, all hot-reloading against bind-mounted source. The default
+  `docker compose up -d` still starts infrastructure only, so the fast host-based inner loop is
+  unchanged.
+- Added `backend/Dockerfile` (`dev` target running `dotnet watch`; `build`/`runtime` targets
+  publishing a non-root ASP.NET image) and `frontend/Dockerfile` (pnpm-workspace aware, `APP` build
+  arg selecting `site` or `app`; `dev` target running `nuxt dev`, `runtime` target serving the Nitro
+  node-server output), plus `.dockerignore` for both.
+- The API dev container redirects MSBuild output to an `/artifacts` volume via `UseArtifactsOutput`,
+  so a Linux container and the Windows host never share `bin`/`obj`. Node modules are likewise
+  masked by anonymous volumes.
+- Added `scripts/dev-up.ps1` (start + wait for health, `-Apps`, `-Reset`), `scripts/dev-grant-role.ps1`
+  (dev-only RBAC grant — self-registration assigns Reader), and `scripts/dev-smoke.ps1`, a 10-step
+  end-to-end check of the running stack: register → grant Editor → login → 401 unauthenticated →
+  create draft → 404 unpublished → publish → public read → unpublish → 404. All scripts target
+  Windows PowerShell 5.1.
+- Relaxed `backend/global.json` from the exact SDK `9.0.309` to the `9.0.3xx` feature band
+  (`rollForward: latestFeature`). The exact pin failed on any machine with a lower patch in the same
+  band, including the .NET SDK container image.
+- Added `docs/LOCAL_DEVELOPMENT.md` (prerequisites, both run modes and their trade-offs, verification
+  layers, data/migration recipes, troubleshooting) and indexed it in `docs/README.md`.
+- Verified: 36 tests pass; both run modes serve `/health`, and `dev-smoke.ps1` passes 10/10 against
+  each; API hot reload and Nuxt HMR both confirmed through the Windows bind mount.
+
+---
+
 ## [2026-07-30 09:30:00 UTC]
 
 CHG-0005 — Identity module: authentication, RBAC, and secured authoring

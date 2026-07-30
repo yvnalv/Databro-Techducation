@@ -1,6 +1,16 @@
 # DataBro — local development infrastructure.
-# Brings up PostgreSQL, Redis, and MinIO (S3-compatible, stands in for DigitalOcean Spaces).
-# Usage: `docker compose up -d`  (reads credentials from ./.env)
+#
+# Two ways to run, both reading credentials/ports from ./.env:
+#
+#   docker compose up -d                     infra only (PostgreSQL, Redis, MinIO).
+#                                            Run the API and Nuxt apps on the host —
+#                                            fastest inner loop. This is the default.
+#
+#   docker compose --profile apps up -d      infra + API + both Nuxt apps, all containerised
+#                                            with hot reload against bind-mounted source.
+#                                            Use for full-stack / integration testing.
+#
+# See docs/LOCAL_DEVELOPMENT.md.
 
 services:
   postgres:
@@ -55,7 +65,95 @@ services:
       timeout: 5s
       retries: 10
 
+  # --- Application services (profile: apps) -------------------------------------------
+  # Opt-in. Source is bind-mounted; both stacks watch and reload on change.
+
+  api:
+    profiles: ["apps"]
+    build:
+      context: ./backend
+      target: dev
+    container_name: databro-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      # Container-network overrides for the host-oriented appsettings.Development.json.
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-databro};Username=${POSTGRES_USER:-databro};Password=${POSTGRES_PASSWORD:-databro_dev_pw}"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: ${JWT_KEY:-dev-only-super-secret-signing-key-change-me-please-32b+}
+    ports:
+      - "${API_PORT:-5158}:8080"
+    volumes:
+      - ./backend:/src
+      # Keep the container's build output off the Windows host tree (see backend/Dockerfile).
+      - api-artifacts:/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
+  site:
+    profiles: ["apps"]
+    build:
+      context: ./frontend
+      target: dev
+      args:
+        APP: site
+    container_name: databro-site
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Browser-visible, so it must be the host-published API port, not the service name.
+      NUXT_PUBLIC_API_BASE_URL: http://localhost:${API_PORT:-5158}
+    ports:
+      - "${SITE_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/workspace
+      # Anonymous volumes so the bind mount does not shadow the image's installed deps.
+      - /workspace/node_modules
+      - /workspace/apps/site/node_modules
+      - /workspace/apps/app/node_modules
+      - /workspace/packages/ui/node_modules
+      - /workspace/packages/api-client/node_modules
+      - /workspace/packages/types/node_modules
+      - /workspace/apps/site/.nuxt
+
+  app:
+    profiles: ["apps"]
+    build:
+      context: ./frontend
+      target: dev
+      args:
+        APP: app
+    container_name: databro-app
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: http://localhost:${API_PORT:-5158}
+    ports:
+      - "${APP_PORT:-3001}:3000"
+    volumes:
+      - ./frontend:/workspace
+      - /workspace/node_modules
+      - /workspace/apps/site/node_modules
+      - /workspace/apps/app/node_modules
+      - /workspace/packages/ui/node_modules
+      - /workspace/packages/api-client/node_modules
+      - /workspace/packages/types/node_modules
+      - /workspace/apps/app/.nuxt
+
 volumes:
   postgres-data:
   redis-data:
   minio-data:
+  api-artifacts:
