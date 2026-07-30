@@ -1,9 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+  <!-- Domain-safe shared kernel. Intentionally has NO external dependencies so that
+       Domain layers (which reference Platform) stay free of framework/persistence concerns.
+       EF Core lives in DataBro.Platform.Persistence, referenced only by Infrastructure. -->
 
 </Project>

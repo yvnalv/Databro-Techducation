@@ -1,5 +1,29 @@
 # DataBro Changelog
 
+## [2026-07-30 02:30:00 UTC]
+
+CHG-0003 — Local dev infrastructure and the first Content vertical slice
+
+- Added `docker-compose.yml` (PostgreSQL 16, Redis 7, MinIO) with healthchecks, `.env.example`, and a
+  gitignored local `.env`. Postgres is mapped to host port 5439 (5432–5434 were occupied locally).
+- Wired EF Core 9.0.18 + Npgsql 9.0.4 (pinned; SDK stays on 9.0.309). Introduced a `Platform.Persistence`
+  shared infra project so EF never leaks into domain-facing `Platform`: audit `SaveChanges` interceptor,
+  soft-delete global query filter, client-generated-key convention (`ValueGeneratedNever`), `SystemClock`,
+  and `NullCurrentUser` (until Identity supplies the user).
+- Content domain: `Article` aggregate (typed JSONB `draft_blocks`/`published_blocks`, `Slug` value
+  object, `SeoMetadata`, `Visibility`), append-only `ArticleVersion` history, `Publish`/`Unpublish`
+  with domain events and business-rule enforcement (CT-1, CT-5, CT-6, CT-8).
+- Content persistence: `ContentDbContext` (owns the `content` schema, snake_case naming), EF configs
+  with JSONB value converters, `ArticleRepository`, DI wiring, design-time factory, and the initial
+  migration applied to Postgres.
+- Content API: public read (`GET /api/v1/articles`, `/{slug}`) and authoring
+  (`POST /api/v1/authoring/articles`, `PATCH`, `/{id}/publish`) behind the standard response envelope.
+- Verified end-to-end against Dockerized Postgres: create draft → 404 while unpublished → publish
+  (snapshots blocks, writes an immutable version, sets `published_at`) → served publicly by slug;
+  empty article rejected with `business_rule_violation` (422). Build 0/0; 4 architecture tests pass.
+
+---
+
 ## [2026-07-29 10:30:00 UTC]
 
 CHG-0002 — Scaffold backend modular monolith and frontend monorepo

@@ -1,3 +1,4 @@
+using DataBro.Modules.Content.Application;
 using DataBro.Modules.Content.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,14 +16,46 @@ public static class ContentModuleExtensions
         IConfiguration configuration)
     {
         services.AddContentInfrastructure(configuration);
-        // TODO: register Content application services (handlers, validators).
         return services;
     }
 
     public static IEndpointRouteBuilder MapContentModule(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1/content").WithTags("Content");
-        group.MapGet("/_ping", () => Results.Ok(new { module = "Content", status = "ok" }));
+        MapPublicEndpoints(endpoints);
+        MapAuthoringEndpoints(endpoints);
         return endpoints;
+    }
+
+    // ---- Public read surface (docs/API_SPEC.md §5). Serves only published content. ----
+    private static void MapPublicEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/v1/articles").WithTags("Content");
+
+        group.MapGet("", async (ArticleService service, int? limit, CancellationToken ct) =>
+            ApiEnvelope.Ok(await service.ListPublishedAsync(limit ?? 20, ct)));
+
+        group.MapGet("/{slug}", async (string slug, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
+    }
+
+    // ---- Authoring surface. Auth (Author/Editor/Admin) is enforced once Identity lands. ----
+    private static void MapAuthoringEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/v1/authoring/articles").WithTags("Content.Authoring");
+
+        group.MapPost("", async (CreateArticleRequest request, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.CreateDraftAsync(request, ct)));
+
+        group.MapGet("", async (ArticleService service, int? limit, CancellationToken ct) =>
+            ApiEnvelope.Ok(await service.ListAllAsync(limit ?? 50, ct)));
+
+        group.MapGet("/{id:guid}", async (Guid id, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetByIdAsync(id, ct)));
+
+        group.MapPatch("/{id:guid}", async (Guid id, UpdateArticleRequest request, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UpdateDraftAsync(id, request, ct)));
+
+        group.MapPost("/{id:guid}/publish", async (Guid id, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.PublishAsync(id, ct)));
     }
 }
