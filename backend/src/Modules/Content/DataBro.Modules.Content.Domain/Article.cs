@@ -11,6 +11,7 @@ namespace DataBro.Modules.Content.Domain;
 public sealed class Article : AggregateRoot
 {
     private readonly List<ArticleVersion> _versions = [];
+    private readonly List<ArticleTag> _tags = [];
 
     public Slug Slug { get; private set; } = null!;
     public string Title { get; private set; } = string.Empty;
@@ -32,6 +33,9 @@ public sealed class Article : AggregateRoot
     public DateTimeOffset? ScheduledFor { get; private set; }
 
     public IReadOnlyList<ArticleVersion> Versions => _versions.AsReadOnly();
+
+    /// <summary>Tag ids assigned to this article (CT-11: any number).</summary>
+    public IReadOnlyList<Guid> TagIds => _tags.Select(t => t.TagId).ToList();
 
     private Article() { } // EF
 
@@ -73,7 +77,25 @@ public sealed class Article : AggregateRoot
         if (seo is not null) Seo = seo;
     }
 
+    /// <summary>
+    /// Assigns the article's single category (CT-11), or clears it. The category's existence is
+    /// verified by the application layer — the domain cannot query.
+    /// </summary>
     public void SetCategory(Guid? categoryId) => CategoryId = categoryId;
+
+    /// <summary>
+    /// Replaces the article's tag set (CT-11: any number). Idempotent and order-insensitive: existing
+    /// links are preserved rather than churned, so EF does not delete and reinsert rows on every save.
+    /// </summary>
+    public void SetTags(IEnumerable<Guid> tagIds)
+    {
+        var target = tagIds.Distinct().ToHashSet();
+
+        _tags.RemoveAll(t => !target.Contains(t.TagId));
+
+        foreach (var tagId in target.Where(id => _tags.All(t => t.TagId != id)))
+            _tags.Add(new ArticleTag(Guid.NewGuid(), Id, tagId));
+    }
 
     /// <summary>
     /// Publishes the article: snapshots the draft into the published copy, writes an immutable

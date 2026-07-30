@@ -1,5 +1,57 @@
 # DataBro Changelog
 
+## [2026-07-30 15:30:00 UTC]
+
+CHG-0008 — Taxonomy: categories, tags, and crawlable pagination
+
+- **Domain:** `Category` (hierarchical) and `Tag` as aggregates separate from `Article`, referenced by
+  id only so the Article boundary holds. Enforced TX-1 (slug unique *per type*, so
+  `/categories/python` and `/tags/python` legitimately coexist), TX-2 (a category still classifying
+  articles, or with children, cannot be deleted — refused with the referencing count), TX-3 (no
+  cycles: the domain rejects a move using an ancestor chain the application supplies, since the domain
+  cannot query), and CT-11 (one category, many tags). `SetTags` is idempotent so EF does not churn
+  join rows on every save.
+- **Category and tag slugs are immutable**, matching articles (CT-2/CT-3). Only display names are
+  editable. Renaming a term's URL needs a 301 record, so it waits for the redirects slice — which
+  means this slice ships with no URL-breaking hole rather than a half-built one.
+- **Permission split that falls out of the existing grants:** creating a term needs `Taxonomy.Manage`
+  (Editor/Admin), but assigning an existing term is part of `Content.Edit`. An Author can label an
+  article and cannot mint new vocabulary, which is what prevents tag sprawl.
+- **Persistence:** `categories`, `tags`, `article_tags` plus the real FK on `articles.category_id`
+  (`AddTaxonomy` migration). Tag links are an aggregate-owned child collection rather than a
+  many-to-many navigation, which would have coupled the two aggregates. Article tag lists are read
+  through a join against `tags` so the global soft-delete filter applies — a deleted tag cannot leak
+  onto a public page.
+- **Offset pagination on public listings**, replacing the unbounded `limit`. Resolves a genuine
+  conflict between two docs: API_SPEC §3 preferred cursors, but SEO.md requires crawlable paginated
+  URLs, and a cursor has no stable URL a crawler can enumerate. Cursors are now scoped to non-indexed
+  feeds; `pageSize` is clamped (default 20, max 100) so it cannot be used to pull the whole table.
+  Paging lives in `meta`.
+- **Filtering:** `?category=` / `?tag=` by slug. An unmatched slug returns an empty page rather than
+  the unfiltered catalogue — silently dropping a filter would serve the whole archive on a page that
+  should be empty.
+- **Site:** `/categories/{slug}` and `/tags/{slug}` with a shared `ArticleList`, crawlable
+  `PaginationNav`, and taxonomy links on article pages and cards — the internal linking structure that
+  makes a topic cluster legible. Category pages emit `BreadcrumbList` structured data mirroring the
+  visible breadcrumb; tag pages deliberately emit none, because tags are flat and claiming a hierarchy
+  would misrepresent the site.
+- **Listing SEO:** each page is self-canonical (page 2 canonicalises to page 2, not page 1 — otherwise
+  the articles only listed there lose their discovery path), page 2+ titles are disambiguated, and a
+  `?page=` past the end returns **404** instead of an empty 200, which would have let a crawler
+  enumerate unbounded thin pages. `rel=prev/next` is emitted only as a courtesy; Google dropped it as
+  an indexing signal in 2019, so the crawlable anchors are the load-bearing part. SEO.md corrected
+  accordingly.
+- Contracts: `TaxonomyTerm`, `Category`, `CategoryWithAncestors`, `Paged<T>` and `PageMeta` in
+  `@databro/types`; category/tag/paging support in `api-client`. `en`/`id` dictionaries extended with
+  pluralized article counts.
+- `scripts/dev-seed-article.ps1` now seeds a category tree and tags, and takes `-Count` for
+  paginating volume. Fixed a collision where consecutive runs reused the same registration email.
+- Verified end to end: 69 backend tests (up from 39), 22 renderer tests, clean typecheck across five
+  workspaces, and live checks of the category tree, breadcrumb JSON-LD, filtering, multi-page
+  pagination, out-of-range 404s, and the Indonesian locale.
+
+---
+
 ## [2026-07-30 14:35:00 UTC]
 
 CHG-0007 — Public site render: block renderer, SEO surface, and the first cross-module contract

@@ -26,6 +26,41 @@ public sealed record SeoDto(
 /// </summary>
 public sealed record AuthorDto(Guid Id, string DisplayName, string? AvatarUrl);
 
+/// <summary>A category or tag as the read surface exposes it.</summary>
+public sealed record TaxonomyTermDto(Guid Id, string Slug, string Name);
+
+public sealed record CategoryDto(
+    Guid Id,
+    string Slug,
+    string Name,
+    string? Description,
+    Guid? ParentId,
+    int Order);
+
+/// <summary>A category plus its ancestors (root first) — the breadcrumb trail for a category page.</summary>
+public sealed record CategoryWithAncestorsDto(CategoryDto Category, IReadOnlyList<CategoryDto> Ancestors);
+
+public sealed record CreateCategoryRequest(
+    string Name,
+    string? Slug = null,
+    Guid? ParentId = null,
+    string? Description = null,
+    int Order = 0);
+
+/// <summary>
+/// Slug is absent by design: a category slug is a public URL and is immutable until the redirects
+/// slice lands (CT-3).
+/// </summary>
+public sealed record UpdateCategoryRequest(
+    string Name,
+    string? Description = null,
+    int Order = 0,
+    Guid? ParentId = null);
+
+public sealed record CreateTagRequest(string Name, string? Slug = null);
+
+public sealed record UpdateTagRequest(string Name);
+
 public sealed record CreateArticleRequest(
     string Title,
     string Summary,
@@ -34,13 +69,17 @@ public sealed record CreateArticleRequest(
     Guid? AuthorId = null,
     string Locale = "en",
     string Visibility = "public",
-    SeoDto? Seo = null);
+    SeoDto? Seo = null,
+    Guid? CategoryId = null,
+    IReadOnlyList<Guid>? TagIds = null);
 
 public sealed record UpdateArticleRequest(
     string Title,
     string Summary,
     ContentDocumentDto Content,
-    SeoDto? Seo = null);
+    SeoDto? Seo = null,
+    Guid? CategoryId = null,
+    IReadOnlyList<Guid>? TagIds = null);
 
 // `Status` and `Visibility` go over the wire lowercase ("published", "premium") so the JSON
 // contract matches the discriminated unions in @databro/types. See ArticleMapping.ToWire.
@@ -55,7 +94,9 @@ public sealed record ArticleSummaryDto(
     string Locale,
     AuthorDto? Author,
     int ReadingTimeMinutes,
-    DateTimeOffset? PublishedAt);
+    DateTimeOffset? PublishedAt,
+    TaxonomyTermDto? Category,
+    IReadOnlyList<TaxonomyTermDto> Tags);
 
 public sealed record ArticleDto(
     Guid Id,
@@ -66,10 +107,17 @@ public sealed record ArticleDto(
     string Visibility,
     string Locale,
     AuthorDto? Author,
-    Guid? CategoryId,
     int CurrentVersion,
     int ReadingTimeMinutes,
     ContentDocumentDto Content,
     SeoDto Seo,
     DateTimeOffset? PublishedAt,
-    DateTimeOffset? ScheduledFor);
+    DateTimeOffset? ScheduledFor,
+    TaxonomyTermDto? Category,
+    IReadOnlyList<TaxonomyTermDto> Tags);
+
+/// <summary>
+/// A page of results. Endpoints put this in the envelope's <c>meta</c> (docs/API_SPEC.md §3), so a
+/// client can render crawlable page links without a second request.
+/// </summary>
+public sealed record PageMetaDto(int Page, int PageSize, int Total, int TotalPages);

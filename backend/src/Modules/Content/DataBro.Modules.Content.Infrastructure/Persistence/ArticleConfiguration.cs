@@ -35,8 +35,16 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(a => a.ScheduledFor);
 
         builder.HasIndex(a => new { a.Status, a.PublishedAt });
-        builder.HasIndex(a => a.CategoryId);
         builder.HasIndex(a => a.TranslationGroupId);
+
+        // Category reference (CT-11: at most one). Restrict so a category that still classifies
+        // articles cannot be deleted out from under them (TX-2) — the application surfaces this as
+        // a conflict with the referencing count rather than letting the database throw.
+        builder.HasOne<Category>()
+            .WithMany()
+            .HasForeignKey(a => a.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(a => a.CategoryId);
 
         // Aggregate-owned version history (append-only), mapped via the backing field.
         builder.HasMany(a => a.Versions)
@@ -47,8 +55,16 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .HasField("_versions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        // Aggregate-owned tag links, mapped via the backing field. TagIds is a projection over it.
+        builder.HasMany<ArticleTag>("_tags")
+            .WithOne()
+            .HasForeignKey(at => at.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation("_tags").UsePropertyAccessMode(PropertyAccessMode.Field);
+
         // Not persisted.
         builder.Ignore(a => a.DomainEvents);
+        builder.Ignore(a => a.TagIds);
     }
 }
 

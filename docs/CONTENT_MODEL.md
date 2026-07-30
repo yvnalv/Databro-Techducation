@@ -112,6 +112,31 @@ Rules:
   still expose SEO metadata + a preview publicly (see [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md)).
 * `reading_time_minutes` — derived from block content on save.
 
+## 5b. Taxonomy
+
+Categories and tags are **separate aggregates** from the content unit. An article references them by
+id only — no navigation property — so the Article aggregate boundary stays intact and Lessons can
+reuse the same arrangement in Phase 2.
+
+| | Shape | Cardinality | Rules |
+|---|---|---|---|
+| **Category** | Hierarchical (`parent_id`, `order`) | At most one per article (CT-11) | TX-1 slug unique among categories; TX-2 cannot be deleted while referenced; TX-3 no cycles |
+| **Tag** | Flat | Any number per article (CT-11) | TX-1 slug unique among tags |
+
+Notes that matter in practice:
+
+* Uniqueness is **per type**, so `/categories/python` and `/tags/python` are different pages by
+  design.
+* Category and tag slugs are **immutable**, exactly like article slugs (CT-2/CT-3): they are public
+  URLs, so renaming one needs a 301 record. Only the display name is editable. Slug changes arrive
+  with the redirects work.
+* Deleting a tag is always allowed; the soft-delete filter removes it from every article's tag list,
+  so a deleted tag cannot surface on a public page. Deleting a *category* is refused while articles
+  or child categories still reference it (TX-2).
+* Creating a term requires `Taxonomy.Manage` (Editor/Admin). An **Author** may assign existing terms
+  while editing their article but cannot mint new ones — the split that keeps tag vocabulary from
+  sprawling.
+
 ## 6. Localization of content
 
 * Article **bodies** are authored per-locale as separate Content Units linked by `translation_group_id`.

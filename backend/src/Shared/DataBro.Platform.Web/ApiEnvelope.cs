@@ -12,6 +12,24 @@ public static class ApiEnvelope
 {
     public static IResult Ok(object? data) => HttpResults.Ok(new { success = true, data });
 
+    /// <summary>
+    /// A successful response carrying paging information in <c>meta</c> (docs/API_SPEC.md §3), so a
+    /// client can render crawlable page links without a second request.
+    /// </summary>
+    public static IResult OkPaged<T>(PagedResult<T> page) =>
+        HttpResults.Ok(new
+        {
+            success = true,
+            data = page.Items,
+            meta = new
+            {
+                page = page.Page,
+                pageSize = page.PageSize,
+                total = page.Total,
+                totalPages = page.TotalPages,
+            },
+        });
+
     public static IResult Fail(Error error) =>
         HttpResults.Json(
             new { success = false, error = new { code = error.Code, message = error.Message } },

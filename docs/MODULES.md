@@ -54,7 +54,8 @@ this in P2). See [CONTENT_MODEL.md](CONTENT_MODEL.md).
 * SEO metadata per unit (slug, meta, canonical, OG, JSON-LD) and `visibility` (Public/Premium).
 * Slug uniqueness and immutability-after-publish; 301 redirect records.
 
-Owns: `articles`, `article_versions`, `categories`, `tags`, `article_tags`, `redirects`.
+Owns: `articles`, `article_versions`, `categories`, `tags`, `article_tags`, `redirects` (`redirects`
+not yet implemented — see the slug-immutability note in [CONTENT_MODEL.md](CONTENT_MODEL.md) §5b).
 
 Consumes (contracts): `IUserDirectory` (author byline — implemented), `IMediaReadService` (asset URLs
 — not yet; image blocks render a placeholder until Media exists).

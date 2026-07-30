@@ -62,3 +62,44 @@ public sealed class UpdateArticleRequestValidator : AbstractValidator<UpdateArti
         RuleFor(r => r.Content).NotNull().SetValidator(new ContentDocumentDtoValidator());
     }
 }
+
+// ---- Taxonomy ----
+
+public sealed class CreateCategoryRequestValidator : AbstractValidator<CreateCategoryRequest>
+{
+    public CreateCategoryRequestValidator()
+    {
+        RuleFor(r => r.Name).NotEmpty().MaximumLength(200);
+        RuleFor(r => r.Description).MaximumLength(1000);
+        RuleFor(r => r.Slug!)
+            .Must(s => SlugRules.Pattern().IsMatch(s))
+            .When(r => !string.IsNullOrWhiteSpace(r.Slug))
+            .WithMessage("Slug must be lowercase letters, digits and hyphens (e.g. 'machine-learning').");
+    }
+}
+
+public sealed class UpdateCategoryRequestValidator : AbstractValidator<UpdateCategoryRequest>
+{
+    public UpdateCategoryRequestValidator()
+    {
+        RuleFor(r => r.Name).NotEmpty().MaximumLength(200);
+        RuleFor(r => r.Description).MaximumLength(1000);
+    }
+}
+
+public sealed class CreateTagRequestValidator : AbstractValidator<CreateTagRequest>
+{
+    public CreateTagRequestValidator()
+    {
+        RuleFor(r => r.Name).NotEmpty().MaximumLength(200);
+        RuleFor(r => r.Slug!)
+            .Must(s => SlugRules.Pattern().IsMatch(s))
+            .When(r => !string.IsNullOrWhiteSpace(r.Slug))
+            .WithMessage("Slug must be lowercase letters, digits and hyphens (e.g. 'rag').");
+    }
+}
+
+public sealed class UpdateTagRequestValidator : AbstractValidator<UpdateTagRequest>
+{
+    public UpdateTagRequestValidator() => RuleFor(r => r.Name).NotEmpty().MaximumLength(200);
+}

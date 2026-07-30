@@ -29,11 +29,19 @@ Success:
 
 ## 3. Pagination, filtering, sorting
 
-* Cursor-based for large/public listings: `?limit=20&cursor=…`. Offset (`?page=&pageSize=`) allowed for
-  admin lists.
-* Filtering via explicit query params (`?category=python&tag=async`).
-* Sorting via `?sort=-published_at` (leading `-` = descending).
-* List responses put paging info in `meta`: `{ "nextCursor": "…", "total": 123 }`.
+* **Offset (`?page=&pageSize=`) for indexable listings** — articles, categories, tags. These pages
+  exist to be crawled, and a cursor has no stable URL a crawler can enumerate, so page numbers are
+  required to satisfy the pagination requirement in [SEO.md](SEO.md). `pageSize` is clamped
+  server-side (default 20, max 100) so it cannot be used to pull the whole table.
+* **Cursor-based (`?limit=20&cursor=…`) for non-indexed feeds** — infinite-scroll surfaces in the
+  authenticated app, activity streams, and anything else no crawler enumerates. *(Not yet implemented;
+  no such endpoint exists.)*
+* Filtering via explicit query params (`?category=python&tag=async`). A filter slug that matches
+  nothing yields an **empty page**, never the unfiltered collection — silently dropping the filter
+  would serve the whole catalogue on a page that should be empty.
+* Sorting via `?sort=-published_at` (leading `-` = descending). *(Not yet implemented.)*
+* List responses put paging info in `meta`:
+  `{ "page": 1, "pageSize": 20, "total": 123, "totalPages": 7 }`.
 
 ## 4. Read vs. write separation
 

@@ -1,4 +1,5 @@
 using DataBro.Modules.Content.Domain;
+using DataBro.Platform.Results;
 
 namespace DataBro.Modules.Content.Application;
 
@@ -13,8 +14,25 @@ public interface IArticleRepository
 
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Article>> ListPublishedAsync(int limit, CancellationToken ct = default);
-    Task<IReadOnlyList<Article>> ListAllAsync(int limit, CancellationToken ct = default);
+    /// <summary>
+    /// Published articles, newest first, optionally narrowed to a category or a tag. Paged because
+    /// taxonomy listings are indexable and must expose stable page URLs (see <see cref="PagedResult{T}"/>).
+    /// </summary>
+    Task<PagedResult<Article>> ListPublishedAsync(
+        PageRequest page,
+        Guid? categoryId = null,
+        Guid? tagId = null,
+        CancellationToken ct = default);
+
+    Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default);
+
+    /// <summary>
+    /// Tag ids per article, excluding soft-deleted tags. Batched to keep list endpoints off the
+    /// N+1 path.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetTagIdsAsync(
+        IReadOnlyCollection<Guid> articleIds,
+        CancellationToken ct = default);
 
     Task SaveChangesAsync(CancellationToken ct = default);
 }

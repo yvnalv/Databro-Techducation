@@ -11,16 +11,22 @@
 
     Written for Windows PowerShell 5.1.
 
+    -Count publishes several articles under one author, which is how to get a category past a
+    single page of results.
+
 .EXAMPLE
     ./scripts/dev-seed-article.ps1
     ./scripts/dev-seed-article.ps1 -Slug my-fixed-slug -Visibility premium
+    ./scripts/dev-seed-article.ps1 -Count 25          # enough to paginate
 #>
 [CmdletBinding()]
 param(
     [string]$ApiBaseUrl = "http://localhost:5158",
     [string]$Slug,
     [ValidateSet("public", "premium")]
-    [string]$Visibility = "public"
+    [string]$Visibility = "public",
+    [ValidateRange(1, 200)]
+    [int]$Count = 1
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +35,11 @@ Set-Location $root
 
 $stamp = Get-Date -Format "yyyyMMddHHmmss"
 if (-not $Slug) { $Slug = "block-showcase-$stamp" }
-$email    = "seed-$stamp@databro.local"
+
+# A random suffix as well as the timestamp: the stamp is second-precision, so consecutive runs
+# would otherwise collide on the registration email.
+$unique   = "$stamp-$([guid]::NewGuid().ToString('N').Substring(0, 6))"
+$email    = "seed-$unique@databro.local"
 $password = "Se3d-Test-Pw!"
 
 function Invoke-Api {
@@ -71,6 +81,34 @@ Invoke-Api -Method POST -Path "/api/v1/auth/register" -Body @{
 $login = Invoke-Api -Method POST -Path "/api/v1/auth/login" -Body @{ email = $email; password = $password }
 $token = $login.data.accessToken
 
+# --- Taxonomy ---
+# Idempotent-ish: slugs are unique (TX-1), so re-runs reuse the existing terms rather than failing.
+function Get-OrCreateTerm {
+    param([string]$Kind, [string]$Name, [string]$Slug, [string]$ParentId)
+
+    $existing = Invoke-Api -Method GET -Path "/api/v1/$Kind"
+    $match = $existing.data | Where-Object { $_.slug -eq $Slug } | Select-Object -First 1
+    if ($match) { return $match.id }
+
+    $body = @{ name = $Name; slug = $Slug }
+    if ($ParentId) { $body.parentId = $ParentId }
+
+    $created = Invoke-Api -Method POST -Path "/api/v1/authoring/$Kind" -Token $token -Body $body
+    return $created.data.id
+}
+
+$aiId  = Get-OrCreateTerm -Kind "categories" -Name "Artificial Intelligence" -Slug "artificial-intelligence"
+$llmId = Get-OrCreateTerm -Kind "categories" -Name "LLM Engineering" -Slug "llm-engineering" -ParentId $aiId
+
+$tagIds = @(
+    (Get-OrCreateTerm -Kind "tags" -Name "RAG" -Slug "rag")
+    (Get-OrCreateTerm -Kind "tags" -Name "Embeddings" -Slug "embeddings")
+    (Get-OrCreateTerm -Kind "tags" -Name "Python" -Slug "python")
+)
+
+Write-Host "  category: llm-engineering (child of artificial-intelligence)" -ForegroundColor DarkGray
+Write-Host "  tags:     rag, embeddings, python" -ForegroundColor DarkGray
+
 $blocks = @(
     @{ id = "b01"; type = "heading";   data = @{ level = 2; text = "What Retrieval-Augmented Generation Actually Solves" } }
     @{ id = "b02"; type = "paragraph"; data = @{ text = "RAG grounds a language model in documents you control, so answers cite your data instead of the model's recollection." } }
@@ -89,25 +127,34 @@ $blocks = @(
     @{ id = "b14"; type = "paragraph"; data = @{ text = "Retrieval quality compounds: better chunks make better context, and better context makes shorter prompts." } }
 )
 
-$create = Invoke-Api -Method POST -Path "/api/v1/authoring/articles" -Token $token -Body @{
-    title      = "Retrieval-Augmented Generation, End to End"
-    summary    = "A practical walkthrough of RAG: chunking, embedding, retrieval, and grounding - and where each step usually goes wrong."
-    slug       = $Slug
-    visibility = $Visibility
-    content    = @{ version = 1; blocks = $blocks }
-    seo        = @{
-        metaTitle       = "Retrieval-Augmented Generation, End to End | DataBro"
-        metaDescription = "How RAG actually works in production: chunking strategy, embeddings, hybrid retrieval, and grounding a model in documents you control."
-        robots          = "index,follow"
+$slugs = @()
+
+for ($i = 1; $i -le $Count; $i++) {
+    $articleSlug = if ($Count -eq 1) { $Slug } else { "$Slug-$i" }
+    $suffix = if ($Count -eq 1) { "" } else { " ($i)" }
+
+    $create = Invoke-Api -Method POST -Path "/api/v1/authoring/articles" -Token $token -Body @{
+        title      = "Retrieval-Augmented Generation, End to End$suffix"
+        summary    = "A practical walkthrough of RAG: chunking, embedding, retrieval, and grounding - and where each step usually goes wrong."
+        slug       = $articleSlug
+        visibility = $Visibility
+        categoryId = $llmId
+        tagIds     = $tagIds
+        content    = @{ version = 1; blocks = $blocks }
+        seo        = @{
+            metaTitle       = "Retrieval-Augmented Generation, End to End | DataBro"
+            metaDescription = "How RAG actually works in production: chunking strategy, embeddings, hybrid retrieval, and grounding a model in documents you control."
+            robots          = "index,follow"
+        }
     }
+
+    $id = $create.data.id
+    Invoke-Api -Method POST -Path "/api/v1/authoring/articles/$id/publish" -Token $token | Out-Null
+    $slugs += $articleSlug
 }
 
-$id = $create.data.id
-Invoke-Api -Method POST -Path "/api/v1/authoring/articles/$id/publish" -Token $token | Out-Null
-
 Write-Host ""
-Write-Host "Published." -ForegroundColor Green
-Write-Host "  slug:   $Slug"
-Write-Host "  author: Ada Lovelace"
-Write-Host "  api:    $ApiBaseUrl/api/v1/articles/$Slug"
-Write-Host "  site:   http://localhost:3000/articles/$Slug"
+Write-Host "Published $Count article(s)." -ForegroundColor Green
+Write-Host "  author:   Ada Lovelace"
+Write-Host "  category: http://localhost:3000/categories/llm-engineering"
+Write-Host "  first:    http://localhost:3000/articles/$($slugs[0])"

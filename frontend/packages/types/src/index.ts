@@ -111,6 +111,27 @@ export interface AuthorSummary {
   avatarUrl?: string | null;
 }
 
+// ---- Taxonomy (docs/BUSINESS_RULES.md TX-1 … TX-3, CT-11) ----
+
+/** A category or tag as the read surface exposes it. */
+export interface TaxonomyTerm {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+export interface Category extends TaxonomyTerm {
+  description?: string | null;
+  parentId?: string | null;
+  order: number;
+}
+
+/** A category plus its ancestors, root first — the breadcrumb trail for a category page. */
+export interface CategoryWithAncestors {
+  category: Category;
+  ancestors: Category[];
+}
+
 export interface ArticleSummary {
   id: string;
   slug: string;
@@ -122,6 +143,10 @@ export interface ArticleSummary {
   author: AuthorSummary | null;
   readingTimeMinutes: number;
   publishedAt?: string;
+  /** Null when uncategorised, or when the category was deleted (CT-11: at most one). */
+  category: TaxonomyTerm | null;
+  /** Excludes deleted tags; empty rather than absent when untagged. */
+  tags: TaxonomyTerm[];
 }
 
 export interface Article extends ArticleSummary {
@@ -129,6 +154,23 @@ export interface Article extends ArticleSummary {
   seo: SeoMetadata;
   currentVersion: number;
   scheduledFor?: string;
-  /** Taxonomy is not implemented yet; the API emits a raw id and no tags. */
-  categoryId?: string | null;
+}
+
+// ---- Paging ----
+
+/**
+ * Offset paging for indexable listings. docs/API_SPEC.md §3 prefers cursors for public lists, but
+ * category and tag pages exist to be crawled and a cursor has no stable URL a crawler can
+ * enumerate. See docs/SEO.md.
+ */
+export interface PageMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface Paged<T> {
+  items: T[];
+  meta: PageMeta;
 }

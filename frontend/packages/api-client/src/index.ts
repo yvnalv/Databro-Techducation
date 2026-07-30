@@ -5,6 +5,11 @@ import type {
   ApiResponse,
   Article,
   ArticleSummary,
+  Category,
+  CategoryWithAncestors,
+  Paged,
+  PageMeta,
+  TaxonomyTerm,
 } from "@databro/types";
 
 export class ApiClientError extends Error {
@@ -39,6 +44,14 @@ export class ApiClient {
   }
 
   private async request<TData>(path: string, init?: RequestInit): Promise<TData> {
+    return (await this.envelope<TData>(path, init)).data;
+  }
+
+  /** Like {@link request} but keeps `meta`, which carries paging on list endpoints. */
+  private async envelope<TData>(
+    path: string,
+    init?: RequestInit,
+  ): Promise<{ data: TData; meta?: Record<string, unknown> }> {
     const headers = new Headers(init?.headers);
     headers.set("Accept", "application/json");
     const token = this.getToken?.();
@@ -70,21 +83,67 @@ export class ApiClient {
         body.error.traceId,
       );
     }
-    return body.data;
+    return { data: body.data, meta: body.meta };
   }
 
   // ---- Public read surface ----
-  // Only endpoints the API actually serves. Category/tag filtering arrives with the taxonomy
-  // slice and search with the Search module; adding them here early would ship methods that
-  // 404 at runtime.
+  // Only endpoints the API actually serves. Search arrives with the Search module; adding it here
+  // early would ship a method that 404s at runtime.
 
-  listArticles(params?: { limit?: number }): Promise<ArticleSummary[]> {
-    const query = params?.limit != null ? `?limit=${params.limit}` : "";
-    return this.request<ArticleSummary[]>(`/api/v1/articles${query}`);
+  /**
+   * Published articles, newest first, optionally narrowed by category or tag slug.
+   *
+   * Offset-paged: these listings are indexable, and a crawler needs stable page URLs it can
+   * enumerate (docs/SEO.md). An unmatched `category`/`tag` slug yields an empty page rather than
+   * the unfiltered catalogue.
+   */
+  async listArticles(params?: {
+    page?: number;
+    pageSize?: number;
+    category?: string;
+    tag?: string;
+  }): Promise<Paged<ArticleSummary>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+    if (params?.category) query.set("category", params.category);
+    if (params?.tag) query.set("tag", params.tag);
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<ArticleSummary[]>(`/api/v1/articles${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
   }
 
   getArticle(slug: string): Promise<Article> {
     return this.request<Article>(`/api/v1/articles/${encodeURIComponent(slug)}`);
+  }
+
+  // ---- Taxonomy ----
+
+  listCategories(): Promise<Category[]> {
+    return this.request<Category[]>("/api/v1/categories");
+  }
+
+  /** The category plus its ancestor trail (root first) for breadcrumbs. */
+  getCategory(slug: string): Promise<CategoryWithAncestors> {
+    return this.request<CategoryWithAncestors>(`/api/v1/categories/${encodeURIComponent(slug)}`);
+  }
+
+  listTags(): Promise<TaxonomyTerm[]> {
+    return this.request<TaxonomyTerm[]>("/api/v1/tags");
+  }
+
+  getTag(slug: string): Promise<TaxonomyTerm> {
+    return this.request<TaxonomyTerm>(`/api/v1/tags/${encodeURIComponent(slug)}`);
   }
 }
 

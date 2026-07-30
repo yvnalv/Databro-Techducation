@@ -7,8 +7,8 @@ Last updated: 2026-07-30.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **content renders publicly end to end → taxonomy,
-search, and media next**.
+**Phase 1 — Foundation & Content.** Sub-stage: **content + taxonomy render publicly → search, media,
+and scheduled publishing next**.
 
 ## Done
 
@@ -33,6 +33,10 @@ search, and media next**.
 
 ## Recently done
 
+* **Taxonomy:** `Category` (hierarchical) and `Tag` aggregates with TX-1/2/3 + CT-11 enforced,
+  authoring CRUD behind `Taxonomy.Manage`, assignment on articles, and `/categories/{slug}` +
+  `/tags/{slug}` pages with `BreadcrumbList` structured data. Public listings are now offset-paginated
+  with crawlable page links.
 * **Public site render:** block renderer registry in `@databro/ui` (all ten Phase 1 block types +
   unknown-type fallback), article and list pages on `site`, full SEO head (canonical, hreflang,
   OG/Twitter, JSON-LD `Article`), real 404s, premium preview, and `en`/`id` i18n. Verified end to end
@@ -46,11 +50,13 @@ search, and media next**.
 
 ## Next up (proposed order)
 
-1. Content: categories & tags (taxonomy), scheduled publishing, and slug-change 301 redirects.
-2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-3. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
-4. CI pipeline (build/test + architecture-fitness gate).
-5. Design system pass over the site (deferred deliberately — see below).
+1. Slug-change 301 redirects (`redirects` table + lookup + site honoring), covering articles and
+   taxonomy together. Blocks renaming a mis-slugged term, so it is the natural follow-on.
+2. Scheduled publishing (`scheduled_for` exists; needs Hangfire and rule CT-7).
+3. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
+4. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
+5. CI pipeline (build/test + architecture-fitness gate).
+6. Design system pass over the site (deferred deliberately — see below).
 
 ## Known gaps / deferred
 
@@ -68,10 +74,15 @@ search, and media next**.
   never raw HTML.
 * Redis and Hangfire are provisioned but nothing in the backend uses them yet.
 * Media module is still a scaffold, so image blocks render an accessible placeholder.
+* **Category and tag slugs are immutable**, like article slugs — renaming a term's display name works,
+  but changing its URL waits for the redirects slice (CT-3).
+* No bulk "reassign all articles from category A to B" operation; deleting a category in use is
+  refused and the editor reassigns manually.
+* Taxonomy has no authoring UI — terms are managed via the API until the CMS surface exists.
 
 ## Testing status
 
-* `dotnet test` — 39 passing: architecture-fitness (4) + Content & Identity unit/integration (35).
+* `dotnet test` — 69 passing: architecture-fitness (4) + Content & Identity unit/integration (65).
 * `pnpm --filter @databro/ui test` — 22 passing: block renderer + embed allowlist (Vitest).
 * `pnpm typecheck` — clean across all five workspaces.
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).

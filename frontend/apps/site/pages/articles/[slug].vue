@@ -74,7 +74,25 @@ const formattedDate = computed(() =>
     </div>
 
     <footer class="mt-16">
-      <NuxtLink :to="localePath('/')">{{ t("articles.backToArticles") }}</NuxtLink>
+      <!-- Taxonomy links close the internal-linking loop: a reader (and a crawler) can move from
+           this article to the rest of its topic cluster. -->
+      <p v-if="published.category || published.tags.length" class="text-sm">
+        <NuxtLink
+          v-if="published.category"
+          :to="localePath(`/categories/${published.category.slug}`)"
+          class="font-medium"
+        >
+          {{ published.category.name }}
+        </NuxtLink>
+        <template v-for="(tag, index) in published.tags" :key="tag.id">
+          <span v-if="published.category || index > 0" aria-hidden="true"> · </span>
+          <NuxtLink :to="localePath(`/tags/${tag.slug}`)">#{{ tag.name }}</NuxtLink>
+        </template>
+      </p>
+
+      <p class="mt-6">
+        <NuxtLink :to="localePath('/')">{{ t("articles.backToArticles") }}</NuxtLink>
+      </p>
     </footer>
   </article>
 </template>

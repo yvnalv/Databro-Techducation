@@ -37,7 +37,10 @@ public static class ContentInfrastructureExtensions
         });
 
         services.AddScoped<IArticleRepository, ArticleRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ArticleService>();
+        services.AddScoped<TaxonomyService>();
 
         services.AddValidatorsFromAssemblyContaining<ArticleService>(ServiceLifetime.Singleton);
 

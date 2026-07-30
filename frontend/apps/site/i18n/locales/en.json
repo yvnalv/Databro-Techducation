@@ -19,6 +19,22 @@
     "unknownAuthor": "DataBro",
     "backToArticles": "Back to articles"
   },
+  "categories": {
+    "breadcrumbLabel": "Breadcrumb",
+    "defaultDescription": "Articles and guides on {name}.",
+    "articleCount": "No articles yet | 1 article | {count} articles"
+  },
+  "tags": {
+    "eyebrow": "Tag",
+    "pageTitle": "Articles tagged {name}",
+    "defaultDescription": "Every article tagged {name}.",
+    "articleCount": "No articles yet | 1 article | {count} articles"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next"
+  },
   "premium": {
     "badge": "Premium",
     "previewNotice": "This is a preview. The full article is available to members.",

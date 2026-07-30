@@ -1,29 +1,35 @@
 <script setup lang="ts">
-import type { ArticleSummary } from "@databro/types";
+import type { ArticleSummary, Paged } from "@databro/types";
 
-const { t, locale } = useI18n();
-const localePath = useLocalePath();
+const { t } = useI18n();
+const route = useRoute();
 const client = useApiClient();
+
+const page = computed(() => Number(route.query.page ?? 1) || 1);
 
 // useAsyncData so the list is fetched during SSR/prerender and serialized into the payload -
 // the page must be complete in the initial HTML for crawlers.
-const { data: articles } = await useAsyncData<ArticleSummary[]>(
-  "articles:list",
-  () => client.listArticles({ limit: 20 }),
-  // The homepage is prerendered; an API hiccup should degrade to an empty list rather than
-  // failing the whole build.
-  { default: () => [] },
+const { data } = await useAsyncData<Paged<ArticleSummary>>(
+  () => `articles:page:${page.value}`,
+  () => client.listArticles({ page: page.value }),
+  {
+    watch: [page],
+    // The homepage is prerendered; an API hiccup should degrade to an empty list rather than
+    // failing the whole build.
+    default: () => ({ items: [], meta: { page: 1, pageSize: 0, total: 0, totalPages: 0 } }),
+  },
 );
 
-const formatDate = (value?: string) =>
-  value ? new Date(value).toLocaleDateString(locale.value, { year: "numeric", month: "long", day: "numeric" }) : "";
+const articles = computed(() => data.value?.items ?? []);
+const meta = computed(() => data.value!.meta);
 
-useSeoMeta({
+assertPageInRange(meta.value);
+
+useListingSeo({
   title: t("site.tagline"),
   description: t("site.description"),
-  ogTitle: t("site.tagline"),
-  ogDescription: t("site.description"),
-  ogType: "website",
+  path: "/",
+  meta: meta.value,
 });
 </script>
 
@@ -35,29 +41,7 @@ useSeoMeta({
 
     <h2 class="mt-16 text-2xl font-semibold">{{ t("articles.listTitle") }}</h2>
 
-    <p v-if="!articles?.length" class="mt-4 text-slate-600">{{ t("articles.listEmpty") }}</p>
-
-    <ul v-else class="mt-6 space-y-8">
-      <li v-for="article in articles" :key="article.id">
-        <article>
-          <h3 class="text-xl font-semibold">
-            <NuxtLink :to="localePath(`/articles/${article.slug}`)">{{ article.title }}</NuxtLink>
-          </h3>
-          <p class="mt-2 text-slate-600">{{ article.summary }}</p>
-          <p class="mt-2 text-sm text-slate-500">
-            <span>{{ t("articles.byAuthor", { name: article.author?.displayName ?? t("articles.unknownAuthor") }) }}</span>
-            <span aria-hidden="true"> · </span>
-            <span>{{ t("articles.readingTime", { minutes: article.readingTimeMinutes }) }}</span>
-            <template v-if="article.publishedAt">
-              <span aria-hidden="true"> · </span>
-              <time :datetime="article.publishedAt">{{ formatDate(article.publishedAt) }}</time>
-            </template>
-            <span v-if="article.visibility === 'premium'" class="ml-2 border px-2 py-0.5 text-xs uppercase">
-              {{ t("premium.badge") }}
-            </span>
-          </p>
-        </article>
-      </li>
-    </ul>
+    <ArticleList :articles="articles" />
+    <PaginationNav :meta="meta" base-path="/" />
   </div>
 </template>

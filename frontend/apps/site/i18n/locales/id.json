@@ -19,6 +19,22 @@
     "unknownAuthor": "DataBro",
     "backToArticles": "Kembali ke artikel"
   },
+  "categories": {
+    "breadcrumbLabel": "Remah roti",
+    "defaultDescription": "Artikel dan panduan tentang {name}.",
+    "articleCount": "Belum ada artikel | 1 artikel | {count} artikel"
+  },
+  "tags": {
+    "eyebrow": "Tagar",
+    "pageTitle": "Artikel bertagar {name}",
+    "defaultDescription": "Semua artikel yang bertagar {name}.",
+    "articleCount": "Belum ada artikel | 1 artikel | {count} artikel"
+  },
+  "pagination": {
+    "label": "Navigasi halaman",
+    "previous": "Sebelumnya",
+    "next": "Berikutnya"
+  },
   "premium": {
     "badge": "Premium",
     "previewNotice": "Ini adalah pratinjau. Artikel lengkap tersedia untuk anggota.",

@@ -24,8 +24,14 @@ Stored in the article's `seo` JSONB plus first-class columns:
 ## 3. Structured data (JSON-LD)
 
 * Articles emit `Article` / `TechArticle` schema (headline, author, datePublished, dateModified,
-  image, publisher).
+  image, publisher). Premium articles add `isAccessibleForFree: false` + `hasPart.cssSelector`
+  naming the gated region, which is how a paywall stays indexable instead of reading as cloaking.
+* **Category pages emit `BreadcrumbList`**, mirroring the visible breadcrumb. This is what makes a
+  category tree legible as a topic cluster rather than a pile of unrelated pages.
+* **Tag pages emit no breadcrumb.** Tags are flat, so claiming a hierarchy would be structured data
+  that misrepresents the site.
 * Author pages emit `Person`; the site emits `Organization` + `WebSite` (with SearchAction).
+  *(Not yet implemented.)*
 * Phase 2 adds `Course` structured data for courses/lessons.
 
 ## 4. URLs & redirects
@@ -33,7 +39,16 @@ Stored in the article's `seo` JSONB plus first-class columns:
 * Clean, stable, human-readable paths (e.g. `/python/virtual-environments`).
 * **Slugs are immutable after publish.** If a slug must change, the old path is written to `redirects`
   as a **301** and the `site` app serves the redirect. Never break an indexed URL silently.
-* Category/tag pages have canonical, paginated URLs with `rel=prev/next` where applicable.
+* **Paginated listings** (homepage, category, tag) use offset page numbers — `?page=2` — not cursors,
+  because a crawler must be able to enumerate the set. Each page is **self-canonical**: page 2
+  canonicalises to page 2, never to page 1. Canonicalising every page to the first tells a crawler
+  the deeper pages are duplicates, and the articles only listed there lose their discovery path.
+* Pagination links must be real `<a href>` elements. `rel=prev/next` is still emitted, but it is a
+  courtesy for other engines only — Google confirmed in 2019 that it had not used those hints for
+  indexing for years, so the crawlable anchors are the load-bearing part.
+* A `?page=` beyond the last page returns **404**, not an empty 200. Otherwise a crawler can
+  enumerate an unbounded supply of thin, near-duplicate indexable pages.
+* Page 2+ titles are disambiguated (`Category — 2`) to avoid duplicate-title reports.
 * Trailing-slash and case normalization handled at the edge (Nginx/CDN) consistently.
 
 ## 5. Rendering & performance
