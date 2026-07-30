@@ -15,7 +15,6 @@ internal static class JsonbConversion
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 
     public static PropertyBuilder<T> HasJsonbConversion<T>(this PropertyBuilder<T> builder)
-        where T : class
     {
         var converter = new ValueConverter<T, string>(
             v => JsonSerializer.Serialize(v, Options),

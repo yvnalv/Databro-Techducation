@@ -44,7 +44,8 @@ public static class ContentModuleExtensions
         var group = endpoints.MapGroup("/api/v1/authoring/articles").WithTags("Content.Authoring");
 
         group.MapPost("", async (CreateArticleRequest request, ArticleService service, CancellationToken ct) =>
-            ApiEnvelope.From(await service.CreateDraftAsync(request, ct)));
+            ApiEnvelope.From(await service.CreateDraftAsync(request, ct)))
+            .AddEndpointFilter<ValidationFilter<CreateArticleRequest>>();
 
         group.MapGet("", async (ArticleService service, int? limit, CancellationToken ct) =>
             ApiEnvelope.Ok(await service.ListAllAsync(limit ?? 50, ct)));
@@ -53,9 +54,13 @@ public static class ContentModuleExtensions
             ApiEnvelope.OkOrNotFound(await service.GetByIdAsync(id, ct)));
 
         group.MapPatch("/{id:guid}", async (Guid id, UpdateArticleRequest request, ArticleService service, CancellationToken ct) =>
-            ApiEnvelope.From(await service.UpdateDraftAsync(id, request, ct)));
+            ApiEnvelope.From(await service.UpdateDraftAsync(id, request, ct)))
+            .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
 
         group.MapPost("/{id:guid}/publish", async (Guid id, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.PublishAsync(id, ct)));
+
+        group.MapPost("/{id:guid}/unpublish", async (Guid id, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UnpublishAsync(id, ct)));
     }
 }

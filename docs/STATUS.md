@@ -25,18 +25,22 @@ Last updated: 2026-07-29.
 
 ## In progress
 
-* Content module hardening (see next up).
+* Content module — validation + tests done; categories/tags and scheduling still to do.
 
 ## Next up (proposed order)
 
-1. Content hardening: request validation (FluentValidation), unit/integration tests for
-   publish/versioning/slug rules, unpublish/schedule endpoints, categories & tags.
+1. Content: categories & tags (taxonomy), scheduled publishing, and slug-change 301 redirects.
 2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
 3. Implement Identity (registration, email verification, login, JWT + refresh, RBAC) and enforce
    authoring authorization; replace `NullCurrentUser`/`SystemAuthorId`.
 4. Surface the published article on the `site` app (SSG/ISR) using `@databro/api-client`.
 5. PostgreSQL FTS search; SEO metadata/redirects; Media upload to MinIO/Spaces.
 6. CI pipeline (build/test + architecture-fitness gate).
+
+## Testing status
+
+* `dotnet test` — 29 passing: architecture-fitness (4) + Content unit & Testcontainers integration (25).
+* Integration tests require Docker (Testcontainers spins up PostgreSQL).
 
 ## Open questions / to be ADR'd later
 

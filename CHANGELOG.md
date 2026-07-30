@@ -1,5 +1,24 @@
 # DataBro Changelog
 
+## [2026-07-30 06:00:00 UTC]
+
+CHG-0004 — Harden the Content module: validation and tests
+
+- Added FluentValidation request validation (create/update article, content document, blocks) enforced
+  via a reusable minimal-API `ValidationFilter<T>` that returns the standard `validation_failed`
+  envelope with per-field details (docs/ERROR_HANDLING.md).
+- Exposed `POST /api/v1/authoring/articles/{id}/unpublish`; added `ArticleService.UnpublishAsync`.
+- New test project `DataBro.Modules.Content.Tests`:
+  - Domain unit tests for `Slug` (validation/normalization) and `Article`
+    (publish/versioning/unpublish business rules CT-1/CT-5/CT-8).
+  - Full-stack API integration tests against a throwaway PostgreSQL container (Testcontainers) via
+    `WebApplicationFactory<Program>`: happy-path create → publish → public read, publish gating,
+    duplicate-slug conflict, invalid-slug/empty-title validation, blockless-publish `422`, and
+    unpublish hiding from public read.
+- Whole suite green: build 0/0; 29 tests pass (4 architecture + 25 Content).
+
+---
+
 ## [2026-07-30 02:30:00 UTC]
 
 CHG-0003 — Local dev infrastructure and the first Content vertical slice

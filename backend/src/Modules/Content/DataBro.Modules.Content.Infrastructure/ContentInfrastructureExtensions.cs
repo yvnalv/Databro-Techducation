@@ -3,6 +3,7 @@ using DataBro.Modules.Content.Infrastructure.Persistence;
 using DataBro.Platform.Abstractions;
 using DataBro.Platform.Persistence;
 using DataBro.Platform.Persistence.Auditing;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,8 @@ public static class ContentInfrastructureExtensions
 
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<ArticleService>();
+
+        services.AddValidatorsFromAssemblyContaining<ArticleService>(ServiceLifetime.Singleton);
 
         return services;
     }

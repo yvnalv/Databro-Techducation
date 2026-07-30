@@ -76,6 +76,20 @@ public sealed class ArticleService(IArticleRepository repository, IClock clock)
         return Result.Success(article.ToDto());
     }
 
+    public async Task<Result<ArticleDto>> UnpublishAsync(Guid id, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null)
+            return Result.Failure<ArticleDto>(Error.NotFound("Article not found."));
+
+        var result = article.Unpublish();
+        if (result.IsFailure)
+            return Result.Failure<ArticleDto>(result.Error);
+
+        await repository.SaveChangesAsync(ct);
+        return Result.Success(article.ToDraftDto());
+    }
+
     public async Task<ArticleDto?> GetPublishedBySlugAsync(string slug, CancellationToken ct = default)
     {
         var article = await repository.GetPublishedBySlugAsync(slug, ct);
