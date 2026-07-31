@@ -20,7 +20,7 @@ const formatDate = (value?: string) =>
       <article
         class="flex h-full flex-col rounded-card border border-line bg-surface-raised p-6 shadow-card transition-shadow hover:shadow-card-hover"
       >
-        <h3 class="text-lg font-semibold tracking-tight text-ink">
+        <h3 class="font-display text-lg font-semibold tracking-tight text-ink">
           <!-- The whole card is not a link: the title is, so the accessible name is the title
                rather than the entire card's text content. -->
           <NuxtLink :to="localePath(`/articles/${article.slug}`)" class="hover:text-accent">

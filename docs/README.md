@@ -23,6 +23,8 @@ This is the documentation index. The master project instructions live in the roo
 * [DATABASE.md](DATABASE.md) — schema conventions and Phase 1 tables.
 * [CONTENT_MODEL.md](CONTENT_MODEL.md) — the content/block/versioning engine (core domain).
 * [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md) — two-app monorepo, rendering strategy.
+* [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — colour, typography, spacing, components.
+* [UI_PATTERNS.md](UI_PATTERNS.md) — page-level composition and what we deliberately diverge on.
 * [SEO.md](SEO.md) — SEO as a cross-cutting concern.
 * [API_SPEC.md](API_SPEC.md) — REST conventions and Phase 1 endpoints.
 * [ERROR_HANDLING.md](ERROR_HANDLING.md) — error envelope and codes.

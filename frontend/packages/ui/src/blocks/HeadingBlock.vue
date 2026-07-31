@@ -26,7 +26,7 @@ const anchor = computed(() =>
   <component
     :is="tag"
     :id="anchor"
-    class="scroll-mt-24 font-semibold tracking-tight text-ink"
+    class="scroll-mt-24 font-display font-semibold tracking-tight text-ink"
     :class="{
       'text-2xl sm:text-3xl': tag === 'h2',
       'text-xl sm:text-2xl': tag === 'h3',

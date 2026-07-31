@@ -91,7 +91,7 @@ useHead({
       <span>{{ category.category.name }}</span>
     </nav>
 
-    <h1 class="mt-4 text-4xl font-bold tracking-tight">{{ category.category.name }}</h1>
+    <h1 class="mt-4 font-display text-4xl font-bold tracking-tight">{{ category.category.name }}</h1>
     <p class="mt-4 text-lg text-ink-muted">{{ description }}</p>
 
     <p class="mt-2 text-sm text-ink-subtle">

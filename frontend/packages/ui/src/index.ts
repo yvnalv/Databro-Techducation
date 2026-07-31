@@ -6,6 +6,15 @@
 
 export { default as tailwindPreset, tokens } from "./tailwind-preset";
 
+// ---- Primitives (docs/DESIGN_SYSTEM.md §5) ----
+
+export { default as DbButton } from "./components/DbButton.vue";
+export { default as DbCard } from "./components/DbCard.vue";
+export { default as DbChip } from "./components/DbChip.vue";
+export { default as DbInput } from "./components/DbInput.vue";
+export { default as DbAccordion } from "./components/DbAccordion.vue";
+export type { AccordionItem } from "./components/DbAccordion.vue";
+
 // ---- Content block renderer ----
 
 export { default as ContentRenderer } from "./blocks/ContentRenderer.vue";

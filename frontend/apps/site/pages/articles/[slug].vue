@@ -48,7 +48,7 @@ const formattedDate = computed(() =>
   <article class="mx-auto max-w-prose px-6 py-14 sm:py-20">
     <header>
       <!-- The only h1 on the page; block headings start at h2 so the outline stays well-formed. -->
-      <h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ published.title }}</h1>
+      <h1 class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ published.title }}</h1>
 
       <p class="mt-4 text-lg text-ink-muted sm:text-xl">{{ published.summary }}</p>
 

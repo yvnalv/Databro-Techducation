@@ -14,22 +14,38 @@
 
 export const tokens = {
   colors: {
+    /**
+     * Brand ramp — deep teal. `500` is decorative only: it fails AA for text on white, which is
+     * why `600` is the action/link step (docs/DESIGN_SYSTEM.md §1.2).
+     */
     brand: {
-      50: "#eef6ff",
-      100: "#d9ebff",
-      200: "#bcdcff",
-      300: "#8ec6ff",
-      400: "#59a6ff",
-      500: "#3385f6",
-      600: "#1f66db",
-      700: "#1a51b0",
-      800: "#1b458c",
-      900: "#1b3d73",
+      50: "#f0fdfa",
+      100: "#ccfbf1",
+      200: "#99f6e4",
+      300: "#5eead4",
+      400: "#2dd4bf",
+      500: "#14b8a6",
+      600: "#0d9488",
+      700: "#0f766e",
+      800: "#115e59",
+      900: "#134e4a",
+    },
+    /** Secondary ramp — violet. Category accents and secondary actions, never the primary. */
+    violet: {
+      50: "#f5f3ff",
+      100: "#ede9fe",
+      200: "#ddd6fe",
+      500: "#8b5cf6",
+      600: "#7c3aed",
+      700: "#6d28d9",
     },
   },
   fontFamily: {
-    sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-    mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+    // Display face for headings: geometric with friendly terminals, matching the reference's
+    // heading voice. Body stays on Inter for legibility at small sizes.
+    display: ["Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
+    sans: ["Inter Variable", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+    mono: ["JetBrains Mono Variable", "JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
   },
 } as const;
 
@@ -61,8 +77,9 @@ const preset: Partial<Config> = {
   theme: {
     extend: {
       colors: {
-        // Raw ramp, for the rare case a specific step is genuinely wanted.
+        // Raw ramps, for the rare case a specific step is genuinely wanted.
         brand: { ...tokens.colors.brand },
+        violet: { ...tokens.colors.violet },
 
         // Semantic surfaces and text. These are what components should use.
         surface: {
@@ -84,6 +101,35 @@ const preset: Partial<Config> = {
           DEFAULT: withAlpha("--db-accent"),
           hover: withAlpha("--db-accent-hover"),
           subtle: withAlpha("--db-accent-subtle"),
+          deep: withAlpha("--db-accent-deep"),
+        },
+        secondary: {
+          DEFAULT: withAlpha("--db-secondary"),
+          hover: withAlpha("--db-secondary-hover"),
+          subtle: withAlpha("--db-secondary-subtle"),
+        },
+
+        // Functional. Each has a `subtle` fill so a status can be tinted without inventing a colour.
+        success: {
+          DEFAULT: withAlpha("--db-success"),
+          subtle: withAlpha("--db-success-subtle"),
+        },
+        warning: {
+          DEFAULT: withAlpha("--db-warning"),
+          subtle: withAlpha("--db-warning-subtle"),
+        },
+        danger: {
+          DEFAULT: withAlpha("--db-danger"),
+          subtle: withAlpha("--db-danger-subtle"),
+        },
+        info: {
+          DEFAULT: withAlpha("--db-info"),
+          subtle: withAlpha("--db-info-subtle"),
+        },
+        // The only amber in the system, so "premium" always reads the same way.
+        premium: {
+          DEFAULT: withAlpha("--db-premium"),
+          subtle: withAlpha("--db-premium-subtle"),
         },
 
         // Callout variants, so the four states are themeable rather than hardcoded per component.
@@ -96,6 +142,7 @@ const preset: Partial<Config> = {
       },
 
       fontFamily: {
+        display: [...tokens.fontFamily.display],
         sans: [...tokens.fontFamily.sans],
         mono: [...tokens.fontFamily.mono],
       },

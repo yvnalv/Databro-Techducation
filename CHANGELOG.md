@@ -1,5 +1,39 @@
 # DataBro Changelog
 
+## [2026-07-31 16:05:00 UTC]
+
+CHG-0012 — Design system documented, palette adopted, primitives built
+
+- Studied the supplied 34-screenshot reference set and recorded it as two docs:
+  [DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) (colour, typography, spacing, elevation, components) and
+  [UI_PATTERNS.md](docs/UI_PATTERNS.md) (page-level composition, plus an explicit list of what is
+  deliberately *not* adopted and why).
+- **New palette: deep teal primary, violet secondary, amber reserved solely for premium.** The
+  reference's bright blue is the default LMS choice and its pink→violet gradient reads
+  consumer-lifestyle; DataBro teaches practitioners. Teal is uncommon in the category, carries
+  data/terminal associations, and holds AA contrast on white. Teal `500` is marked decorative-only
+  because it fails AA for text — `600` is the action/link step.
+- Extended the token layer with secondary, functional (success/warning/danger/info) and premium
+  roles, each with a `subtle` fill so a status can be tinted without inventing a colour. Dark-mode
+  accent steps invert up the ramp rather than merely swapping the background.
+- **Self-hosted fonts** — Plus Jakarta Sans (display), Inter (body), JetBrains Mono (code), as
+  variable files via fontsource. Not Google's CDN: a third-party request on every page is both a
+  privacy leak and a render-blocking dependency on the SEO-critical path.
+- Added primitives to `@databro/ui` — `DbButton`, `DbCard`, `DbChip`, `DbInput`, `DbAccordion` —
+  built before page work so the CMS editor inherits them rather than growing its own. They stay
+  framework-agnostic: `DbButton` takes an `as` prop instead of importing NuxtLink.
+- Accessibility contracts are enforced by tests rather than convention: `DbButton` uses
+  `aria-disabled` when rendered as an anchor (where `disabled` is invalid), `DbInput` wires errors
+  through `aria-invalid` + `aria-describedby` and suppresses the hint so only one message is
+  announced, and `DbAccordion` uses real buttons with `aria-expanded`/`aria-controls`.
+- Moved the reduced-motion guard into the token stylesheet so it applies globally instead of being
+  re-declared per component.
+- Verified: 59 renderer/primitive tests (up from 45), clean typecheck across five workspaces, live in
+  the containerised stack, and a production build confirming the new token classes survive the
+  Tailwind purge.
+
+---
+
 ## [2026-07-31 16:20:00 UTC]
 
 CHG-0011 — Design tokens and the article reading experience

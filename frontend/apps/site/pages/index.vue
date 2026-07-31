@@ -36,10 +36,10 @@ useListingSeo({
 <template>
   <div class="mx-auto max-w-shell px-6 py-14 sm:py-20">
     <p class="text-sm font-semibold uppercase tracking-wide text-accent">{{ t("site.name") }}</p>
-    <h1 class="mt-3 text-4xl font-bold tracking-tight">{{ t("site.tagline") }}</h1>
+    <h1 class="mt-3 font-display text-4xl font-bold tracking-tight">{{ t("site.tagline") }}</h1>
     <p class="mt-4 text-lg text-ink-muted">{{ t("site.description") }}</p>
 
-    <h2 class="mt-16 text-2xl font-semibold">{{ t("articles.listTitle") }}</h2>
+    <h2 class="mt-16 font-display text-2xl font-semibold">{{ t("articles.listTitle") }}</h2>
 
     <ArticleList :articles="articles" />
     <PaginationNav :meta="meta" base-path="/" />

@@ -9,6 +9,12 @@ export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxtjs/i18n"],
 
   css: [
+    // Fonts are self-hosted, not fetched from Google's CDN: a third-party request on every page is
+    // both a privacy leak and a render-blocking dependency on the SEO-critical path. Variable fonts
+    // so one file covers every weight.
+    "@fontsource-variable/inter",
+    "@fontsource-variable/plus-jakarta-sans",
+    "@fontsource-variable/jetbrains-mono",
     // Semantic design tokens (the CSS custom properties the Tailwind preset maps to) plus the
     // article rhythm. Must load before Tailwind's utilities resolve against them.
     "@databro/ui/tokens.css",

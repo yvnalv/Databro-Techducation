@@ -1,43 +1,73 @@
 /*
- * DataBro semantic design tokens.
+ * DataBro semantic design tokens (docs/DESIGN_SYSTEM.md).
  *
  * Values are space-separated RGB channels rather than hex, so Tailwind's `<alpha-value>` syntax
  * works through them (`text-ink/70`). The Tailwind preset maps each variable to a semantic colour
  * name; components reference the name, never the value.
  *
- * Dark mode is driven by two signals, both of which must work:
+ * Palette: deep teal primary, violet secondary, amber reserved solely for "premium". Chosen over
+ * the reference's bright blue because DataBro teaches practitioners rather than selling consumer
+ * courses, and because a blue LMS is indistinguishable from a dozen others (DESIGN_SYSTEM §1.1).
+ *
+ * Light mode is the primary theme. Dark mode responds to two signals, both of which must work:
  *   - `prefers-color-scheme`, for a reader who has never touched a toggle
  *   - `[data-theme]`, for an explicit choice, which has to beat the OS preference in both directions
- *
- * Palette values here are provisional. They are deliberately confined to this file so adopting a
- * brand palette is one edit, not a sweep through components.
  */
 
 :root {
+  /* --- Surfaces --- */
   --db-surface: 255 255 255;
   --db-surface-raised: 255 255 255;
-  --db-surface-sunken: 246 248 251;
+  --db-surface-sunken: 248 250 252;
 
+  /* --- Text --- */
   --db-ink: 15 23 42;
   --db-ink-muted: 71 85 105;
   --db-ink-subtle: 100 116 139;
   --db-ink-inverted: 255 255 255;
 
+  /* --- Lines --- */
   --db-border: 226 232 240;
   --db-border-strong: 203 213 225;
 
-  --db-accent: 31 102 219;
-  --db-accent-hover: 26 81 176;
-  --db-accent-subtle: 238 246 255;
+  /* --- Accent: teal 600/700/50. `500` is decorative only - it fails AA on white. --- */
+  --db-accent: 13 148 136;
+  --db-accent-hover: 15 118 110;
+  --db-accent-subtle: 240 253 250;
+  --db-accent-deep: 17 94 89;
 
-  --db-note-info: 31 102 219;
+  /* --- Secondary: violet --- */
+  --db-secondary: 124 58 237;
+  --db-secondary-hover: 109 40 217;
+  --db-secondary-subtle: 245 243 255;
+
+  /* --- Functional --- */
+  --db-success: 5 150 105;
+  --db-success-subtle: 236 253 245;
+  --db-warning: 217 119 6;
+  --db-warning-subtle: 255 251 235;
+  --db-danger: 220 38 38;
+  --db-danger-subtle: 254 242 242;
+  --db-info: 2 132 199;
+  --db-info-subtle: 240 249 255;
+
+  /* Premium is the only amber in the system, so the badge always reads the same way. */
+  --db-premium: 180 83 9;
+  --db-premium-subtle: 255 251 235;
+
+  /* Callout variants map onto the functional hues; `tip` is the brand accent. */
+  --db-note-info: 2 132 199;
   --db-note-tip: 13 148 136;
-  --db-note-warning: 180 83 9;
-  --db-note-danger: 190 46 46;
+  --db-note-warning: 217 119 6;
+  --db-note-danger: 220 38 38;
 
   color-scheme: light;
 }
 
+/*
+ * Dark mode. Accent steps lighten (teal 400/300) because a 600 that passes AA on white fails
+ * badly on a dark surface - the ramp has to invert, not just the background.
+ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --db-surface: 15 20 30;
@@ -52,11 +82,28 @@
     --db-border: 39 48 64;
     --db-border-strong: 55 67 87;
 
-    --db-accent: 116 173 255;
-    --db-accent-hover: 152 195 255;
-    --db-accent-subtle: 22 34 56;
+    --db-accent: 45 212 191;
+    --db-accent-hover: 94 234 212;
+    --db-accent-subtle: 19 45 46;
+    --db-accent-deep: 153 246 228;
 
-    --db-note-info: 116 173 255;
+    --db-secondary: 167 139 250;
+    --db-secondary-hover: 196 181 253;
+    --db-secondary-subtle: 39 32 62;
+
+    --db-success: 52 211 153;
+    --db-success-subtle: 16 44 36;
+    --db-warning: 251 191 36;
+    --db-warning-subtle: 48 35 12;
+    --db-danger: 248 113 113;
+    --db-danger-subtle: 52 22 24;
+    --db-info: 56 189 248;
+    --db-info-subtle: 12 38 54;
+
+    --db-premium: 251 191 36;
+    --db-premium-subtle: 48 35 12;
+
+    --db-note-info: 56 189 248;
     --db-note-tip: 45 212 191;
     --db-note-warning: 251 191 36;
     --db-note-danger: 248 113 113;
@@ -79,11 +126,28 @@
   --db-border: 39 48 64;
   --db-border-strong: 55 67 87;
 
-  --db-accent: 116 173 255;
-  --db-accent-hover: 152 195 255;
-  --db-accent-subtle: 22 34 56;
+  --db-accent: 45 212 191;
+  --db-accent-hover: 94 234 212;
+  --db-accent-subtle: 19 45 46;
+  --db-accent-deep: 153 246 228;
 
-  --db-note-info: 116 173 255;
+  --db-secondary: 167 139 250;
+  --db-secondary-hover: 196 181 253;
+  --db-secondary-subtle: 39 32 62;
+
+  --db-success: 52 211 153;
+  --db-success-subtle: 16 44 36;
+  --db-warning: 251 191 36;
+  --db-warning-subtle: 48 35 12;
+  --db-danger: 248 113 113;
+  --db-danger-subtle: 52 22 24;
+  --db-info: 56 189 248;
+  --db-info-subtle: 12 38 54;
+
+  --db-premium: 251 191 36;
+  --db-premium-subtle: 48 35 12;
+
+  --db-note-info: 56 189 248;
   --db-note-tip: 45 212 191;
   --db-note-warning: 251 191 36;
   --db-note-danger: 248 113 113;
@@ -121,4 +185,16 @@
 /* Nested blocks inside a list item sit tighter than top-level ones. */
 .databro-content li > * + * {
   margin-top: 0.75rem;
+}
+
+/* Respect a reduced-motion preference globally rather than per component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -45,7 +45,7 @@ useListingSeo({
 <template>
   <div class="mx-auto max-w-shell px-6 py-14 sm:py-20">
     <p class="text-sm font-semibold uppercase tracking-wide text-accent">{{ t("tags.eyebrow") }}</p>
-    <h1 class="mt-3 text-4xl font-bold tracking-tight">#{{ tag.name }}</h1>
+    <h1 class="mt-3 font-display text-4xl font-bold tracking-tight">#{{ tag.name }}</h1>
     <p class="mt-4 text-lg text-ink-muted">{{ description }}</p>
 
     <p class="mt-2 text-sm text-ink-subtle">
