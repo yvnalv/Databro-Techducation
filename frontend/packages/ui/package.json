@@ -15,12 +15,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@databro/types": "workspace:*"
+    "@databro/types": "workspace:*",
+    "katex": "^0.18.1"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@types/katex": "^0.16.8",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/test-utils": "^2.4.11",
     "happy-dom": "^20.11.1",

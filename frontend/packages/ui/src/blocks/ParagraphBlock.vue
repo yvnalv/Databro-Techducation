@@ -1,15 +1,16 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { ParagraphBlock } from "@databro/types";
+import RichText from "./RichText";
+import { toRichText } from "./rich-text";
 
-defineProps<{ data: ParagraphBlock["data"] }>();
+const props = defineProps<{ data: ParagraphBlock["data"] }>();
 
-// `data.marks` (inline bold/italic/link spans) is declared in @databro/types but its shape is not
-// specified yet, so it is deliberately ignored here. Text is interpolated, never v-html: block
-// data is author-supplied and reaches this renderer straight out of JSONB, so treating it as
-// markup would make the CMS an XSS vector. Rich text arrives as a structured mark renderer, not
-// as raw HTML.
+// `content` is the ADR-0009 node array; `text` is the pre-ADR-0009 plain string, still accepted so
+// documents written before the change keep rendering.
+const content = computed(() => toRichText(props.data?.content, props.data?.text));
 </script>
 
 <template>
-  <p>{{ data.text }}</p>
+  <p><RichText :content="content" /></p>
 </template>

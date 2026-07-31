@@ -8,6 +8,10 @@ export default defineNuxtConfig({
 
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxtjs/i18n"],
 
+  // KaTeX ships its own stylesheet; without it, math renders as unpositioned glyphs. Loaded here
+  // rather than imported by the renderer so it is bundled once, not per block.
+  css: ["katex/dist/katex.min.css"],
+
   // Workspace TS packages are transpiled by Vite.
   build: {
     transpile: ["@databro/ui", "@databro/api-client", "@databro/types"],

@@ -16,6 +16,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0006](adr/0006-postgres-fts-search.md) | PostgreSQL full-text search for Phase 1 | Accepted |
 | [0007](adr/0007-unify-article-lesson.md) | Unify Article and Lesson on one content engine | Accepted |
 | [0008](adr/0008-cross-module-contracts-in-platform.md) | Cross-module read contracts live in Platform | Accepted |
+| [0009](adr/0009-inline-rich-text-node-tree.md) | Inline rich text as a ProseMirror-compatible node tree | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

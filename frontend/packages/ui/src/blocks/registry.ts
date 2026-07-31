@@ -8,6 +8,7 @@ import EmbedBlock from "./EmbedBlock.vue";
 import HeadingBlock from "./HeadingBlock.vue";
 import ImageBlock from "./ImageBlock.vue";
 import ListBlock from "./ListBlock.vue";
+import MathBlock from "./MathBlock.vue";
 import ParagraphBlock from "./ParagraphBlock.vue";
 import QuoteBlock from "./QuoteBlock.vue";
 import TableBlock from "./TableBlock.vue";
@@ -33,6 +34,7 @@ export const blockRegistry: Record<BlockType, Component> = {
   divider: DividerBlock,
   embed: EmbedBlock,
   table: TableBlock,
+  math: MathBlock,
 };
 
 export function resolveBlockComponent(type: string): Component | null {

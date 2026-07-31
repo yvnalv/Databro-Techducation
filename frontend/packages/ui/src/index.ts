@@ -10,13 +10,18 @@ export { default as tailwindPreset, tokens } from "./tailwind-preset";
 
 export { default as ContentRenderer } from "./blocks/ContentRenderer.vue";
 export { default as BlockRenderer } from "./blocks/BlockRenderer.vue";
+export { default as RichText } from "./blocks/RichText";
 export { blockRegistry, resolveBlockComponent } from "./blocks/registry";
 export { resolveEmbed, isSafeLink, type EmbedTarget } from "./blocks/embed-providers";
+export { toRichText, richTextToPlain, markToElement, safeHref } from "./blocks/rich-text";
+export { renderMath } from "./blocks/katex";
 export {
   mediaResolverKey,
   rendererOptionsKey,
+  nestingDepthKey,
   defaultMediaResolver,
   defaultRendererOptions,
+  MAX_NESTING_DEPTH,
   type MediaResolver,
   type RendererOptions,
 } from "./blocks/context";

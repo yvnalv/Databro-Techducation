@@ -13,7 +13,29 @@ function doc(blocks: ContentDocument["blocks"]): ContentDocument {
 describe("ContentRenderer", () => {
   it("renders every supported block type", () => {
     // Guards against a block type being added to the registry without a rendering test.
-    expect(SUPPORTED_BLOCK_TYPES).toHaveLength(10);
+    expect(SUPPORTED_BLOCK_TYPES).toHaveLength(11);
+  });
+
+  // Documents written before ADR-0009 carry plain `text` strings. There is no production content to
+  // migrate, so the renderers accept both shapes; these assert the shim keeps working.
+  it("still renders pre-ADR-0009 plain-text blocks", () => {
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([
+          { id: "p", type: "paragraph", data: { text: "legacy paragraph" } },
+          { id: "q", type: "quote", data: { text: "legacy quote" } },
+          { id: "c", type: "callout", data: { variant: "info", text: "legacy callout" } },
+          { id: "l", type: "list", data: { ordered: false, items: ["legacy item"] } },
+          { id: "t", type: "table", data: { headers: ["H"], rows: [["cell"]] } },
+        ] as never),
+      },
+    });
+
+    expect(wrapper.text()).toContain("legacy paragraph");
+    expect(wrapper.get("blockquote").text()).toContain("legacy quote");
+    expect(wrapper.get("aside").text()).toContain("legacy callout");
+    expect(wrapper.get("li").text()).toContain("legacy item");
+    expect(wrapper.get("td").text()).toContain("cell");
   });
 
   it("renders headings as h2-h4 with a deep-linkable anchor", () => {

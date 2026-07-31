@@ -21,5 +21,19 @@ export interface RendererOptions {
 export const mediaResolverKey: InjectionKey<MediaResolver> = Symbol("databro.mediaResolver");
 export const rendererOptionsKey: InjectionKey<RendererOptions> = Symbol("databro.rendererOptions");
 
+/**
+ * Current block nesting depth. List items may contain blocks (ADR-0009), which makes the renderer
+ * recursive, so a malformed or hostile document could otherwise nest deeply enough to exhaust the
+ * stack during SSR — taking down the request, not just the block.
+ */
+export const nestingDepthKey: InjectionKey<number> = Symbol("databro.nestingDepth");
+
+/**
+ * One level of nesting is what the content model is for — a step containing a code sample, or a
+ * two-level list. Deeper than that is almost certainly a malformed document, so nested blocks are
+ * dropped rather than rendered.
+ */
+export const MAX_NESTING_DEPTH = 1;
+
 export const defaultMediaResolver: MediaResolver = () => null;
 export const defaultRendererOptions: RendererOptions = { showUnknownBlocks: false };

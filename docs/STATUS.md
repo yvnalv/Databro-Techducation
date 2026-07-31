@@ -33,6 +33,10 @@ and scheduled publishing next**.
 
 ## Recently done
 
+* **Content model v2 (ADR-0009):** inline rich text as a ProseMirror/Tiptap-compatible node tree, so
+  articles can finally contain links, inline code and emphasis. Added `math` (KaTeX, block + inline),
+  `code.output`, and blocks nested inside list items. Renderers accept the pre-ADR-0009 plain-string
+  shape as a compatibility shim.
 * **Taxonomy:** `Category` (hierarchical) and `Tag` aggregates with TX-1/2/3 + CT-11 enforced,
   authoring CRUD behind `Taxonomy.Manage`, assignment on articles, and `/categories/{slug}` +
   `/tags/{slug}` pages with `BreadcrumbList` structured data. Public listings are now offset-paginated
@@ -70,8 +74,9 @@ and scheduled publishing next**.
   gate on until Billing (Phase 3). Reserved, not enforced.
 * **Syntax highlighting is not wired.** Code blocks emit the standard `language-*` markup so a
   highlighter drops in later without touching page code.
-* `paragraph.marks` (inline rich text) reserved but unimplemented — it must be a structured renderer,
-  never raw HTML.
+* **No authoring UI.** Articles and taxonomy are API-only; `apps/app` is still a stub. This is the
+  binding constraint on content production and the reason the CMS editor is next.
+* Inline rich text is renderable but not yet *authorable* — the editor lands with the CMS slice.
 * Redis and Hangfire are provisioned but nothing in the backend uses them yet.
 * Media module is still a scaffold, so image blocks render an accessible placeholder.
 * **Category and tag slugs are immutable**, like article slugs — renaming a term's display name works,
@@ -83,7 +88,8 @@ and scheduled publishing next**.
 ## Testing status
 
 * `dotnet test` — 69 passing: architecture-fitness (4) + Content & Identity unit/integration (65).
-* `pnpm --filter @databro/ui test` — 22 passing: block renderer + embed allowlist (Vitest).
+* `pnpm --filter @databro/ui test` — 45 passing: block renderer, embed allowlist, inline rich text
+  (marks, unsafe hrefs, XSS), math, code output, and nested-block depth capping (Vitest).
 * `pnpm typecheck` — clean across all five workspaces.
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).
 * `scripts/dev-smoke.ps1` — 10-step end-to-end check against a running stack; passes in both run

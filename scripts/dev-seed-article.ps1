@@ -109,22 +109,64 @@ $tagIds = @(
 Write-Host "  category: llm-engineering (child of artificial-intelligence)" -ForegroundColor DarkGray
 Write-Host "  tags:     rag, embeddings, python" -ForegroundColor DarkGray
 
+# Inline-content helpers (ADR-0009). Blocks now carry a node array rather than a plain string.
+function Txt { param([string]$Text) @{ type = "text"; text = $Text } }
+function Bold { param([string]$Text) @{ type = "text"; text = $Text; marks = @(@{ type = "bold" }) } }
+function Mono { param([string]$Text) @{ type = "text"; text = $Text; marks = @(@{ type = "code" }) } }
+function Link { param([string]$Text, [string]$Href) @{ type = "text"; text = $Text; marks = @(@{ type = "link"; attrs = @{ href = $Href } }) } }
+function MathI { param([string]$Latex) @{ type = "mathInline"; attrs = @{ latex = $Latex } } }
+
 $blocks = @(
     @{ id = "b01"; type = "heading";   data = @{ level = 2; text = "What Retrieval-Augmented Generation Actually Solves" } }
-    @{ id = "b02"; type = "paragraph"; data = @{ text = "RAG grounds a language model in documents you control, so answers cite your data instead of the model's recollection." } }
-    @{ id = "b03"; type = "callout";   data = @{ variant = "tip"; text = "Start with good chunking. Most bad RAG results are retrieval problems, not model problems." } }
+    @{ id = "b02"; type = "paragraph"; data = @{ content = @(
+        (Txt "RAG grounds a language model in documents you control, so answers cite your data instead of the model's recollection. See the "),
+        (Link "pgvector documentation" "https://github.com/pgvector/pgvector"),
+        (Txt " for the storage side, or start with "),
+        (Mono "sentence-transformers"),
+        (Txt ".")
+    ) } }
+    @{ id = "b03"; type = "callout";   data = @{ variant = "tip"; content = @(
+        (Txt "Start with good chunking. Most bad RAG results are "),
+        (Bold "retrieval"),
+        (Txt " problems, not model problems.")
+    ) } }
     @{ id = "b04"; type = "heading";   data = @{ level = 3; text = "A Minimal Pipeline" } }
-    @{ id = "b05"; type = "code";      data = @{ language = "python"; filename = "rag.py"; code = "chunks = split(document, size=512)`nindex.upsert(embed(chunks))`nhits = index.query(embed(question), k=5)" } }
-    @{ id = "b06"; type = "list";      data = @{ ordered = $true; items = @("Chunk the source documents", "Embed and index the chunks", "Retrieve the top-k for a question", "Ground the generation in what you retrieved") } }
-    @{ id = "b07"; type = "quote";     data = @{ text = "The model is only as good as what you put in front of it."; attribution = "Every RAG postmortem, eventually" } }
-    @{ id = "b08"; type = "table";     data = @{ headers = @("Strategy", "Recall", "Cost"); rows = @(@("Keyword", "Low", "Low"), @("Dense vector", "High", "Medium"), @("Hybrid", "Highest", "High")) } }
-    @{ id = "b09"; type = "image";     data = @{ mediaId = "00000000-0000-0000-0000-000000000001"; alt = "Diagram of a retrieval-augmented generation pipeline"; caption = "The retrieval step is where most quality is won or lost." } }
-    @{ id = "b10"; type = "divider";   data = @{} }
-    @{ id = "b11"; type = "embed";     data = @{ provider = "youtube"; url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } }
-    @{ id = "b12"; type = "embed";     data = @{ provider = "unknown"; url = "https://example.com/not-allowlisted" } }
+    @{ id = "b05"; type = "code";      data = @{ language = "python"; filename = "rag.py"
+        code   = "chunks = split(document, size=512)`nindex.upsert(embed(chunks))`nhits = index.query(embed(question), k=5)"
+        output = "Retrieved 5 chunks in 12ms" } }
+    # Steps carrying their own code sample - the nested-blocks capability from ADR-0009.
+    @{ id = "b06"; type = "list";      data = @{ ordered = $true; items = @(
+        @{ content = @((Txt "Chunk the source documents")); blocks = @(
+            @{ id = "b06a"; type = "code"; data = @{ language = "python"; code = "chunks = split(document, size=512, overlap=64)" } }
+        ) },
+        @{ content = @((Txt "Embed and index the chunks")) },
+        @{ content = @((Txt "Retrieve the top-"), (Mono "k"), (Txt " for a question")) },
+        @{ content = @((Txt "Ground the generation in what you retrieved")) }
+    ) } }
+    @{ id = "b07"; type = "quote";     data = @{ content = @((Txt "The model is only as good as what you put in front of it.")); attribution = "Every RAG postmortem, eventually" } }
+    @{ id = "b08"; type = "table";     data = @{
+        headers = @(@((Txt "Strategy")), @((Txt "Recall")), @((Txt "Cost")))
+        rows = @(
+            @(@((Mono "BM25")),        @((Txt "Low")),     @((Txt "Low"))),
+            @(@((Txt "Dense vector")), @((Txt "High")),    @((Txt "Medium"))),
+            @(@((Txt "Hybrid")),       @((Txt "Highest")), @((Txt "High")))
+        ) } }
+    # Math moved into Phase 1 with ADR-0009: unavoidable for ML explanation.
+    @{ id = "b09"; type = "paragraph"; data = @{ content = @(
+        (Txt "Attention cost grows as "), (MathI "O(n^2)"), (Txt " in sequence length, which is why retrieval beats a longer context window:")
+    ) } }
+    @{ id = "b10"; type = "math";      data = @{ latex = "\text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{T}}{\sqrt{d_k}}\right)V" } }
+    @{ id = "b11"; type = "image";     data = @{ mediaId = "00000000-0000-0000-0000-000000000001"; alt = "Diagram of a retrieval-augmented generation pipeline"; caption = "The retrieval step is where most quality is won or lost." } }
+    @{ id = "b12"; type = "divider";   data = @{} }
+    @{ id = "b13"; type = "embed";     data = @{ provider = "youtube"; url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } }
+    @{ id = "b14"; type = "embed";     data = @{ provider = "unknown"; url = "https://example.com/not-allowlisted" } }
     # Deliberately unrenderable: proves the site degrades instead of throwing.
-    @{ id = "b13"; type = "chart";     data = @{ series = @(1, 2, 3) } }
-    @{ id = "b14"; type = "paragraph"; data = @{ text = "Retrieval quality compounds: better chunks make better context, and better context makes shorter prompts." } }
+    @{ id = "b15"; type = "chart";     data = @{ series = @(1, 2, 3) } }
+    # A hostile link, to prove the anchor is dropped while the prose survives.
+    @{ id = "b16"; type = "paragraph"; data = @{ content = @(
+        (Txt "Retrieval quality compounds. "),
+        (Link "This link is hostile and must not become an anchor" "javascript:alert(1)")
+    ) } }
 )
 
 $slugs = @()

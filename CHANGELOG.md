@@ -1,5 +1,45 @@
 # DataBro Changelog
 
+## [2026-07-31 15:05:00 UTC]
+
+CHG-0010 — Content model v2: inline rich text, math, code output, nested blocks
+
+- **ADR-0009 — inline rich text as a ProseMirror-compatible node tree.** Every text field in the block
+  catalog was a plain string, which meant a published article could not contain a single hyperlink:
+  no citations, no linking to external docs, no internal linking beyond taxonomy. For a platform whose
+  acquisition strategy is long-form technical content, that was the most limiting property of the
+  model. Inline content is now an array of nodes shaped like ProseMirror's document model — the shape
+  Tiptap uses natively, so the CMS editor will need no translation layer between what it edits and
+  what is stored.
+- Marks are `bold`, `italic`, `code`, `strike` and `link`. Inline content applies to `paragraph`,
+  `callout`, `quote`, list items and table cells. `heading` deliberately stays a plain string, since
+  emphasis or links inside a heading hurt both the document outline and anchor generation.
+- **Marks map to elements, never to HTML strings** — the no-`v-html` rule already governing block text
+  extends to inline content, which is equally author-supplied. A `link` href is scheme-checked exactly
+  like an embed URL: `javascript:`, `data:` and protocol-relative URLs drop the anchor while keeping
+  the prose. Site-relative hrefs are allowed so articles can link to one another.
+- **`math` moved into Phase 1** (block + `mathInline`), from "reserved for later phases". Explaining
+  attention, gradients and loss functions is core Phase 1 subject matter here, not a Phase 2 nicety.
+  KaTeX is the single deliberate `v-html` exception: its input is LaTeX rather than HTML, it runs with
+  `trust: false` so markup-emitting commands are disabled, and `throwOnError: false` renders a
+  malformed formula as visible error text instead of failing the whole server render. The reasoning
+  lives at the call site.
+- **`code.output`** pairs a sample with its result — the "run this, get that" pattern this genre leans
+  on — rendered as `<samp>` so it is never mistaken for source or syntax-highlighted.
+- **List items may contain blocks**, so a tutorial step can carry its own code sample. Rendering is
+  therefore recursive and depth-capped at one level of nesting: past that, nested blocks are dropped,
+  so a malformed document cannot exhaust the stack during SSR.
+- Renderers accept the pre-ADR-0009 plain `text: string` wherever `content` is expected. There is no
+  production content, so no data migration was written; the shim keeps existing local documents
+  rendering and is explicitly not a supported authoring shape.
+- Verified: 45 renderer tests (up from 22) covering marks, mark nesting, hostile hrefs, XSS, malformed
+  LaTeX, KaTeX injection attempts, code output, nested steps and the depth cap; 69 backend tests;
+  clean typecheck across five workspaces. Confirmed live in the containerised stack against a seeded
+  article exercising every new capability, including that a `javascript:` link renders as text with no
+  anchor.
+
+---
+
 ## [2026-07-30 16:10:00 UTC]
 
 CHG-0009 — Fix SSR API resolution in the containerised stack

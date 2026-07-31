@@ -40,24 +40,49 @@ embeddings — without a heavyweight block-per-row schema.
 
 | type | purpose | key data fields |
 |---|---|---|
-| `heading` | section heading | `level` (2–4), `text` |
-| `paragraph` | rich text | `text`, `marks` (bold/italic/code/link ranges) |
-| `code` | code sample | `language`, `code`, `runnable` (reserved for Playground), `filename?` |
-| `callout` | note/tip/warning | `variant` (info/tip/warning/danger), `text` |
+| `heading` | section heading | `level` (2–4), `text` — **plain string by design** |
+| `paragraph` | prose | `content` (inline nodes) |
+| `code` | code sample | `language`, `code`, `filename?`, `output?`, `runnable` (reserved for Playground) |
+| `callout` | note/tip/warning | `variant` (info/tip/warning/danger), `content` |
 | `image` | media | `mediaId`, `alt`, `caption?` |
-| `quote` | blockquote | `text`, `attribution?` |
-| `list` | ordered/unordered | `ordered`, `items[]` |
+| `quote` | blockquote | `content`, `attribution?` |
+| `list` | ordered/unordered | `ordered`, `items[]` — each `{ content, blocks? }` |
 | `divider` | separator | — |
 | `embed` | external embed | `provider`, `url` (allowlisted providers only) |
-| `table` | simple table | `headers[]`, `rows[][]` |
+| `table` | simple table | `headers[]`, `rows[][]` — cells carry inline content |
+| `math` | block equation | `latex` (KaTeX) |
 
 Reserved for later phases: `quiz-ref` (P2), `exercise` (P3), `interactive-playground` (P3),
-`file-download`, `math` (KaTeX).
+`file-download`.
 
-**The Phase 1 catalog above is implemented and closed.** All ten types have renderers in
+### 3a. Inline content (ADR-0009)
+
+Text-bearing fields hold an **array of inline nodes**, shaped like ProseMirror's document model —
+the model Tiptap uses natively, so the CMS editor needs no translation layer.
+
+```jsonc
+"content": [
+  { "type": "text", "text": "Install with " },
+  { "type": "text", "text": "pip install databro", "marks": [{ "type": "code" }] },
+  { "type": "text", "text": " — see the " },
+  { "type": "text", "text": "docs", "marks": [{ "type": "link", "attrs": { "href": "https://…" } }] },
+  { "type": "mathInline", "attrs": { "latex": "O(n^2)" } }
+]
+```
+
+* Marks: `bold`, `italic`, `code`, `strike`, `link` (`attrs.href`).
+* Inline nodes: `text`, and the atomic `mathInline`.
+* Inline content appears in `paragraph`, `callout`, `quote`, list items and table cells.
+  **`heading` deliberately stays a plain string** — emphasis or links inside a heading hurt the
+  document outline and anchor generation.
+* **Legacy shim:** a plain `text: string` is still accepted wherever `content` is expected, so
+  documents written before ADR-0009 keep rendering. It is a compatibility shim, not a supported
+  authoring shape.
+
+**The Phase 1 catalog above is implemented and closed.** All eleven types have renderers in
 `packages/ui/src/blocks`, and the registry is typed `Record<BlockType, Component>` so adding a member
-to `BlockType` fails the build until a renderer exists. Two fields remain reserved but unimplemented:
-`paragraph.marks` (see below) and `code.runnable` (Playground, Phase 3).
+to `BlockType` fails the build until a renderer exists. One field remains reserved but unimplemented:
+`code.runnable` (Playground, Phase 3).
 
 ### Block invariants
 
@@ -71,8 +96,16 @@ to `BlockType` fails the build until a renderer exists. Two fields remain reserv
   `packages/ui/src/blocks/embed-providers.ts`.
 * **Block text is never rendered as HTML.** Block data is author-supplied and reaches the renderer
   straight out of JSONB, so interpolating it as markup would make the CMS a stored-XSS vector.
-  `paragraph.marks` is therefore reserved but deliberately unimplemented: rich text will arrive as a
-  structured mark renderer, never as a raw HTML string.
+  Marks map to *elements* (`<strong>`, `<code>`, `<a>`), never to HTML strings, and a link `href`
+  is scheme-checked exactly like an embed URL — a `javascript:` or `data:` href drops the anchor
+  while keeping the prose.
+* **One deliberate exception:** KaTeX output. Its input is LaTeX rather than HTML, it runs with
+  `trust: false` so the commands that can emit markup or arbitrary URLs are disabled, and
+  `throwOnError: false` renders a malformed formula as visible error text instead of failing the
+  whole server render. The reasoning lives at the call site in `packages/ui/src/blocks/katex.ts`.
+* **Nesting is depth-capped.** List items may contain blocks, which makes rendering recursive; past
+  one level of nesting the nested blocks are dropped, so a malformed document cannot exhaust the
+  stack during SSR.
 * Unknown block types degrade gracefully (forward compatibility): content outlives renderers, so a
   published document may carry a type added after the current bundle shipped. The public site hides
   them; the CMS preview shows a placeholder (`ContentRenderer` prop `showUnknownBlocks`).
