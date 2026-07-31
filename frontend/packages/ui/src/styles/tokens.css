@@ -1,0 +1,124 @@
+/*
+ * DataBro semantic design tokens.
+ *
+ * Values are space-separated RGB channels rather than hex, so Tailwind's `<alpha-value>` syntax
+ * works through them (`text-ink/70`). The Tailwind preset maps each variable to a semantic colour
+ * name; components reference the name, never the value.
+ *
+ * Dark mode is driven by two signals, both of which must work:
+ *   - `prefers-color-scheme`, for a reader who has never touched a toggle
+ *   - `[data-theme]`, for an explicit choice, which has to beat the OS preference in both directions
+ *
+ * Palette values here are provisional. They are deliberately confined to this file so adopting a
+ * brand palette is one edit, not a sweep through components.
+ */
+
+:root {
+  --db-surface: 255 255 255;
+  --db-surface-raised: 255 255 255;
+  --db-surface-sunken: 246 248 251;
+
+  --db-ink: 15 23 42;
+  --db-ink-muted: 71 85 105;
+  --db-ink-subtle: 100 116 139;
+  --db-ink-inverted: 255 255 255;
+
+  --db-border: 226 232 240;
+  --db-border-strong: 203 213 225;
+
+  --db-accent: 31 102 219;
+  --db-accent-hover: 26 81 176;
+  --db-accent-subtle: 238 246 255;
+
+  --db-note-info: 31 102 219;
+  --db-note-tip: 13 148 136;
+  --db-note-warning: 180 83 9;
+  --db-note-danger: 190 46 46;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --db-surface: 15 20 30;
+    --db-surface-raised: 22 28 40;
+    --db-surface-sunken: 11 15 23;
+
+    --db-ink: 226 232 240;
+    --db-ink-muted: 156 170 189;
+    --db-ink-subtle: 122 136 156;
+    --db-ink-inverted: 15 20 30;
+
+    --db-border: 39 48 64;
+    --db-border-strong: 55 67 87;
+
+    --db-accent: 116 173 255;
+    --db-accent-hover: 152 195 255;
+    --db-accent-subtle: 22 34 56;
+
+    --db-note-info: 116 173 255;
+    --db-note-tip: 45 212 191;
+    --db-note-warning: 251 191 36;
+    --db-note-danger: 248 113 113;
+
+    color-scheme: dark;
+  }
+}
+
+/* An explicit choice wins over the OS preference — including choosing dark on a light system. */
+:root[data-theme="dark"] {
+  --db-surface: 15 20 30;
+  --db-surface-raised: 22 28 40;
+  --db-surface-sunken: 11 15 23;
+
+  --db-ink: 226 232 240;
+  --db-ink-muted: 156 170 189;
+  --db-ink-subtle: 122 136 156;
+  --db-ink-inverted: 15 20 30;
+
+  --db-border: 39 48 64;
+  --db-border-strong: 55 67 87;
+
+  --db-accent: 116 173 255;
+  --db-accent-hover: 152 195 255;
+  --db-accent-subtle: 22 34 56;
+
+  --db-note-info: 116 173 255;
+  --db-note-tip: 45 212 191;
+  --db-note-warning: 251 191 36;
+  --db-note-danger: 248 113 113;
+
+  color-scheme: dark;
+}
+
+/*
+ * Article body rhythm.
+ *
+ * Vertical spacing lives on the container rather than on each block, so every block type gets
+ * consistent rhythm without eleven components each asserting their own margins — and so a block
+ * renders correctly wherever it appears, including inside a list item.
+ */
+.databro-content > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Headings need more space above than below: the gap should bind them to what follows. */
+.databro-content > h2 {
+  margin-top: 3rem;
+}
+
+.databro-content > h3,
+.databro-content > h4 {
+  margin-top: 2.25rem;
+}
+
+.databro-content > h2 + *,
+.databro-content > h3 + *,
+.databro-content > h4 + * {
+  margin-top: 0.75rem;
+}
+
+/* Nested blocks inside a list item sit tighter than top-level ones. */
+.databro-content li > * + * {
+  margin-top: 0.75rem;
+}

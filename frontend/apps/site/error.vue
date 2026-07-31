@@ -16,10 +16,10 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl px-6 py-24">
-    <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ error?.statusCode }}</p>
+  <div class="mx-auto max-w-shell px-6 py-24">
+    <p class="text-sm font-semibold uppercase tracking-wide text-ink-subtle">{{ error?.statusCode }}</p>
     <h1 class="mt-3 text-4xl font-bold tracking-tight">{{ title }}</h1>
-    <p class="mt-4 text-lg text-slate-600">{{ message }}</p>
+    <p class="mt-4 text-lg text-ink-muted">{{ message }}</p>
     <p class="mt-8">
       <NuxtLink :to="localePath('/')" @click="clearError({ redirect: '/' })">{{ t("error.backHome") }}</NuxtLink>
     </p>

@@ -1,5 +1,42 @@
 # DataBro Changelog
 
+## [2026-07-31 16:20:00 UTC]
+
+CHG-0011 — Design tokens and the article reading experience
+
+- **Two-layer token system.** Raw values (brand ramp, typefaces, type scale) live in
+  `tailwind-preset.ts`; semantic names (`surface`, `ink`, `line`, `accent`, `note-*`) resolve through
+  CSS custom properties in `ui/src/styles/tokens.css`. Components now reference meaning
+  (`text-ink-muted`) rather than a raw colour (`text-slate-500`), so light and dark themes come from
+  one set of class names and a palette change touches no component. Channel values are
+  space-separated RGB so Tailwind opacity modifiers still work through a variable.
+- **Dark mode** responds to both `prefers-color-scheme` and an explicit `[data-theme]`, with the
+  explicit choice winning in either direction.
+- **Type scale** on a ~1.25 ratio with line heights tuned for reading rather than Tailwind's
+  UI-oriented defaults, plus `max-w-prose` (~68ch) for article bodies and `max-w-shell` for listings
+  and chrome, which are scanned rather than read.
+- **Article rhythm lives on the `.databro-content` container**, not on individual blocks: eleven
+  components no longer each assert their own margins, and a block renders correctly wherever it
+  appears, including nested inside a list item.
+- Restyled every block renderer against the tokens — code blocks with a filename header and visually
+  separated output, callout variants coloured by semantic token (with role and data attribute still
+  carrying the meaning, so it survives in monochrome), bordered tables, and inline marks. Links are
+  underlined rather than colour-only, so they stay identifiable without colour perception.
+- Migrated the site chrome, article page, listing cards and error page off hardcoded Tailwind palette
+  classes onto the semantic tokens.
+- Typed the preset as `Partial<Config>` at the source (adding `tailwindcss` as a dev dependency of
+  `@databro/ui`) instead of casting at each point of use, so a malformed token fails in the package
+  that owns it.
+- **Scope note:** the palette *values* and the marketing/listing layout are deliberately not done.
+  They need the supplied design reference, which is a client-rendered SPA that returns no markup to
+  fetch, so it requires screenshots. What landed is the half driven by readability principle rather
+  than by the reference, and is retunable from one file.
+- Verified: 45 renderer tests, clean typecheck across five workspaces, live in the containerised
+  stack, and a production build confirming the new token classes and CSS variables survive the
+  Tailwind purge.
+
+---
+
 ## [2026-07-31 15:05:00 UTC]
 
 CHG-0010 — Content model v2: inline rich text, math, code output, nested blocks

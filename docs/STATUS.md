@@ -67,8 +67,10 @@ and scheduled publishing next**.
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
-* **Visual design is deliberately minimal** on the site — semantic markup with structural utility
-  classes only. The design system is a separate discussion.
+* **Design pass is half done.** The token architecture (semantic colours, dark mode, type scale,
+  spacing) and the *article reading experience* are in. Still outstanding: the palette and typeface
+  values, and the marketing/listing layout — both need the LearnUp reference, which is a
+  client-rendered SPA that cannot be read programmatically, so it needs screenshots.
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.

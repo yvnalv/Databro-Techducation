@@ -39,9 +39,9 @@ provide(nestingDepthKey, depth + 1);
   <component
     :is="data?.ordered ? 'ol' : 'ul'"
     :class="data?.ordered ? 'list-decimal' : 'list-disc'"
-    class="pl-6"
+    class="space-y-2 pl-6 marker:text-ink-subtle"
   >
-    <li v-for="(item, index) in items" :key="index">
+    <li v-for="(item, index) in items" :key="index" class="text-base text-ink sm:text-lg">
       <RichText :content="item.content" />
 
       <!-- A step can carry a code sample or callout of its own (ADR-0009). Rendered through the

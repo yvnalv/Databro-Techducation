@@ -12,5 +12,5 @@ const content = computed(() => toRichText(props.data?.content, props.data?.text)
 </script>
 
 <template>
-  <p><RichText :content="content" /></p>
+  <p class="text-base text-ink sm:text-lg"><RichText :content="content" /></p>
 </template>

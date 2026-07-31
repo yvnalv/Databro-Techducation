@@ -79,9 +79,9 @@ useHead({
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl px-6 py-16">
+  <div class="mx-auto max-w-shell px-6 py-14 sm:py-20">
     <!-- The visible breadcrumb mirrors the JSON-LD; both are crawlable navigation. -->
-    <nav :aria-label="t('categories.breadcrumbLabel')" class="text-sm text-slate-500">
+    <nav :aria-label="t('categories.breadcrumbLabel')" class="text-sm text-ink-subtle">
       <NuxtLink :to="localePath('/')">{{ t("nav.home") }}</NuxtLink>
       <template v-for="ancestor in category.ancestors" :key="ancestor.id">
         <span aria-hidden="true"> / </span>
@@ -92,9 +92,9 @@ useHead({
     </nav>
 
     <h1 class="mt-4 text-4xl font-bold tracking-tight">{{ category.category.name }}</h1>
-    <p class="mt-4 text-lg text-slate-600">{{ description }}</p>
+    <p class="mt-4 text-lg text-ink-muted">{{ description }}</p>
 
-    <p class="mt-2 text-sm text-slate-500">
+    <p class="mt-2 text-sm text-ink-subtle">
       {{ t("categories.articleCount", articles.meta.total) }}
     </p>
 

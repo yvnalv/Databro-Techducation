@@ -20,7 +20,19 @@ const content = computed(() => toRichText(props.data?.content, props.data?.text)
 </script>
 
 <template>
-  <aside :role="role" :data-variant="variant" class="border-l-4 p-4">
-    <p><RichText :content="content" /></p>
+  <!-- Colour alone never carries the meaning: the variant is also exposed via role and data
+       attribute, so the distinction survives for assistive tech and in monochrome. -->
+  <aside
+    :role="role"
+    :data-variant="variant"
+    class="rounded-card border-l-4 bg-surface-sunken px-5 py-4"
+    :class="{
+      'border-note-info': variant === 'info',
+      'border-note-tip': variant === 'tip',
+      'border-note-warning': variant === 'warning',
+      'border-note-danger': variant === 'danger',
+    }"
+  >
+    <p class="text-base text-ink"><RichText :content="content" /></p>
   </aside>
 </template>

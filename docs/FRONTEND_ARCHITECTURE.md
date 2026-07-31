@@ -49,6 +49,29 @@ both apps use is copied.** See [ADR-0005](DECISIONS.md).
 
 * **`ui`** — component library + Tailwind preset (single source of design tokens) + the content-block
   renderer registry (one renderer used by both apps). WCAG 2.1 AA target.
+
+### Design tokens
+
+Two layers, and the distinction is load-bearing:
+
+1. **Raw values** — the brand ramp, typefaces, the type scale — in `tailwind-preset.ts`. Swapping the
+   palette or typeface is an edit to that object and nothing else.
+2. **Semantic names** — `surface`, `ink`, `line`, `accent`, `note-*` — resolved through CSS custom
+   properties in `ui/src/styles/tokens.css`, which both apps load.
+
+Components reference *meaning* (`text-ink-muted`), never a raw colour (`text-slate-500`). That is what
+makes light and dark themes come from one set of class names, and what keeps a palette change from
+touching a single component. Values use space-separated RGB channels so Tailwind's opacity modifiers
+(`text-ink/70`) still work through a variable.
+
+Dark mode responds to **both** `prefers-color-scheme` and an explicit `[data-theme]`, with the
+explicit choice winning in either direction.
+
+Reading-specific tokens worth knowing: `max-w-prose` is ~68ch — the single most load-bearing number
+for long-form readability — and `max-w-shell` is the wider container for listings and chrome, which
+are scanned rather than read. Article vertical rhythm lives on the `.databro-content` container, not
+on individual blocks, so every block type gets consistent spacing and a block renders correctly
+wherever it appears, including nested in a list item.
 * **`api-client`** — typed wrapper over `/api/v1`, handling the response envelope, auth token refresh,
   and error normalization.
 * **`types`** — DTOs and the content-block schema types, kept in lockstep with backend contracts.

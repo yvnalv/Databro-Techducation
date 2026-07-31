@@ -3,5 +3,5 @@
 </script>
 
 <template>
-  <hr />
+  <hr class="border-line" />
 </template>

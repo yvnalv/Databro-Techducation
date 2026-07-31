@@ -8,9 +8,14 @@ export default defineNuxtConfig({
 
   modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxtjs/i18n"],
 
-  // KaTeX ships its own stylesheet; without it, math renders as unpositioned glyphs. Loaded here
-  // rather than imported by the renderer so it is bundled once, not per block.
-  css: ["katex/dist/katex.min.css"],
+  css: [
+    // Semantic design tokens (the CSS custom properties the Tailwind preset maps to) plus the
+    // article rhythm. Must load before Tailwind's utilities resolve against them.
+    "@databro/ui/tokens.css",
+    // KaTeX ships its own stylesheet; without it, math renders as unpositioned glyphs. Loaded here
+    // rather than imported by the renderer so it is bundled once, not per block.
+    "katex/dist/katex.min.css",
+  ],
 
   // Workspace TS packages are transpiled by Vite.
   build: {

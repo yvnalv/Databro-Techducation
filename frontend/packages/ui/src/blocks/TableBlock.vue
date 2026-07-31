@@ -16,18 +16,27 @@ const rows = computed(() => (props.data?.rows ?? []).map((row) => (row ?? []).ma
 
 <template>
   <!-- Wrapped so a wide table scrolls itself instead of forcing the page to scroll sideways. -->
-  <div class="overflow-x-auto">
-    <table class="w-full">
-      <thead v-if="headers.length">
+  <div class="overflow-x-auto rounded-card border border-line">
+    <table class="w-full border-collapse text-left text-sm">
+      <thead v-if="headers.length" class="bg-surface-sunken">
         <tr>
-          <th v-for="(header, index) in headers" :key="index" scope="col">
+          <th
+            v-for="(header, index) in headers"
+            :key="index"
+            scope="col"
+            class="whitespace-nowrap px-4 py-3 font-semibold text-ink"
+          >
             <RichText :content="header" />
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, rowIndex) in rows" :key="rowIndex">
-          <td v-for="(value, cellIndex) in row" :key="cellIndex">
+        <tr
+          v-for="(row, rowIndex) in rows"
+          :key="rowIndex"
+          class="border-t border-line align-top"
+        >
+          <td v-for="(value, cellIndex) in row" :key="cellIndex" class="px-4 py-3 text-ink-muted">
             <RichText :content="value" />
           </td>
         </tr>

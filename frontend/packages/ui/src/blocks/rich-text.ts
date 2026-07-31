@@ -36,11 +36,17 @@ export function richTextToPlain(content: RichText): string {
     .join("");
 }
 
-const MARK_ELEMENTS: Record<Exclude<InlineMark["type"], "link">, string> = {
-  bold: "strong",
-  italic: "em",
-  code: "code",
-  strike: "s",
+// Styling lives here rather than in a stylesheet because these elements are produced by a render
+// function, not a template — there is no other place to attach it.
+const MARK_ELEMENTS: Record<Exclude<InlineMark["type"], "link">, { tag: string; class?: string }> = {
+  bold: { tag: "strong", class: "font-semibold text-ink" },
+  italic: { tag: "em" },
+  code: {
+    tag: "code",
+    class:
+      "rounded border border-line bg-surface-sunken px-1.5 py-0.5 font-mono text-[0.9em] text-ink",
+  },
+  strike: { tag: "s", class: "text-ink-subtle" },
 };
 
 export type MarkElement =
@@ -68,13 +74,18 @@ export function markToElement(mark: InlineMark): MarkElement {
         // Author-supplied outbound links: don't pass referrer or window handles, and don't lend
         // ranking weight to arbitrary destinations.
         rel: "nofollow noopener noreferrer",
+        // Underlined, not colour-only: a link must remain identifiable without colour perception.
+        class:
+          "font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent",
         ...(mark.attrs.title ? { title: mark.attrs.title } : {}),
       },
     };
   }
 
-  const tag = MARK_ELEMENTS[mark.type];
-  return tag ? { tag } : null;
+  const element = MARK_ELEMENTS[mark.type];
+  if (!element) return null;
+
+  return { tag: element.tag, ...(element.class ? { attrs: { class: element.class } } : {}) };
 }
 
 /** Allows absolute http(s) and site-relative URLs; rejects every other scheme. */

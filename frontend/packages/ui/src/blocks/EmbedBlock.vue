@@ -19,13 +19,19 @@ const safeLink = computed(() => (isSafeLink(props.data.url) ? props.data.url : n
       referrerpolicy="strict-origin-when-cross-origin"
       sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
       allowfullscreen
-      class="aspect-video w-full border-0"
+      class="aspect-video w-full rounded-card border-0"
     ></iframe>
   </figure>
 
   <!-- Not allowlisted: degrade to a link rather than framing an unknown origin. -->
-  <p v-else-if="safeLink">
-    <a :href="safeLink" rel="nofollow noopener noreferrer" target="_blank">{{ safeLink }}</a>
+  <p v-else-if="safeLink" class="break-all text-sm">
+    <a
+      :href="safeLink"
+      rel="nofollow noopener noreferrer"
+      target="_blank"
+      class="font-medium text-accent underline decoration-accent/40 underline-offset-2"
+      >{{ safeLink }}</a
+    >
   </p>
 
   <!-- Not even a usable URL (e.g. a javascript: scheme). Render nothing. -->

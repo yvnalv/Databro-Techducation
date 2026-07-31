@@ -44,14 +44,15 @@ const formattedDate = computed(() =>
 </script>
 
 <template>
-  <article class="mx-auto max-w-3xl px-6 py-16">
+  <!-- max-w-prose (~68ch) is the measure the whole reading experience hangs on. -->
+  <article class="mx-auto max-w-prose px-6 py-14 sm:py-20">
     <header>
       <!-- The only h1 on the page; block headings start at h2 so the outline stays well-formed. -->
-      <h1 class="text-4xl font-bold tracking-tight">{{ published.title }}</h1>
+      <h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ published.title }}</h1>
 
-      <p class="mt-4 text-lg text-slate-600">{{ published.summary }}</p>
+      <p class="mt-4 text-lg text-ink-muted sm:text-xl">{{ published.summary }}</p>
 
-      <p class="mt-4 text-sm text-slate-500">
+      <p class="mt-5 text-sm text-ink-subtle">
         <span>{{ t("articles.byAuthor", { name: published.author?.displayName ?? t("articles.unknownAuthor") }) }}</span>
         <span aria-hidden="true"> · </span>
         <span>{{ t("articles.readingTime", { minutes: published.readingTimeMinutes }) }}</span>
@@ -61,11 +62,18 @@ const formattedDate = computed(() =>
         </template>
       </p>
 
-      <p v-if="isPremium" class="mt-4 border p-4">
-        <span class="font-semibold uppercase">{{ t("premium.badge") }}</span>
-        <span class="ml-2">{{ t("premium.previewNotice") }}</span>
+      <p
+        v-if="isPremium"
+        class="mt-6 rounded-card border border-line bg-surface-sunken px-5 py-4 text-sm"
+      >
+        <span class="font-semibold uppercase tracking-wide text-accent">
+          {{ t("premium.badge") }}
+        </span>
+        <span class="ml-2 text-ink-muted">{{ t("premium.previewNotice") }}</span>
       </p>
     </header>
+
+    <hr class="mt-8 border-line" />
 
     <!-- The class is referenced by the JSON-LD `hasPart.cssSelector` that declares the gated
          region to search engines - keep the two in step (see useArticleSeo). -->
@@ -73,25 +81,31 @@ const formattedDate = computed(() =>
       <ContentRenderer :document="published.content" />
     </div>
 
-    <footer class="mt-16">
+    <footer class="mt-16 border-t border-line pt-8">
       <!-- Taxonomy links close the internal-linking loop: a reader (and a crawler) can move from
            this article to the rest of its topic cluster. -->
-      <p v-if="published.category || published.tags.length" class="text-sm">
+      <div v-if="published.category || published.tags.length" class="flex flex-wrap gap-2">
         <NuxtLink
           v-if="published.category"
           :to="localePath(`/categories/${published.category.slug}`)"
-          class="font-medium"
+          class="rounded-card bg-accent-subtle px-3 py-1 text-sm font-medium text-accent"
         >
           {{ published.category.name }}
         </NuxtLink>
-        <template v-for="(tag, index) in published.tags" :key="tag.id">
-          <span v-if="published.category || index > 0" aria-hidden="true"> · </span>
-          <NuxtLink :to="localePath(`/tags/${tag.slug}`)">#{{ tag.name }}</NuxtLink>
-        </template>
-      </p>
+        <NuxtLink
+          v-for="tag in published.tags"
+          :key="tag.id"
+          :to="localePath(`/tags/${tag.slug}`)"
+          class="rounded-card border border-line px-3 py-1 text-sm text-ink-muted transition-colors hover:text-ink"
+        >
+          #{{ tag.name }}
+        </NuxtLink>
+      </div>
 
-      <p class="mt-6">
-        <NuxtLink :to="localePath('/')">{{ t("articles.backToArticles") }}</NuxtLink>
+      <p class="mt-8 text-sm">
+        <NuxtLink :to="localePath('/')" class="font-medium text-accent hover:underline">
+          {{ t("articles.backToArticles") }}
+        </NuxtLink>
       </p>
     </footer>
   </article>

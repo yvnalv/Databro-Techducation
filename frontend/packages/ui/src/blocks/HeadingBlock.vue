@@ -22,7 +22,17 @@ const anchor = computed(() =>
 </script>
 
 <template>
-  <component :is="tag" :id="anchor" class="scroll-mt-24 font-semibold">
+  <!-- scroll-mt keeps a deep-linked heading clear of a sticky header rather than flush to it. -->
+  <component
+    :is="tag"
+    :id="anchor"
+    class="scroll-mt-24 font-semibold tracking-tight text-ink"
+    :class="{
+      'text-2xl sm:text-3xl': tag === 'h2',
+      'text-xl sm:text-2xl': tag === 'h3',
+      'text-lg sm:text-xl': tag === 'h4',
+    }"
+  >
     {{ data.text }}
   </component>
 </template>

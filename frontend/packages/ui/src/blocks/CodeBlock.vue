@@ -22,14 +22,25 @@ const output = computed(() => props.data?.output?.replace(/\s+$/, "") || null);
 </script>
 
 <template>
-  <figure>
-    <figcaption v-if="data?.filename" class="font-mono text-xs">{{ data.filename }}</figcaption>
+  <figure class="overflow-hidden rounded-card border border-line bg-surface-sunken">
+    <figcaption
+      v-if="data?.filename"
+      class="border-b border-line px-4 py-2 font-mono text-xs text-ink-muted"
+    >
+      {{ data.filename }}
+    </figcaption>
 
-    <pre :class="languageClass" class="overflow-x-auto"><code :class="languageClass">{{ data?.code }}</code></pre>
+    <pre
+      :class="languageClass"
+      class="overflow-x-auto px-4 py-3.5 font-mono text-sm leading-relaxed text-ink"
+    ><code :class="languageClass">{{ data?.code }}</code></pre>
 
-    <!-- Marked up distinctly so it is never mistaken for source, and never highlighted as code. -->
-    <div v-if="output" data-code-output>
-      <pre class="overflow-x-auto"><samp>{{ output }}</samp></pre>
+    <!-- Visually separated from the source above: output is a result, not something to copy.
+         Marked up as <samp> so it is never mistaken for code or syntax-highlighted. -->
+    <div v-if="output" data-code-output class="border-t border-line bg-surface/40">
+      <pre
+        class="overflow-x-auto px-4 py-3 font-mono text-sm leading-relaxed text-ink-muted"
+      ><samp>{{ output }}</samp></pre>
     </div>
   </figure>
 </template>

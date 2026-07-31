@@ -13,18 +13,24 @@ const formatDate = (value?: string) =>
 </script>
 
 <template>
-  <p v-if="!articles.length" class="mt-4 text-slate-600">{{ t("articles.listEmpty") }}</p>
+  <p v-if="!articles.length" class="mt-6 text-ink-muted">{{ t("articles.listEmpty") }}</p>
 
-  <ul v-else class="mt-6 space-y-8">
+  <ul v-else class="mt-8 grid gap-6 sm:grid-cols-2">
     <li v-for="article in articles" :key="article.id">
-      <article>
-        <h3 class="text-xl font-semibold">
-          <NuxtLink :to="localePath(`/articles/${article.slug}`)">{{ article.title }}</NuxtLink>
+      <article
+        class="flex h-full flex-col rounded-card border border-line bg-surface-raised p-6 shadow-card transition-shadow hover:shadow-card-hover"
+      >
+        <h3 class="text-lg font-semibold tracking-tight text-ink">
+          <!-- The whole card is not a link: the title is, so the accessible name is the title
+               rather than the entire card's text content. -->
+          <NuxtLink :to="localePath(`/articles/${article.slug}`)" class="hover:text-accent">
+            {{ article.title }}
+          </NuxtLink>
         </h3>
 
-        <p class="mt-2 text-slate-600">{{ article.summary }}</p>
+        <p class="mt-2 flex-1 text-sm text-ink-muted">{{ article.summary }}</p>
 
-        <p class="mt-2 text-sm text-slate-500">
+        <p class="mt-4 text-xs text-ink-subtle">
           <span>{{ t("articles.byAuthor", { name: article.author?.displayName ?? t("articles.unknownAuthor") }) }}</span>
           <span aria-hidden="true"> · </span>
           <span>{{ t("articles.readingTime", { minutes: article.readingTimeMinutes }) }}</span>
@@ -32,26 +38,33 @@ const formatDate = (value?: string) =>
             <span aria-hidden="true"> · </span>
             <time :datetime="article.publishedAt">{{ formatDate(article.publishedAt) }}</time>
           </template>
-          <span v-if="article.visibility === 'premium'" class="ml-2 border px-2 py-0.5 text-xs uppercase">
+          <span
+            v-if="article.visibility === 'premium'"
+            class="ml-2 rounded-card bg-accent-subtle px-2 py-0.5 font-medium uppercase tracking-wide text-accent"
+          >
             {{ t("premium.badge") }}
           </span>
         </p>
 
         <!-- Taxonomy links are real anchors, not filters applied in JS: they are the internal
              linking structure crawlers follow to discover topic clusters. -->
-        <p v-if="article.category || article.tags.length" class="mt-2 text-sm">
+        <div v-if="article.category || article.tags.length" class="mt-3 flex flex-wrap gap-2">
           <NuxtLink
             v-if="article.category"
             :to="localePath(`/categories/${article.category.slug}`)"
-            class="font-medium"
+            class="rounded-card bg-accent-subtle px-2.5 py-0.5 text-xs font-medium text-accent"
           >
             {{ article.category.name }}
           </NuxtLink>
-          <template v-for="(tag, index) in article.tags" :key="tag.id">
-            <span v-if="article.category || index > 0" aria-hidden="true"> · </span>
-            <NuxtLink :to="localePath(`/tags/${tag.slug}`)">#{{ tag.name }}</NuxtLink>
-          </template>
-        </p>
+          <NuxtLink
+            v-for="tag in article.tags"
+            :key="tag.id"
+            :to="localePath(`/tags/${tag.slug}`)"
+            class="rounded-card border border-line px-2.5 py-0.5 text-xs text-ink-muted transition-colors hover:text-ink"
+          >
+            #{{ tag.name }}
+          </NuxtLink>
+        </div>
       </article>
     </li>
   </ul>
