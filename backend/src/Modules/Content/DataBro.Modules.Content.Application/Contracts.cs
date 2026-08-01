@@ -35,6 +35,12 @@ public sealed record AuthorProfileDto(Guid Id, string DisplayName, string? Avata
 /// <summary>A category or tag as the read surface exposes it.</summary>
 public sealed record TaxonomyTermDto(Guid Id, string Slug, string Name);
 
+/// <summary>A resolved redirect (docs/SEO.md §4). The site serves <c>StatusCode</c> to <c>ToPath</c>.</summary>
+public sealed record RedirectDto(string FromPath, string ToPath, int StatusCode);
+
+/// <summary>Body of a slug-change request: the single new slug for an article or taxonomy term.</summary>
+public sealed record ChangeSlugRequest(string Slug);
+
 public sealed record CategoryDto(
     Guid Id,
     string Slug,
@@ -56,8 +62,8 @@ public sealed record CreateCategoryRequest(
     int Order = 0);
 
 /// <summary>
-/// Slug is absent by design: a category slug is a public URL and is immutable until the redirects
-/// slice lands (CT-3).
+/// Slug is absent by design: it moves through the dedicated slug-change endpoint, which pairs the
+/// change with a 301 redirect (CT-3). This request only renames and repositions.
 /// </summary>
 public sealed record UpdateCategoryRequest(
     string Name,

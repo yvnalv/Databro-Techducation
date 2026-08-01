@@ -280,3 +280,13 @@ export interface Paged<T> {
   items: T[];
   meta: PageMeta;
 }
+
+/**
+ * A resolved URL redirect (docs/SEO.md §4). Returned by the redirect-lookup endpoint when a moved
+ * slug should resolve to a `statusCode` (301) redirect rather than a 404.
+ */
+export interface Redirect {
+  fromPath: string;
+  toPath: string;
+  statusCode: number;
+}

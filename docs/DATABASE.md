@@ -80,8 +80,10 @@ created_by) — immutable history; one row per published/saved version.
 **categories** (id, parent_id null, name, slug unique, description, order). Hierarchical.
 **tags** (id, name, slug unique).
 **article_tags** (article_id, tag_id) — join.
-**redirects** (id, from_path unique, to_path, status_code default 301, reason, created_at) — populated
-when a slug changes or content moves.
+**redirects** (id, from_path, to_path, status_code default 301, reason, + audit) — populated when a
+slug changes or content moves (CT-3). `from_path` carries a **filtered** unique index
+(`WHERE is_deleted = false`) so a path redirected away, freed, then moved again does not collide with
+the tombstone row. Chains are collapsed on write, so a live redirect always points at a real page.
 
 ### media
 

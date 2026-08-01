@@ -77,10 +77,15 @@ GET    /api/v1/categories/{slug}/articles    articles in category
 GET    /api/v1/tags                          tag list
 GET    /api/v1/tags/{slug}/articles          articles by tag
 GET    /api/v1/authors/{id}                  author profile + articles
+GET    /api/v1/redirects?from={path}         resolve a moved path -> { toPath, statusCode } or 404
 GET    /api/v1/search?q=…                    keyword search over published content
 GET    /api/v1/feed.rss                      RSS
 GET    /sitemap.xml, /robots.txt             (platform, outside /api)
 ```
+
+The `site` app calls `/api/v1/redirects` on a 404 to honor a moved slug with a 301 rather than
+serving a dead page (docs/SEO.md §4). `from` is the normalized path (leading slash, lowercased, no
+trailing slash); a 404 is the normal "no redirect" answer.
 
 ### Articles — authoring (app; Author/Editor/Admin)
 ```
@@ -91,6 +96,7 @@ PATCH  /api/v1/authoring/articles/{id}                  update draft (blocks, me
 POST   /api/v1/authoring/articles/{id}/publish          publish (Editor/Admin)
 POST   /api/v1/authoring/articles/{id}/schedule         { scheduledFor }
 POST   /api/v1/authoring/articles/{id}/unpublish
+PUT    /api/v1/authoring/articles/{id}/slug             change slug { slug }; 301 if published (CT-3)
 DELETE /api/v1/authoring/articles/{id}                  soft delete
 GET    /api/v1/authoring/articles/{id}/versions         version history
 POST   /api/v1/authoring/articles/{id}/restore/{version}
@@ -100,7 +106,14 @@ POST   /api/v1/authoring/articles/{id}/restore/{version}
 ```
 POST/PATCH/DELETE /api/v1/authoring/categories
 POST/PATCH/DELETE /api/v1/authoring/tags
+PUT /api/v1/authoring/categories/{id}/slug   change slug { slug }; always records a 301 (CT-3)
+PUT /api/v1/authoring/tags/{id}/slug         change slug { slug }; always records a 301 (CT-3)
 ```
+
+A term slug is always a live public URL, so a taxonomy slug change is unconditionally paired with a
+301. An article's is paired with one only once it has been published — a never-published draft has no
+indexed URL to protect. Redirect chains are collapsed on write, so a stored redirect always points at
+a live page (one hop).
 
 ### Media (Author/Editor/Admin)
 ```

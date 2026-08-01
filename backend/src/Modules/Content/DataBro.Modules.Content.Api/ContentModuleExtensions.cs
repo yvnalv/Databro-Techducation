@@ -26,9 +26,24 @@ public static class ContentModuleExtensions
     {
         MapPublicEndpoints(endpoints);
         MapPublicTaxonomyEndpoints(endpoints);
+        MapRedirectEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
         MapTaxonomyAuthoringEndpoints(endpoints);
         return endpoints;
+    }
+
+    // ---- Redirect lookup. The `site` app hits this on a 404 to see whether a moved slug should
+    // resolve to a 301 instead of a dead page (docs/SEO.md §4). Public and cacheable. ----
+    private static void MapRedirectEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/api/v1/redirects", async (
+            string? from, RedirectService service, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(from))
+                return ApiEnvelope.OkOrNotFound(null);
+
+            return ApiEnvelope.OkOrNotFound(await service.ResolveAsync(from, ct));
+        }).WithTags("Content");
     }
 
     // ---- Public read surface (docs/API_SPEC.md §5). Serves only published content. ----
@@ -111,6 +126,13 @@ public static class ContentModuleExtensions
         group.MapPost("/{id:guid}/unpublish", async (Guid id, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentPublish));
+
+        // Changing a public URL is a publishing concern, not a drafting one (CT-3): behind
+        // Content.Publish, alongside a 301 the service writes for an already-published article.
+        group.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.ChangeSlugAsync(id, request.Slug, ct)))
+            .AddEndpointFilter<ValidationFilter<ChangeSlugRequest>>()
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
     }
 
     // ---- Taxonomy authoring. Behind Taxonomy.Manage (Editor/Admin), which an Author deliberately
@@ -134,6 +156,11 @@ public static class ContentModuleExtensions
             ApiEnvelope.FromEmpty(await service.DeleteCategoryAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.TaxonomyManage));
 
+        categories.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, TaxonomyService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.ChangeCategorySlugAsync(id, request.Slug, ct)))
+            .AddEndpointFilter<ValidationFilter<ChangeSlugRequest>>()
+            .RequireAuthorization(Perm(Permissions.TaxonomyManage));
+
         var tags = endpoints.MapGroup("/api/v1/authoring/tags").WithTags("Content.Taxonomy");
 
         tags.MapPost("", async (CreateTagRequest request, TaxonomyService service, CancellationToken ct) =>
@@ -148,6 +175,11 @@ public static class ContentModuleExtensions
 
         tags.MapDelete("/{id:guid}", async (Guid id, TaxonomyService service, CancellationToken ct) =>
             ApiEnvelope.FromEmpty(await service.DeleteTagAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.TaxonomyManage));
+
+        tags.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, TaxonomyService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.ChangeTagSlugAsync(id, request.Slug, ct)))
+            .AddEndpointFilter<ValidationFilter<ChangeSlugRequest>>()
             .RequireAuthorization(Perm(Permissions.TaxonomyManage));
     }
 

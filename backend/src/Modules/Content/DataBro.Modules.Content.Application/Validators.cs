@@ -63,6 +63,18 @@ public sealed class UpdateArticleRequestValidator : AbstractValidator<UpdateArti
     }
 }
 
+public sealed class ChangeSlugRequestValidator : AbstractValidator<ChangeSlugRequest>
+{
+    public ChangeSlugRequestValidator()
+    {
+        RuleFor(r => r.Slug)
+            .NotEmpty().WithMessage("A new slug is required.")
+            .Must(s => SlugRules.Pattern().IsMatch(s))
+            .When(r => !string.IsNullOrWhiteSpace(r.Slug))
+            .WithMessage("Slug must be lowercase letters, digits and hyphens (e.g. 'my-article').");
+    }
+}
+
 // ---- Taxonomy ----
 
 public sealed class CreateCategoryRequestValidator : AbstractValidator<CreateCategoryRequest>

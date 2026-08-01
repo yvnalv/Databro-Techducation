@@ -9,6 +9,7 @@ public sealed class ArticleService(
     IArticleRepository repository,
     ICategoryRepository categories,
     ITagRepository tags,
+    RedirectService redirects,
     IClock clock,
     ICurrentUser currentUser,
     IUserDirectory userDirectory)
@@ -89,6 +90,45 @@ public sealed class ArticleService(
 
         await repository.SaveChangesAsync(ct);
         return Result.Success(article.ToDto(await ResolveAsync([article], ct)));
+    }
+
+    /// <summary>
+    /// Changes an article's slug (CT-2/CT-3). If the article has ever been published its old
+    /// <c>/articles/{slug}</c> path is indexed, so a 301 is recorded from it to the new path in the
+    /// same transaction; a never-published draft simply moves, since it had no public URL to protect.
+    /// </summary>
+    public async Task<Result<ArticleDto>> ChangeSlugAsync(Guid id, string newSlug, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null)
+            return Result.Failure<ArticleDto>(Error.NotFound("Article not found."));
+
+        Slug slug;
+        try
+        {
+            slug = Slug.Create(newSlug);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.Failure<ArticleDto>(Error.Validation(ex.Message));
+        }
+
+        if (slug.Equals(article.Slug))
+            return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
+
+        if (await repository.SlugExistsAsync(slug.Value, ct))
+            return Result.Failure<ArticleDto>(new Error("slug_taken", $"The slug '{slug.Value}' is already in use."));
+
+        var previous = article.ChangeSlug(slug);
+
+        // previous is non-null here (slug differs), but the check keeps the intent explicit.
+        if (previous is not null && article.PublishedAt is not null)
+            await redirects.RecordAsync(
+                ContentPaths.Article(previous.Value), ContentPaths.Article(slug.Value),
+                "article slug changed", ct);
+
+        await repository.SaveChangesAsync(ct);
+        return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
     }
 
     public async Task<Result<ArticleDto>> UnpublishAsync(Guid id, CancellationToken ct = default)

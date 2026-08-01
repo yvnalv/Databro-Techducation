@@ -94,6 +94,29 @@ public class ArticleTests
     }
 
     [Fact]
+    public void ChangeSlug_returns_the_previous_slug()
+    {
+        var article = NewDraft();
+
+        var previous = article.ChangeSlug(Slug.Create("deep-learning"));
+
+        Assert.NotNull(previous);
+        Assert.Equal("intro-to-ml", previous!.Value);
+        Assert.Equal("deep-learning", article.Slug.Value);
+    }
+
+    [Fact]
+    public void ChangeSlug_to_the_same_value_is_a_no_op()
+    {
+        var article = NewDraft();
+
+        var previous = article.ChangeSlug(Slug.Create("intro-to-ml"));
+
+        Assert.Null(previous);
+        Assert.Equal("intro-to-ml", article.Slug.Value);
+    }
+
+    [Fact]
     public void Unpublish_only_valid_when_published()
     {
         var article = NewDraft();

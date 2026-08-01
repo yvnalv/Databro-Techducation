@@ -6,6 +6,8 @@ const { t, locale } = useI18n();
 const localePath = useLocalePath();
 const route = useRoute();
 const client = useApiClient();
+// Captured before the useAsyncData await so the redirect guard keeps its Nuxt context (E1001).
+const nuxtApp = useNuxtApp();
 
 const slug = computed(() => String(route.params.slug));
 
@@ -21,8 +23,10 @@ const { data: article, error } = await useAsyncData<Article>(
 );
 
 // An unpublished or missing slug must surface as a real 404, not a 200 with empty content and
-// not a 503 - either would leave a dead URL indexed (docs/SEO.md).
+// not a 503 - either would leave a dead URL indexed (docs/SEO.md). First, though, a slug that
+// moved resolves to a 301 rather than a dead end.
 if (error.value || !article.value) {
+  await honorRedirect(`/articles/${slug.value}`, { nuxtApp, client, localePath });
   throw toNuxtError(error.value ?? createError({ statusCode: 404 }));
 }
 

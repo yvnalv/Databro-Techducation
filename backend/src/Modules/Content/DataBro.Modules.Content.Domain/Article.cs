@@ -78,6 +78,21 @@ public sealed class Article : AggregateRoot
     }
 
     /// <summary>
+    /// Changes the slug and returns the previous one, or null when the slug is unchanged. The public
+    /// URL is a promise: once the article has been published the caller must record a 301 from the old
+    /// path (CT-2/CT-3) — a decision the service makes from <see cref="PublishedAt"/>, since a
+    /// never-published draft has no indexed URL to protect.
+    /// </summary>
+    public Slug? ChangeSlug(Slug newSlug)
+    {
+        if (Slug.Equals(newSlug)) return null;
+
+        var previous = Slug;
+        Slug = newSlug;
+        return previous;
+    }
+
+    /// <summary>
     /// Assigns the article's single category (CT-11), or clears it. The category's existence is
     /// verified by the application layer — the domain cannot query.
     /// </summary>

@@ -7,7 +7,8 @@ namespace DataBro.Modules.Content.Application;
 /// Use cases for the Content module's taxonomy: categories (hierarchical, one per article) and tags
 /// (flat, many per article). Rules TX-1 … TX-3 and CT-11 (docs/BUSINESS_RULES.md).
 /// </summary>
-public sealed class TaxonomyService(ICategoryRepository categories, ITagRepository tags)
+public sealed class TaxonomyService(
+    ICategoryRepository categories, ITagRepository tags, RedirectService redirects)
 {
     // ---- Categories ----
 
@@ -67,6 +68,39 @@ public sealed class TaxonomyService(ICategoryRepository categories, ITagReposito
             if (move.IsFailure)
                 return Result.Failure<CategoryDto>(move.Error);
         }
+
+        await categories.SaveChangesAsync(ct);
+        return Result.Success(category.ToDto());
+    }
+
+    /// <summary>
+    /// Changes a category's slug and records a 301 from its old <c>/categories/{slug}</c> path (CT-3).
+    /// A category slug is always a live public URL, so the redirect is unconditional.
+    /// </summary>
+    public async Task<Result<CategoryDto>> ChangeCategorySlugAsync(
+        Guid id, string newSlug, CancellationToken ct = default)
+    {
+        var category = await categories.GetByIdAsync(id, ct);
+        if (category is null)
+            return Result.Failure<CategoryDto>(Error.NotFound("Category not found."));
+
+        var parsed = ResolveSlug(newSlug, newSlug);
+        if (parsed.IsFailure)
+            return Result.Failure<CategoryDto>(parsed.Error);
+
+        var slug = parsed.Value;
+        if (slug.Equals(category.Slug))
+            return Result.Success(category.ToDto());
+
+        if (await categories.SlugExistsAsync(slug.Value, ct))
+            return Result.Failure<CategoryDto>(
+                new Error("slug_taken", $"The category slug '{slug.Value}' is already in use."));
+
+        var previous = category.ChangeSlug(slug);
+        if (previous is not null)
+            await redirects.RecordAsync(
+                ContentPaths.Category(previous.Value), ContentPaths.Category(slug.Value),
+                "category slug changed", ct);
 
         await categories.SaveChangesAsync(ct);
         return Result.Success(category.ToDto());
@@ -164,6 +198,38 @@ public sealed class TaxonomyService(ICategoryRepository categories, ITagReposito
             return Result.Failure<TaxonomyTermDto>(Error.NotFound("Tag not found."));
 
         tag.Rename(request.Name);
+        await tags.SaveChangesAsync(ct);
+        return Result.Success(tag.ToTermDto());
+    }
+
+    /// <summary>
+    /// Changes a tag's slug and records a 301 from its old <c>/tags/{slug}</c> path (CT-3).
+    /// </summary>
+    public async Task<Result<TaxonomyTermDto>> ChangeTagSlugAsync(
+        Guid id, string newSlug, CancellationToken ct = default)
+    {
+        var tag = await tags.GetByIdAsync(id, ct);
+        if (tag is null)
+            return Result.Failure<TaxonomyTermDto>(Error.NotFound("Tag not found."));
+
+        var parsed = ResolveSlug(newSlug, newSlug);
+        if (parsed.IsFailure)
+            return Result.Failure<TaxonomyTermDto>(parsed.Error);
+
+        var slug = parsed.Value;
+        if (slug.Equals(tag.Slug))
+            return Result.Success(tag.ToTermDto());
+
+        if (await tags.SlugExistsAsync(slug.Value, ct))
+            return Result.Failure<TaxonomyTermDto>(
+                new Error("slug_taken", $"The tag slug '{slug.Value}' is already in use."));
+
+        var previous = tag.ChangeSlug(slug);
+        if (previous is not null)
+            await redirects.RecordAsync(
+                ContentPaths.Tag(previous.Value), ContentPaths.Tag(slug.Value),
+                "tag slug changed", ct);
+
         await tags.SaveChangesAsync(ct);
         return Result.Success(tag.ToTermDto());
     }

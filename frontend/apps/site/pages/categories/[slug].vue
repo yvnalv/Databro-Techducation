@@ -6,6 +6,8 @@ const localePath = useLocalePath();
 const route = useRoute();
 const config = useRuntimeConfig();
 const client = useApiClient();
+// Captured before the useAsyncData await so the redirect guard keeps its Nuxt context (E1001).
+const nuxtApp = useNuxtApp();
 
 const slug = computed(() => String(route.params.slug));
 const page = computed(() => Number(route.query.page ?? 1) || 1);
@@ -24,8 +26,10 @@ const { data, error } = await useAsyncData(
   { watch: [slug, page] },
 );
 
-// An unknown category must 404, not render an empty listing that a crawler would index.
+// An unknown category must 404, not render an empty listing that a crawler would index — unless
+// its slug moved, in which case honor the 301.
 if (error.value || !data.value) {
+  await honorRedirect(`/categories/${slug.value}`, { nuxtApp, client, localePath });
   throw toNuxtError(error.value ?? createError({ statusCode: 404 }));
 }
 

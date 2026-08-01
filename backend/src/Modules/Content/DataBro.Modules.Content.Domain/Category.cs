@@ -44,15 +44,28 @@ public sealed class Category : AggregateRoot
     }
 
     /// <summary>
-    /// Renames and repositions a category. The slug is deliberately not editable: it is a public URL
-    /// (<c>/categories/{slug}</c>), and changing it would break links without a 301 redirect record
-    /// (CT-3). Slug changes arrive with the redirects slice.
+    /// Renames and repositions a category. The slug is changed separately via <see cref="ChangeSlug"/>,
+    /// which the service pairs with a 301 redirect (CT-3) — a rename must not silently move a public URL.
     /// </summary>
     public void Update(string name, string? description, int order)
     {
         Name = name.Trim();
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         Order = order;
+    }
+
+    /// <summary>
+    /// Changes the slug and returns the previous one, or null when unchanged. A category slug is
+    /// always a live public URL (<c>/categories/{slug}</c>), so the service always records a 301 from
+    /// the old path (CT-3).
+    /// </summary>
+    public Slug? ChangeSlug(Slug newSlug)
+    {
+        if (Slug.Equals(newSlug)) return null;
+
+        var previous = Slug;
+        Slug = newSlug;
+        return previous;
     }
 
     /// <summary>

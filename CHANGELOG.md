@@ -1,5 +1,33 @@
 # DataBro Changelog
 
+## [2026-08-01 15:02:04 UTC]
+
+CHG-0017 — Slug-change 301 redirects for articles and taxonomy
+
+- **A published content unit's URL can now move without breaking (CT-2/CT-3, docs/SEO.md §4).** A new
+  `redirects` table in the `content` schema records a 301 from the old path whenever a slug changes,
+  so an indexed URL never silently 404s.
+- **Dedicated slug-change endpoints**, separate from the general update so moving a public URL is an
+  explicit act: `PUT /api/v1/authoring/articles/{id}/slug` (behind `Content.Publish` — changing a URL
+  is a publishing concern), and `PUT /api/v1/authoring/{categories,tags}/{id}/slug` (behind
+  `Taxonomy.Manage`). Each carries `{ slug }`.
+- **An article records a redirect only once it has been published**; a never-published draft has no
+  indexed URL to protect and simply moves. A category or tag slug is always a live public URL, so its
+  move is unconditionally paired with a 301.
+- **Redirect chains are collapsed on write.** Renaming `a → b` then `b → c` repoints `a` straight to
+  `c`, so a crawler never follows two hops and the public lookup needs only one.
+- **Public lookup:** `GET /api/v1/redirects?from={path}` returns `{ toPath, statusCode }` or 404. The
+  `site` app calls it on a content 404 and, on the server, issues a real 301 (`navigateTo` with
+  `redirectCode`) — the SEO-critical path — before falling back to a genuine 404.
+- The redirect is written in the **same unit of work** as the slug change, so the two commit together
+  (CT-3 is atomic). The `from_path` unique index is **filtered on `is_deleted`** so a path redirected
+  away, freed, then moved again does not collide with the tombstone row.
+- Docs updated: API_SPEC (new endpoints), DATABASE (redirects table), STATUS (slice done, next-up
+  reordered). Verified: backend build clean, **94 tests passing** (was 71; +23 domain + API redirect
+  tests), frontend typecheck clean across all five workspaces.
+
+---
+
 ## [2026-08-01 04:20:00 UTC]
 
 CHG-0016 — Match the reference palette; remove automatic dark mode

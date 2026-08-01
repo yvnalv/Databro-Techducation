@@ -20,9 +20,20 @@ public sealed class Tag : AggregateRoot
     public static Tag Create(Guid id, Slug slug, string name) =>
         new() { Id = id, Slug = slug, Name = name.Trim() };
 
-    /// <summary>
-    /// Renames the tag. As with <see cref="Category"/>, the slug is immutable: it is a public URL and
-    /// changing it needs a 301 redirect record (CT-3), which arrives with the redirects slice.
-    /// </summary>
+    /// <summary>Renames the tag. The slug moves separately via <see cref="ChangeSlug"/>.</summary>
     public void Rename(string name) => Name = name.Trim();
+
+    /// <summary>
+    /// Changes the slug and returns the previous one, or null when unchanged. As with
+    /// <see cref="Category"/>, a tag slug is a live public URL, so the service records a 301 from the
+    /// old path (CT-3).
+    /// </summary>
+    public Slug? ChangeSlug(Slug newSlug)
+    {
+        if (Slug.Equals(newSlug)) return null;
+
+        var previous = Slug;
+        Slug = newSlug;
+        return previous;
+    }
 }

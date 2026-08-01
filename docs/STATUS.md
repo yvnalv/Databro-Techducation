@@ -33,6 +33,12 @@ and scheduled publishing next**.
 
 ## Recently done
 
+* **Slug-change 301 redirects (CT-2/CT-3, docs/SEO.md §4):** a `redirects` table in the `content`
+  schema, dedicated `PUT .../{id}/slug` endpoints for articles (behind `Content.Publish`) and
+  categories/tags (behind `Taxonomy.Manage`), and a public `GET /api/v1/redirects?from=` lookup the
+  `site` app hits on a 404 to serve a 301 instead of a dead page. An article's move records a redirect
+  only once it has been published; a term's always does. Redirect chains are collapsed on write (one
+  hop), and the `from_path` unique index is filtered on `is_deleted` so a freed path can move again.
 * **Content model v2 (ADR-0009):** inline rich text as a ProseMirror/Tiptap-compatible node tree, so
   articles can finally contain links, inline code and emphasis. Added `math` (KaTeX, block + inline),
   `code.output`, and blocks nested inside list items. Renderers accept the pre-ADR-0009 plain-string
@@ -54,12 +60,10 @@ and scheduled publishing next**.
 
 ## Next up (proposed order)
 
-1. Slug-change 301 redirects (`redirects` table + lookup + site honoring), covering articles and
-   taxonomy together. Blocks renaming a mis-slugged term, so it is the natural follow-on.
-2. Scheduled publishing (`scheduled_for` exists; needs Hangfire and rule CT-7).
-3. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-4. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
-5. CI pipeline (build/test + architecture-fitness gate).
+1. Scheduled publishing (`scheduled_for` exists; needs Hangfire and rule CT-7).
+2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
+3. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
+4. CI pipeline (build/test + architecture-fitness gate).
 
 ## Known gaps / deferred
 
@@ -80,15 +84,16 @@ and scheduled publishing next**.
 * Inline rich text is renderable but not yet *authorable* — the editor lands with the CMS slice.
 * Redis and Hangfire are provisioned but nothing in the backend uses them yet.
 * Media module is still a scaffold, so image blocks render an accessible placeholder.
-* **Category and tag slugs are immutable**, like article slugs — renaming a term's display name works,
-  but changing its URL waits for the redirects slice (CT-3).
+* **Slug changes go through a dedicated endpoint**, not the general update — a term's rename and its
+  URL move are separate operations, and the URL move always records a 301 (CT-3).
 * No bulk "reassign all articles from category A to B" operation; deleting a category in use is
   refused and the editor reassigns manually.
 * Taxonomy has no authoring UI — terms are managed via the API until the CMS surface exists.
 
 ## Testing status
 
-* `dotnet test` — 71 passing: architecture-fitness (4) + Content & Identity unit/integration (67).
+* `dotnet test` — 94 passing: architecture-fitness (4) + Content & Identity unit/integration (90),
+  including the slug-change/redirect domain + API suite.
 * `pnpm --filter @databro/ui test` — 59 passing: block renderer, embed allowlist, inline rich text
   (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, and the primitives'
   accessibility contracts (Vitest).

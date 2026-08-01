@@ -78,8 +78,8 @@ public class CategoryTests
     [Fact]
     public void Update_does_not_change_the_slug()
     {
-        // A category slug is a public URL; changing it needs a 301 record (CT-3), which is why
-        // Update deliberately has no slug parameter.
+        // A category slug is a public URL; it moves only through ChangeSlug, which the service pairs
+        // with a 301 (CT-3). Update deliberately has no slug parameter.
         var category = NewCategory("machine-learning");
 
         category.Update("Renamed Entirely", null, 5);
@@ -87,6 +87,40 @@ public class CategoryTests
         Assert.Equal("machine-learning", category.Slug.Value);
         Assert.Equal("Renamed Entirely", category.Name);
         Assert.Equal(5, category.Order);
+    }
+
+    [Fact]
+    public void ChangeSlug_returns_the_previous_slug_or_null_when_unchanged()
+    {
+        var category = NewCategory("machine-learning");
+
+        Assert.Equal("machine-learning", category.ChangeSlug(Slug.Create("ml"))!.Value);
+        Assert.Equal("ml", category.Slug.Value);
+        Assert.Null(category.ChangeSlug(Slug.Create("ml")));
+    }
+}
+
+public class TagTests
+{
+    [Fact]
+    public void ChangeSlug_returns_the_previous_slug_or_null_when_unchanged()
+    {
+        var tag = Tag.Create(Guid.NewGuid(), Slug.Create("rag"), "RAG");
+
+        Assert.Equal("rag", tag.ChangeSlug(Slug.Create("retrieval"))!.Value);
+        Assert.Equal("retrieval", tag.Slug.Value);
+        Assert.Null(tag.ChangeSlug(Slug.Create("retrieval")));
+    }
+
+    [Fact]
+    public void Rename_does_not_change_the_slug()
+    {
+        var tag = Tag.Create(Guid.NewGuid(), Slug.Create("rag"), "RAG");
+
+        tag.Rename("Retrieval-Augmented Generation");
+
+        Assert.Equal("rag", tag.Slug.Value);
+        Assert.Equal("Retrieval-Augmented Generation", tag.Name);
     }
 }
 

@@ -9,6 +9,7 @@ import type {
   CategoryWithAncestors,
   Paged,
   PageMeta,
+  Redirect,
   TaxonomyTerm,
 } from "@databro/types";
 
@@ -144,6 +145,23 @@ export class ApiClient {
 
   getTag(slug: string): Promise<TaxonomyTerm> {
     return this.request<TaxonomyTerm>(`/api/v1/tags/${encodeURIComponent(slug)}`);
+  }
+
+  // ---- Redirects ----
+
+  /**
+   * Resolves a path to its redirect target, or null when none exists. The site calls this on a 404
+   * to honor a moved slug with a 301 rather than serving a dead page (docs/SEO.md §4). A 404 from
+   * the endpoint is the normal "no redirect" answer, so it maps to null rather than throwing.
+   */
+  async resolveRedirect(path: string): Promise<Redirect | null> {
+    const query = new URLSearchParams({ from: path });
+    try {
+      return await this.request<Redirect>(`/api/v1/redirects?${query}`);
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 404) return null;
+      throw error;
+    }
   }
 }
 

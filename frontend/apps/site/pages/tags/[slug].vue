@@ -2,8 +2,11 @@
 import type { ArticleSummary, Paged, TaxonomyTerm } from "@databro/types";
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const client = useApiClient();
+// Captured before the useAsyncData await so the redirect guard keeps its Nuxt context (E1001).
+const nuxtApp = useNuxtApp();
 
 const slug = computed(() => String(route.params.slug));
 const page = computed(() => Number(route.query.page ?? 1) || 1);
@@ -20,8 +23,10 @@ const { data, error } = await useAsyncData(
   { watch: [slug, page] },
 );
 
-// An unknown tag must 404 rather than render an empty listing for crawlers to index.
+// An unknown tag must 404 rather than render an empty listing for crawlers to index — unless its
+// slug moved, in which case honor the 301.
 if (error.value || !data.value) {
+  await honorRedirect(`/tags/${slug.value}`, { nuxtApp, client, localePath });
   throw toNuxtError(error.value ?? createError({ statusCode: 404 }));
 }
 
