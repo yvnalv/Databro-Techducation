@@ -99,7 +99,16 @@ public sealed class TaxonomyService(ICategoryRepository categories, ITagReposito
     }
 
     public async Task<IReadOnlyList<CategoryDto>> ListCategoriesAsync(CancellationToken ct = default)
-        => (await categories.ListAllAsync(ct)).Select(c => c.ToDto()).ToList();
+    {
+        var all = await categories.ListAllAsync(ct);
+
+        // One grouped query for every count, rather than one query per category.
+        var counts = await categories.CountPublishedArticlesAsync(ct);
+
+        return all
+            .Select(c => c.ToDto() with { ArticleCount = counts.GetValueOrDefault(c.Id) })
+            .ToList();
+    }
 
     /// <summary>The category plus its ancestor trail (root first) for breadcrumbs.</summary>
     public async Task<CategoryWithAncestorsDto?> GetCategoryBySlugAsync(

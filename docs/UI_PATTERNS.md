@@ -153,8 +153,19 @@ colour matching the tint, and a class count beneath.
 
 DataBro: same anatomy, tints drawn from the `50` step of the teal/violet/functional hues rather than
 arbitrary pastels (DESIGN_SYSTEM §1.6). Tint is assigned **deterministically from the category slug**
-so a category keeps its colour across pages and between deploys. Count comes from the paging
-`meta.total` already returned by the API.
+so a category keeps its colour across pages and between deploys.
+
+Two rules the reference does not have to worry about, because it has no real data:
+
+* **Counts are published-only**, and come from a batched query rather than one per tile. A tile must
+  never promise drafts a reader cannot open.
+* **Any category with its own published articles is tiled, at whatever depth** — not just top-level
+  ones. Restricting to top-level hides everything when articles live in child categories, which is
+  the normal shape of a growing taxonomy. Rolling child counts up into the parent was rejected
+  outright: a tile would advertise 28 articles and the page it links to would show 0, because the
+  category page filters strictly. **A count must always agree with the page it points at.** Rolling
+  up would first require changing what a category page *means* — a deliberate decision, not a display
+  tweak.
 
 ---
 

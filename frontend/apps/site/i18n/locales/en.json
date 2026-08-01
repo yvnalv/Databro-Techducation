@@ -58,5 +58,20 @@
     "topics": "Topics",
     "topicsEmpty": "No topics yet.",
     "contact": "Contact"
+  },
+  "home": {
+    "heroTitle": "Learn the craft behind AI, data and software.",
+    "heroSubtitle": "Deep, practical writing on RAG, machine learning, data engineering, Python and SQL — written for people who ship, not for people collecting certificates.",
+    "highlightOne": "Built from real systems",
+    "highlightTwo": "Code you can run",
+    "highlightThree": "No fluff, no filler",
+    "primaryCta": "Start reading",
+    "latestTitle": "Latest articles",
+    "latestSubtitle": "New writing on the tools and ideas worth your time.",
+    "categoriesTitle": "Browse by topic",
+    "categoriesSubtitle": "Start where you are, and go as deep as you like.",
+    "ctaTitle": "Learn something properly this week.",
+    "ctaSubtitle": "Long-form, practical, and free to read.",
+    "ctaButton": "Browse the articles"
   }
 }

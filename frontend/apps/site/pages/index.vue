@@ -1,27 +1,44 @@
 <script setup lang="ts">
-import type { ArticleSummary, Paged } from "@databro/types";
+import type { ArticleSummary, Category, Paged } from "@databro/types";
 
+/**
+ * Home (docs/UI_PATTERNS.md §4).
+ *
+ * Section order follows the reference, but staged to what is actually backed by data: hero, latest
+ * articles, category tiles, CTA band. Course grid, instructors and pricing arrive with Phase 2;
+ * the reference's logo/social-proof strip is omitted entirely rather than filled with fake logos.
+ *
+ * Sections alternate `surface` / `surface-sunken` so the page separates into bands without rules.
+ */
 const { t } = useI18n();
 const route = useRoute();
 const client = useApiClient();
 
 const page = computed(() => Number(route.query.page ?? 1) || 1);
 
-// useAsyncData so the list is fetched during SSR/prerender and serialized into the payload -
-// the page must be complete in the initial HTML for crawlers.
-const { data } = await useAsyncData<Paged<ArticleSummary>>(
-  () => `articles:page:${page.value}`,
-  () => client.listArticles({ page: page.value }),
+// useAsyncData so the page is complete in the initial HTML for crawlers. Both reads degrade to
+// empty rather than failing the prerender if the API hiccups during a build.
+const { data } = await useAsyncData(
+  () => `home:${page.value}`,
+  async () => {
+    const [articles, categories] = await Promise.all([
+      client.listArticles({ page: page.value }),
+      client.listCategories(),
+    ]);
+    return { articles, categories };
+  },
   {
     watch: [page],
-    // The homepage is prerendered; an API hiccup should degrade to an empty list rather than
-    // failing the whole build.
-    default: () => ({ items: [], meta: { page: 1, pageSize: 0, total: 0, totalPages: 0 } }),
+    default: () => ({
+      articles: { items: [], meta: { page: 1, pageSize: 0, total: 0, totalPages: 0 } } as Paged<ArticleSummary>,
+      categories: [] as Category[],
+    }),
   },
 );
 
-const articles = computed(() => data.value?.items ?? []);
-const meta = computed(() => data.value!.meta);
+const articles = computed(() => data.value?.articles.items ?? []);
+const meta = computed(() => data.value!.articles.meta);
+const categories = computed(() => data.value?.categories ?? []);
 
 assertPageInRange(meta.value);
 
@@ -35,19 +52,25 @@ useListingSeo({
 
 <template>
   <div>
-    <PageHeader
-      :eyebrow="t('site.name')"
-      :title="t('site.tagline')"
-      :subtitle="t('site.description')"
-    />
+    <!-- The hero is the page's identity; it only makes sense on the first page of the listing. -->
+    <HeroSection v-if="meta.page === 1" />
 
-    <div class="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20">
-      <h2 class="font-display text-2xl font-semibold tracking-tight text-ink">
-        {{ t("articles.listTitle") }}
-      </h2>
+    <section class="bg-surface">
+      <div class="mx-auto max-w-shell px-4 py-16 sm:px-6 sm:py-20">
+        <div class="text-center">
+          <h2 class="font-display text-3xl font-bold tracking-tight text-ink">
+            {{ t("home.latestTitle") }}
+          </h2>
+          <p class="mx-auto mt-3 max-w-2xl text-ink-muted">{{ t("home.latestSubtitle") }}</p>
+        </div>
 
-      <ArticleList :articles="articles" />
-      <PaginationNav :meta="meta" base-path="/" />
-    </div>
+        <ArticleList :articles="articles" />
+        <PaginationNav :meta="meta" base-path="/" />
+      </div>
+    </section>
+
+    <CategoryTiles v-if="meta.page === 1" :categories="categories" />
+
+    <CtaBand />
   </div>
 </template>

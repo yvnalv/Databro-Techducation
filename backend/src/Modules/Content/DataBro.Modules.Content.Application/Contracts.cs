@@ -41,7 +41,9 @@ public sealed record CategoryDto(
     string Name,
     string? Description,
     Guid? ParentId,
-    int Order);
+    int Order,
+    /// <summary>Published articles in this category. Drives the public category tiles.</summary>
+    int ArticleCount = 0);
 
 /// <summary>A category plus its ancestors (root first) — the breadcrumb trail for a category page.</summary>
 public sealed record CategoryWithAncestorsDto(CategoryDto Category, IReadOnlyList<CategoryDto> Ancestors);

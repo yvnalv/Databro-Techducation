@@ -54,6 +54,18 @@ internal sealed class CategoryRepository(ContentDbContext db) : ICategoryReposit
     public Task<int> CountArticlesAsync(Guid categoryId, CancellationToken ct = default)
         => db.Articles.CountAsync(a => a.CategoryId == categoryId, ct);
 
+    public async Task<IReadOnlyDictionary<Guid, int>> CountPublishedArticlesAsync(
+        CancellationToken ct = default)
+    {
+        var counts = await db.Articles
+            .Where(a => a.Status == ArticleStatus.Published && a.CategoryId != null)
+            .GroupBy(a => a.CategoryId!.Value)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return counts.ToDictionary(c => c.CategoryId, c => c.Count);
+    }
+
     public void Remove(Category category) => db.Categories.Remove(category);
 
     public Task SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);

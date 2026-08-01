@@ -322,6 +322,34 @@ public class TaxonomyApiTests(ContentApiFactory factory) : IClassFixture<Content
     }
 
     [Fact]
+    public async Task Category_list_counts_published_articles_only()
+    {
+        // The tile count must reflect what a reader can actually open, so a draft must not inflate
+        // it. This is deliberately a different count from the one guarding TX-2 deletion.
+        var editor = await EditorClientAsync();
+        var anon = AnonymousClient();
+        var slug = $"counted-{Guid.NewGuid():N}";
+        var categoryId = await CreateCategoryAsync(editor, slug);
+
+        var draft = await ReadAsync(await editor.PostAsJsonAsync(
+            "/api/v1/authoring/articles", DraftPayload($"d-{Guid.NewGuid():N}", categoryId)));
+        var publishedArticle = await ReadAsync(await editor.PostAsJsonAsync(
+            "/api/v1/authoring/articles", DraftPayload($"p-{Guid.NewGuid():N}", categoryId)));
+
+        var publishedId = publishedArticle.Root.GetProperty("data").GetProperty("id").GetGuid();
+        (await editor.PostAsync($"/api/v1/authoring/articles/{publishedId}/publish", null))
+            .EnsureSuccessStatusCode();
+
+        var list = await ReadAsync(await anon.GetAsync("/api/v1/categories"));
+        var mine = list.Root.GetProperty("data").EnumerateArray()
+            .Single(c => c.GetProperty("slug").GetString() == slug);
+
+        // Two articles exist in the category; only one is published.
+        Assert.Equal(1, mine.GetProperty("articleCount").GetInt32());
+        Assert.NotEqual(Guid.Empty, draft.Root.GetProperty("data").GetProperty("id").GetGuid());
+    }
+
+    [Fact]
     public async Task An_unknown_category_slug_is_a_404()
     {
         var anon = AnonymousClient();

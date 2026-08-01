@@ -66,10 +66,10 @@ and scheduled publishing next**.
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
-* **Design pass in progress.** Reference set studied and written up as
-  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) + [UI_PATTERNS.md](UI_PATTERNS.md). Done: tokens (teal/violet
-  palette, self-hosted fonts), primitives, site chrome, listings, and the article page. Outstanding:
-  the marketing home sections (hero, category tiles, newsletter band).
+* **Design pass complete for what exists.** Reference set studied and written up as
+  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) + [UI_PATTERNS.md](UI_PATTERNS.md). Tokens, primitives, chrome,
+  listings, article page and the home sections are all done. The reference's course grid, instructor
+  carousel and pricing table wait for Phase 2, since none of them have data behind them yet.
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.
@@ -88,7 +88,7 @@ and scheduled publishing next**.
 
 ## Testing status
 
-* `dotnet test` — 70 passing: architecture-fitness (4) + Content & Identity unit/integration (66).
+* `dotnet test` — 71 passing: architecture-fitness (4) + Content & Identity unit/integration (67).
 * `pnpm --filter @databro/ui test` — 59 passing: block renderer, embed allowlist, inline rich text
   (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, and the primitives'
   accessibility contracts (Vitest).
@@ -101,7 +101,8 @@ and scheduled publishing next**.
 
 ## Open questions / to be ADR'd later
 
-* Newsletter provider (Resend vs. ConvertKit) — decide end of Phase 1.
+* Newsletter provider (Resend vs. ConvertKit) — decide end of Phase 1. The home CTA band is a plain
+  link until then: a subscribe form that silently discards addresses costs more trust than it earns.
 * Playground execution strategy (client WASM vs. server sandbox) — Phase 3 ADR.
 * LLM provider(s) and embedding model — Phase 3 ADR.
 * Billing provider specifics — Phase 3 ADR.

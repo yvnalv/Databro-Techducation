@@ -226,6 +226,8 @@ export interface Category extends TaxonomyTerm {
   description?: string | null;
   parentId?: string | null;
   order: number;
+  /** Published articles only — a tile must never promise drafts a reader cannot open. */
+  articleCount: number;
 }
 
 /** A category plus its ancestors, root first — the breadcrumb trail for a category page. */

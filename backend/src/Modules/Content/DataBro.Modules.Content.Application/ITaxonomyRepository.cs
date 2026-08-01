@@ -22,6 +22,14 @@ public interface ICategoryRepository
     /// <summary>Number of non-deleted articles referencing this category — TX-2 guards deletion.</summary>
     Task<int> CountArticlesAsync(Guid categoryId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Published-article counts per category, for the public category tiles. Distinct from
+    /// <see cref="CountArticlesAsync"/>: that one guards deletion and must see drafts too, while a
+    /// public tile must only ever count what a reader can actually open. Batched, because a count
+    /// per category on a listing is the definition of N+1.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountPublishedArticlesAsync(CancellationToken ct = default);
+
     void Remove(Category category);
     Task SaveChangesAsync(CancellationToken ct = default);
 }

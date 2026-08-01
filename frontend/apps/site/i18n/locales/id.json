@@ -58,5 +58,20 @@
     "topics": "Topik",
     "topicsEmpty": "Belum ada topik.",
     "contact": "Kontak"
+  },
+  "home": {
+    "heroTitle": "Pelajari keahlian di balik AI, data, dan software.",
+    "heroSubtitle": "Tulisan mendalam dan praktis tentang RAG, machine learning, data engineering, Python, dan SQL — untuk Anda yang benar-benar membangun, bukan sekadar mengoleksi sertifikat.",
+    "highlightOne": "Berdasarkan sistem nyata",
+    "highlightTwo": "Kode yang bisa dijalankan",
+    "highlightThree": "Tanpa basa-basi",
+    "primaryCta": "Mulai membaca",
+    "latestTitle": "Artikel terbaru",
+    "latestSubtitle": "Tulisan baru tentang alat dan gagasan yang layak diikuti.",
+    "categoriesTitle": "Jelajahi per topik",
+    "categoriesSubtitle": "Mulai dari mana pun Anda berada, sedalam yang Anda mau.",
+    "ctaTitle": "Pelajari sesuatu dengan serius minggu ini.",
+    "ctaSubtitle": "Mendalam, praktis, dan gratis dibaca.",
+    "ctaButton": "Lihat semua artikel"
   }
 }

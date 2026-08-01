@@ -1,5 +1,36 @@
 # DataBro Changelog
 
+## [2026-08-01 04:05:00 UTC]
+
+CHG-0015 — Marketing home: hero, category tiles, CTA band
+
+- **Hero** — type-led, without the reference's image collage or floating stat card. There is no
+  photography, and a stat card would have to invent numbers; a confident text hero also keeps the LCP
+  element text, which is the fastest thing a hero can be. Shown only on page 1 of the listing.
+- **Category tiles**, which needed a new API capability: `CategoryDto.ArticleCount`, fed by a batched
+  `CountPublishedArticlesAsync`. Deliberately a *different* count from the one guarding TX-2 deletion
+  — that one must see drafts, a public tile must only ever count what a reader can open. One grouped
+  query rather than one per tile.
+- Tiles show **any category with its own published articles, at any depth**. Two alternatives were
+  tried and rejected: top-level-only hid every tile once articles lived in child categories (the
+  normal shape of a growing taxonomy), and rolling child counts up into the parent would have made a
+  tile advertise 28 articles while the page it links to showed 0, because category pages filter
+  strictly. **A count has to agree with the page it points at.** Rolling up would first require
+  changing what a category page means.
+- **CTA band** keeps the reference's rhythm and weight but carries a real link rather than its
+  newsletter capture. No newsletter provider has been chosen (still open in STATUS.md), and a
+  subscribe field that silently discards addresses costs more trust than it earns. Swap in the form
+  once a provider exists.
+- Home sections alternate `surface` / `surface-sunken` so the page separates into bands without
+  rules, matching the reference's rhythm.
+- The reference's logo/social-proof strip is omitted entirely rather than filled with fake logos;
+  course grid, instructors and pricing wait for Phase 2 data.
+- i18n extended for all of it in both locales — 55 keys, parity verified.
+- Verified: 71 backend tests, 59 frontend tests, clean typecheck, production build, and live checks
+  of both locales including that the tile count matches its category page exactly.
+
+---
+
 ## [2026-08-01 03:55:00 UTC]
 
 CHG-0014 — Article page: author card, meta row, related articles
