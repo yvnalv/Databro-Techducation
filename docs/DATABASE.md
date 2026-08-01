@@ -101,6 +101,12 @@ Index: GIN(`tsv`), GIN(`tags`), trigram index on `title` for fuzzy fallback.
 
 **outbox_messages** (id, occurred_at, type, payload jsonb, processed_at null, attempts, error null).
 
+### hangfire
+
+Owned and migrated by **Hangfire.PostgreSql**, not EF Core — its tables (jobs, servers, locks,
+recurring jobs) live in a dedicated `hangfire` schema created automatically at host startup. Backs the
+scheduled-publish sweep (CT-7). Do not write EF migrations against it.
+
 ---
 
 ## Versioning model (content)

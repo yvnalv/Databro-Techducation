@@ -33,6 +33,12 @@ and scheduled publishing next**.
 
 ## Recently done
 
+* **Scheduled publishing (CT-7):** `POST /api/v1/authoring/articles/{id}/schedule` (behind
+  `Content.Publish`) sets a future publish time; a **Hangfire** recurring sweep (every minute, backed
+  by PostgreSQL storage) publishes articles as they come due. Honours CT-7's failure contract — an
+  article that can no longer satisfy the publish preconditions when its time arrives stays scheduled
+  and logs an alert rather than being dropped. Hangfire is host-owned; the Content module registers
+  its own recurring job. Dev-only dashboard at `/hangfire`.
 * **Slug-change 301 redirects (CT-2/CT-3, docs/SEO.md §4):** a `redirects` table in the `content`
   schema, dedicated `PUT .../{id}/slug` endpoints for articles (behind `Content.Publish`) and
   categories/tags (behind `Taxonomy.Manage`), and a public `GET /api/v1/redirects?from=` lookup the
@@ -60,10 +66,9 @@ and scheduled publishing next**.
 
 ## Next up (proposed order)
 
-1. Scheduled publishing (`scheduled_for` exists; needs Hangfire and rule CT-7).
-2. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-3. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
-4. CI pipeline (build/test + architecture-fitness gate).
+1. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
+2. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
+3. CI pipeline (build/test + architecture-fitness gate).
 
 ## Known gaps / deferred
 
@@ -82,7 +87,10 @@ and scheduled publishing next**.
 * **No authoring UI.** Articles and taxonomy are API-only; `apps/app` is still a stub. This is the
   binding constraint on content production and the reason the CMS editor is next.
 * Inline rich text is renderable but not yet *authorable* — the editor lands with the CMS slice.
-* Redis and Hangfire are provisioned but nothing in the backend uses them yet.
+* **Hangfire** now runs the scheduled-publish sweep (PostgreSQL storage). Redis is still provisioned
+  but unused. The scheduled-publish failure "alert" is a logged error for now — it becomes a real
+  notification when the Notification module lands. The sweep assumes a single job server; a
+  multi-server deploy needs `DisableConcurrentExecution` before it is safe.
 * Media module is still a scaffold, so image blocks render an accessible placeholder.
 * **Slug changes go through a dedicated endpoint**, not the general update — a term's rename and its
   URL move are separate operations, and the URL move always records a 301 (CT-3).
@@ -92,8 +100,8 @@ and scheduled publishing next**.
 
 ## Testing status
 
-* `dotnet test` — 94 passing: architecture-fitness (4) + Content & Identity unit/integration (90),
-  including the slug-change/redirect domain + API suite.
+* `dotnet test` — 106 passing: architecture-fitness (4) + Content & Identity unit/integration (102),
+  including the slug-change/redirect and scheduled-publishing domain + API suites.
 * `pnpm --filter @databro/ui test` — 59 passing: block renderer, embed allowlist, inline rich text
   (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, and the primitives'
   accessibility contracts (Vitest).

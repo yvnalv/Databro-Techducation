@@ -41,6 +41,9 @@ public sealed record RedirectDto(string FromPath, string ToPath, int StatusCode)
 /// <summary>Body of a slug-change request: the single new slug for an article or taxonomy term.</summary>
 public sealed record ChangeSlugRequest(string Slug);
 
+/// <summary>Body of a schedule request: when the article should publish automatically (CT-7).</summary>
+public sealed record ScheduleArticleRequest(DateTimeOffset ScheduledFor);
+
 public sealed record CategoryDto(
     Guid Id,
     string Slug,

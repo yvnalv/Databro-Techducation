@@ -94,6 +94,49 @@ public class ArticleTests
     }
 
     [Fact]
+    public void Schedule_sets_status_and_time_for_a_valid_future_request()
+    {
+        var article = NewDraft();
+
+        var result = article.Schedule(Now.AddHours(1), Now);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ArticleStatus.Scheduled, article.Status);
+        Assert.Equal(Now.AddHours(1), article.ScheduledFor);
+    }
+
+    [Fact]
+    public void Schedule_rejects_a_time_in_the_past()
+    {
+        var article = NewDraft();
+
+        var result = article.Schedule(Now.AddMinutes(-1), Now);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ArticleStatus.Draft, article.Status);
+        Assert.Null(article.ScheduledFor);
+    }
+
+    [Fact]
+    public void Schedule_requires_content_and_a_title()
+    {
+        Assert.True(NewDraft(Doc()).Schedule(Now.AddHours(1), Now).IsFailure);   // no blocks
+        Assert.True(NewDraft(title: "  ").Schedule(Now.AddHours(1), Now).IsFailure); // no title
+    }
+
+    [Fact]
+    public void A_published_article_cannot_be_scheduled()
+    {
+        var article = NewDraft();
+        article.Publish(Now);
+
+        var result = article.Schedule(Now.AddHours(1), Now);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("conflict", result.Error.Code);
+    }
+
+    [Fact]
     public void ChangeSlug_returns_the_previous_slug()
     {
         var article = NewDraft();

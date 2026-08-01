@@ -75,6 +75,17 @@ public sealed class ChangeSlugRequestValidator : AbstractValidator<ChangeSlugReq
     }
 }
 
+public sealed class ScheduleArticleRequestValidator : AbstractValidator<ScheduleArticleRequest>
+{
+    public ScheduleArticleRequestValidator()
+    {
+        // Shape only — "must be in the future" is a domain rule (it needs the clock). This just
+        // rejects a missing/default timestamp with a clear 400 rather than a business-rule 422.
+        RuleFor(r => r.ScheduledFor)
+            .NotEqual(default(DateTimeOffset)).WithMessage("A scheduled time is required.");
+    }
+}
+
 // ---- Taxonomy ----
 
 public sealed class CreateCategoryRequestValidator : AbstractValidator<CreateCategoryRequest>

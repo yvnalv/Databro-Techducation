@@ -58,6 +58,14 @@ internal sealed class ArticleRepository(ContentDbContext db) : IArticleRepositor
     public async Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default)
         => await PageAsync(db.Articles.OrderByDescending(a => a.CreatedAt), page, ct);
 
+    public async Task<IReadOnlyList<Article>> ListDueScheduledAsync(DateTimeOffset now, CancellationToken ct = default)
+        // Versions loaded so Publish can append the new one against a tracked collection, matching
+        // the interactive publish path (GetByIdAsync).
+        => await db.Articles
+            .Include(a => a.Versions)
+            .Where(a => a.Status == ArticleStatus.Scheduled && a.ScheduledFor != null && a.ScheduledFor <= now)
+            .ToListAsync(ct);
+
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetTagIdsAsync(
         IReadOnlyCollection<Guid> articleIds, CancellationToken ct = default)
     {

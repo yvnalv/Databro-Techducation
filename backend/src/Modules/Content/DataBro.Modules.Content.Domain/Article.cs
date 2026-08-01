@@ -113,6 +113,31 @@ public sealed class Article : AggregateRoot
     }
 
     /// <summary>
+    /// Schedules the article to publish automatically at <paramref name="scheduledFor"/> (rule CT-7).
+    /// Enforces the publish preconditions now so a schedule cannot be set on something that can never
+    /// publish, and requires a future time. Rescheduling a still-scheduled article is allowed; a
+    /// currently-published one must be unpublished first.
+    /// </summary>
+    public Result Schedule(DateTimeOffset scheduledFor, DateTimeOffset now)
+    {
+        if (Status == ArticleStatus.Published)
+            return Result.Failure(Error.Conflict("A published article cannot be scheduled; unpublish it first."));
+
+        if (string.IsNullOrWhiteSpace(Title))
+            return Result.Failure(Error.Rule("An article requires a title before it can be scheduled."));
+
+        if (!DraftBlocks.HasContent)
+            return Result.Failure(Error.Rule("An article requires at least one content block before it can be scheduled."));
+
+        if (scheduledFor <= now)
+            return Result.Failure(Error.Rule("The scheduled time must be in the future."));
+
+        Status = ArticleStatus.Scheduled;
+        ScheduledFor = scheduledFor;
+        return Result.Success();
+    }
+
+    /// <summary>
     /// Publishes the article: snapshots the draft into the published copy, writes an immutable
     /// version row, and increments the version — atomically (rules CT-1, CT-5, CT-6, CT-8).
     /// </summary>

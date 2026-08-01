@@ -12,6 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <!-- Core only: the module registers its recurring job; the host owns the Hangfire server/storage. -->
+    <PackageReference Include="Hangfire.Core" Version="1.8.20" />
   </ItemGroup>
 
   <PropertyGroup>

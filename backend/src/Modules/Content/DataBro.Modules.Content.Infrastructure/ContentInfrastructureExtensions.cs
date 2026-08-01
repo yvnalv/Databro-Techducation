@@ -43,10 +43,13 @@ public static class ContentInfrastructureExtensions
         services.AddScoped<ArticleService>();
         services.AddScoped<TaxonomyService>();
         services.AddScoped<RedirectService>();
+        services.AddScoped<ScheduledPublishingJob>();
 
         services.AddValidatorsFromAssemblyContaining<ArticleService>(ServiceLifetime.Singleton);
 
         services.AddHostedService<Persistence.ContentInitializer>();
+        // Registers the scheduled-publish recurring job (CT-7) where a Hangfire server is running.
+        services.AddHostedService<ContentJobsInitializer>();
 
         return services;
     }

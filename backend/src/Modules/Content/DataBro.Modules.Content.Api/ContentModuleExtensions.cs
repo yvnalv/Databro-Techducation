@@ -127,6 +127,12 @@ public static class ContentModuleExtensions
             ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentPublish));
 
+        // Scheduling is a publishing act (CT-4/CT-7): the background sweep publishes it when due.
+        group.MapPost("/{id:guid}/schedule", async (Guid id, ScheduleArticleRequest request, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.ScheduleAsync(id, request.ScheduledFor, ct)))
+            .AddEndpointFilter<ValidationFilter<ScheduleArticleRequest>>()
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+
         // Changing a public URL is a publishing concern, not a drafting one (CT-3): behind
         // Content.Publish, alongside a 301 the service writes for an already-published article.
         group.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, ArticleService service, CancellationToken ct) =>

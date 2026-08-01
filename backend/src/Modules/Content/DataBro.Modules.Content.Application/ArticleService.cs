@@ -93,6 +93,25 @@ public sealed class ArticleService(
     }
 
     /// <summary>
+    /// Schedules an article to publish automatically at <paramref name="scheduledFor"/> (CT-7). The
+    /// background sweep (<see cref="ScheduledPublishingJob"/>) does the actual publish when the time
+    /// arrives.
+    /// </summary>
+    public async Task<Result<ArticleDto>> ScheduleAsync(Guid id, DateTimeOffset scheduledFor, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null)
+            return Result.Failure<ArticleDto>(Error.NotFound("Article not found."));
+
+        var result = article.Schedule(scheduledFor, clock.UtcNow);
+        if (result.IsFailure)
+            return Result.Failure<ArticleDto>(result.Error);
+
+        await repository.SaveChangesAsync(ct);
+        return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
+    }
+
+    /// <summary>
     /// Changes an article's slug (CT-2/CT-3). If the article has ever been published its old
     /// <c>/articles/{slug}</c> path is indexed, so a 301 is recorded from it to the new path in the
     /// same transaction; a never-published draft simply moves, since it had no public URL to protect.

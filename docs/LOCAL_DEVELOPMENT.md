@@ -76,6 +76,7 @@ you want a clean-machine reproduction.
 | API | http://localhost:5158/health |
 | Site | http://localhost:3000 |
 | App | http://localhost:3001 |
+| Hangfire dashboard | http://localhost:5158/hangfire (dev only) |
 
 Trade-offs to know before you pick this one:
 

@@ -27,6 +27,12 @@ public interface IArticleRepository
     Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default);
 
     /// <summary>
+    /// Scheduled articles whose time has arrived (<c>ScheduledFor &lt;= now</c>), tracked and with
+    /// version history loaded so the scheduled-publish job can publish them (rule CT-7).
+    /// </summary>
+    Task<IReadOnlyList<Article>> ListDueScheduledAsync(DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>
     /// Tag ids per article, excluding soft-deleted tags. Batched to keep list endpoints off the
     /// N+1 path.
     /// </summary>

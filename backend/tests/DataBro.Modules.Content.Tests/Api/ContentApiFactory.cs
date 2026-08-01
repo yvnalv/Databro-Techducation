@@ -28,6 +28,9 @@ public sealed class ContentApiFactory : WebApplicationFactory<Program>, IAsyncLi
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("ConnectionStrings:Postgres", _db.GetConnectionString());
+        // No Hangfire server in tests: they invoke the scheduled-publish job directly, so the host
+        // must not stand one up (nor touch Hangfire storage). See ContentJobsInitializer.
+        builder.UseSetting("Hangfire:EnableServer", "false");
     }
 
     async Task IAsyncLifetime.InitializeAsync()

@@ -1,5 +1,31 @@
 # DataBro Changelog
 
+## [2026-08-01 15:29:53 UTC]
+
+CHG-0018 — Scheduled publishing via Hangfire (CT-7)
+
+- **Articles can be scheduled to publish automatically.** `POST /api/v1/authoring/articles/{id}/schedule`
+  with `{ scheduledFor }` (behind `Content.Publish`) sets a future publish time and moves the article
+  to `Scheduled`. `Article.Schedule` enforces the publish preconditions up front (title + at least one
+  block) and requires a future time, so a schedule can never be set on something that can't publish.
+- **A Hangfire recurring sweep publishes due articles.** Runs every minute against PostgreSQL-backed
+  Hangfire storage; each due article goes through the same `Publish` path as an interactive publish
+  (snapshot, version row, event).
+- **CT-7 failure contract honoured.** If an article can no longer publish when its time arrives (e.g.
+  its draft was emptied), it stays `Scheduled` and logs an alert instead of being silently dropped —
+  the next sweep retries once an editor fixes it. (The alert is a logged error until a Notification
+  module exists.)
+- **Hangfire is host-owned; the module owns its job.** The host stands up the server + storage; the
+  Content module registers the `content:scheduled-publish` recurring job via a hosted initializer.
+  Both are gated by `Hangfire:EnableServer`, which integration tests set to false and drive the job
+  method directly. Hangfire manages its own `hangfire` schema (no EF migration).
+- Dev-only dashboard at `/hangfire` (permissive auth in Development only; never mounted elsewhere).
+- Docs updated: STATUS (slice done, next-up reordered, gaps), DATABASE (hangfire schema),
+  LOCAL_DEVELOPMENT (dashboard). Verified: backend build clean, **106 tests passing** (was 94; +12
+  domain, job-unit and endpoint tests for scheduling).
+
+---
+
 ## [2026-08-01 15:02:04 UTC]
 
 CHG-0017 — Slug-change 301 redirects for articles and taxonomy
