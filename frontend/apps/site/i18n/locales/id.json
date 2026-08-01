@@ -8,7 +8,8 @@
     "home": "Beranda",
     "articles": "Artikel",
     "skipToContent": "Lompat ke konten",
-    "languageLabel": "Bahasa"
+    "languageLabel": "Bahasa",
+    "primaryLabel": "Utama"
   },
   "articles": {
     "listTitle": "Artikel",
@@ -45,9 +46,14 @@
     "notFoundMessage": "Halaman yang Anda cari tidak ada atau sudah tidak diterbitkan.",
     "genericTitle": "Terjadi kesalahan",
     "genericMessage": "Kami tidak dapat memuat halaman ini. Silakan coba lagi.",
-    "backHome": "Kembali ke beranda"
+    "backHome": "Kembali ke beranda",
+    "code": "Kesalahan {code}"
   },
   "footer": {
-    "rights": "Seluruh hak cipta dilindungi."
+    "rights": "Seluruh hak cipta dilindungi.",
+    "learn": "Belajar",
+    "topics": "Topik",
+    "topicsEmpty": "Belum ada topik.",
+    "contact": "Kontak"
   }
 }

@@ -1,5 +1,38 @@
 # DataBro Changelog
 
+## [2026-08-01 03:45:00 UTC]
+
+CHG-0013 — Site chrome and listings to the reference design
+
+- **Header** split into a `SiteHeader` component with the reference's three-zone layout (brand,
+  navigation, actions), a sticky translucent bar, and a placeholder `BrandMark` — a single-colour SVG
+  that inherits `currentColor`, so the light header and dark footer need one asset, not two.
+- **Footer** rebuilt dark, as in the reference, because it is what terminates the page. Four columns
+  rather than five: DataBro has no apps, so the app-store column is dropped instead of filled with
+  placeholders. **Topic links come from the API**, not a hardcoded list — the footer is a real crawl
+  surface and a hardcoded list would rot silently. It degrades to an empty state rather than ever
+  failing a page render.
+- **`PageHeader` band** for index-style pages: flat `surface-sunken`, not the reference's
+  pink→violet gradient. Slots for a breadcrumb above and a meta line below. Article pages
+  deliberately have no band — it would push the body below the fold on the page where reading time
+  matters most.
+- **`ArticleCard`** rebuilt to the full reference anatomy: cover, category chip, title, excerpt, and
+  a footer row with author avatar, name, date and read time. The cover is a **deterministic tinted
+  panel keyed off the slug**, not a grey placeholder: Media does not exist yet, so the card has to
+  look designed without an image, and the tint must not flicker between renders. Listings moved to a
+  3-up grid on the wider `shell` container.
+- **Pagination** restyled to the reference: numbered, active page a solid accent fill, still real
+  crawlable anchors rather than buttons.
+- **404** rebuilt to the reference composition — oversized ghosted status numeral with the heading
+  overlaid. The reference keeps its newsletter band on error pages; DataBro drops it, since asking
+  for an email on a broken page is the wrong moment.
+- i18n extended for the new chrome in both locales, with a key-parity check confirming 39 identical
+  keys on each side (CLAUDE.md rule 19).
+- Verified: 59 tests, clean typecheck across five workspaces, production build prerendering, and live
+  checks of chrome, cards, pagination, the 404 and the Indonesian locale in the containerised stack.
+
+---
+
 ## [2026-07-31 16:05:00 UTC]
 
 CHG-0012 — Design system documented, palette adopted, primitives built

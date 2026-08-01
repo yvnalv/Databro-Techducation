@@ -43,16 +43,18 @@ useListingSeo({
 </script>
 
 <template>
-  <div class="mx-auto max-w-shell px-6 py-14 sm:py-20">
-    <p class="text-sm font-semibold uppercase tracking-wide text-accent">{{ t("tags.eyebrow") }}</p>
-    <h1 class="mt-3 font-display text-4xl font-bold tracking-tight">#{{ tag.name }}</h1>
-    <p class="mt-4 text-lg text-ink-muted">{{ description }}</p>
+  <div>
+    <PageHeader :eyebrow="t('tags.eyebrow')" :title="`#${tag.name}`" :subtitle="description">
+      <template #meta>
+        <p class="mt-3 text-sm text-ink-subtle">
+          {{ t("tags.articleCount", articles.meta.total) }}
+        </p>
+      </template>
+    </PageHeader>
 
-    <p class="mt-2 text-sm text-ink-subtle">
-      {{ t("tags.articleCount", articles.meta.total) }}
-    </p>
-
-    <ArticleList :articles="articles.items" />
-    <PaginationNav :meta="articles.meta" :base-path="`/tags/${slug}`" />
+    <div class="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20">
+      <ArticleList :articles="articles.items" />
+      <PaginationNav :meta="articles.meta" :base-path="`/tags/${slug}`" />
+    </div>
   </div>
 </template>

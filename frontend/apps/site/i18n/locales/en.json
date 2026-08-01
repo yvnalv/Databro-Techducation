@@ -8,7 +8,8 @@
     "home": "Home",
     "articles": "Articles",
     "skipToContent": "Skip to content",
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "primaryLabel": "Primary"
   },
   "articles": {
     "listTitle": "Articles",
@@ -45,9 +46,14 @@
     "notFoundMessage": "The page you are looking for does not exist or is no longer published.",
     "genericTitle": "Something went wrong",
     "genericMessage": "We could not load this page. Please try again.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "code": "Error {code}"
   },
   "footer": {
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "learn": "Learn",
+    "topics": "Topics",
+    "topicsEmpty": "No topics yet.",
+    "contact": "Contact"
   }
 }

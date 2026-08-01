@@ -79,26 +79,41 @@ useHead({
 </script>
 
 <template>
-  <div class="mx-auto max-w-shell px-6 py-14 sm:py-20">
-    <!-- The visible breadcrumb mirrors the JSON-LD; both are crawlable navigation. -->
-    <nav :aria-label="t('categories.breadcrumbLabel')" class="text-sm text-ink-subtle">
-      <NuxtLink :to="localePath('/')">{{ t("nav.home") }}</NuxtLink>
-      <template v-for="ancestor in category.ancestors" :key="ancestor.id">
-        <span aria-hidden="true"> / </span>
-        <NuxtLink :to="localePath(`/categories/${ancestor.slug}`)">{{ ancestor.name }}</NuxtLink>
+  <div>
+    <PageHeader :title="category.category.name" :subtitle="description">
+      <template #breadcrumb>
+        <!-- The visible breadcrumb mirrors the JSON-LD; both are crawlable navigation. -->
+        <nav
+          :aria-label="t('categories.breadcrumbLabel')"
+          class="flex flex-wrap items-center justify-center gap-1.5 text-sm text-ink-subtle"
+        >
+          <NuxtLink :to="localePath('/')" class="transition-colors hover:text-ink">
+            {{ t("nav.home") }}
+          </NuxtLink>
+          <template v-for="ancestor in category.ancestors" :key="ancestor.id">
+            <span aria-hidden="true">/</span>
+            <NuxtLink
+              :to="localePath(`/categories/${ancestor.slug}`)"
+              class="transition-colors hover:text-ink"
+            >
+              {{ ancestor.name }}
+            </NuxtLink>
+          </template>
+          <span aria-hidden="true">/</span>
+          <span class="text-ink">{{ category.category.name }}</span>
+        </nav>
       </template>
-      <span aria-hidden="true"> / </span>
-      <span>{{ category.category.name }}</span>
-    </nav>
 
-    <h1 class="mt-4 font-display text-4xl font-bold tracking-tight">{{ category.category.name }}</h1>
-    <p class="mt-4 text-lg text-ink-muted">{{ description }}</p>
+      <template #meta>
+        <p class="mt-3 text-sm text-ink-subtle">
+          {{ t("categories.articleCount", articles.meta.total) }}
+        </p>
+      </template>
+    </PageHeader>
 
-    <p class="mt-2 text-sm text-ink-subtle">
-      {{ t("categories.articleCount", articles.meta.total) }}
-    </p>
-
-    <ArticleList :articles="articles.items" />
-    <PaginationNav :meta="articles.meta" :base-path="`/categories/${slug}`" />
+    <div class="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20">
+      <ArticleList :articles="articles.items" />
+      <PaginationNav :meta="articles.meta" :base-path="`/categories/${slug}`" />
+    </div>
   </div>
 </template>
