@@ -5,114 +5,76 @@
  * works through them (`text-ink/70`). The Tailwind preset maps each variable to a semantic colour
  * name; components reference the name, never the value.
  *
- * Palette: deep teal primary, violet secondary, amber reserved solely for "premium". Chosen over
- * the reference's bright blue because DataBro teaches practitioners rather than selling consumer
- * courses, and because a blue LMS is indistinguishable from a dozen others (DESIGN_SYSTEM §1.1).
+ * PALETTE: sampled directly from the LearnUp reference screenshots, not estimated by eye — the
+ * primary blue, the pink→violet page-header gradient, the navy footer and the surface tints are the
+ * measured values from `UI UX References/`.
  *
- * Light mode is the primary theme. Dark mode responds to two signals, both of which must work:
- *   - `prefers-color-scheme`, for a reader who has never touched a toggle
- *   - `[data-theme]`, for an explicit choice, which has to beat the OS preference in both directions
+ * THEME: **light only.** An earlier revision switched on `prefers-color-scheme`, which meant anyone
+ * whose OS was in dark mode saw a dark site regardless of the design. DataBro is a light-mode
+ * product, so the automatic switch is gone. The `[data-theme="dark"]` block below stays as an
+ * explicit, opt-in override for a future toggle; nothing turns it on today.
  */
 
 :root {
   /* --- Surfaces --- */
   --db-surface: 255 255 255;
   --db-surface-raised: 255 255 255;
-  --db-surface-sunken: 248 250 252;
+  --db-surface-sunken: 246 248 253; /* #f6f8fd - the reference's alternating band */
 
-  /* --- Text --- */
-  --db-ink: 15 23 42;
-  --db-ink-muted: 71 85 105;
-  --db-ink-subtle: 100 116 139;
+  /* --- Text. Headings are the deep navy that also carries the footer. --- */
+  --db-ink: 19 41 62; /* #13293e */
+  --db-ink-muted: 91 107 127; /* #5b6b7f */
+  --db-ink-subtle: 135 146 163; /* #8792a3 */
   --db-ink-inverted: 255 255 255;
 
   /* --- Lines --- */
-  --db-border: 226 232 240;
-  --db-border-strong: 203 213 225;
+  --db-border: 230 235 242;
+  --db-border-strong: 213 221 232;
 
-  /* --- Accent: teal 600/700/50. `500` is decorative only - it fails AA on white. --- */
-  --db-accent: 13 148 136;
-  --db-accent-hover: 15 118 110;
-  --db-accent-subtle: 240 253 250;
-  --db-accent-deep: 17 94 89;
+  /* --- Accent: the reference's primary blue #0068d9 --- */
+  --db-accent: 0 104 217;
+  --db-accent-hover: 0 87 184;
+  --db-accent-subtle: 231 241 255; /* #e7f1ff */
+  --db-accent-deep: 19 41 62; /* navy, for the footer and inverted bands */
 
-  /* --- Secondary: violet --- */
-  --db-secondary: 124 58 237;
-  --db-secondary-hover: 109 40 217;
-  --db-secondary-subtle: 245 243 255;
+  /* --- Page-header gradient: pink → violet, sampled left-to-right --- */
+  --db-gradient-from: 227 119 177; /* #e377b1 */
+  --db-gradient-via: 146 116 228; /* #9274e4 */
+  --db-gradient-to: 122 115 244; /* #7a73f4 */
 
-  /* --- Functional --- */
-  --db-success: 5 150 105;
-  --db-success-subtle: 236 253 245;
-  --db-warning: 217 119 6;
-  --db-warning-subtle: 255 251 235;
-  --db-danger: 220 38 38;
-  --db-danger-subtle: 254 242 242;
-  --db-info: 2 132 199;
-  --db-info-subtle: 240 249 255;
+  /* --- Secondary: the gradient's violet, for accents that are not the primary --- */
+  --db-secondary: 122 115 244;
+  --db-secondary-hover: 100 92 224;
+  --db-secondary-subtle: 240 238 254;
 
-  /* Premium is the only amber in the system, so the badge always reads the same way. */
-  --db-premium: 180 83 9;
-  --db-premium-subtle: 255 251 235;
+  /* --- Functional, taken from the reference's button set --- */
+  --db-success: 46 158 107; /* text-safe form of #4caf83 */
+  --db-success-subtle: 228 243 238; /* #e4f3ee - also the category chip tint */
+  --db-warning: 194 98 14;
+  --db-warning-subtle: 255 244 230;
+  --db-danger: 209 52 21; /* readable form of #e24814 */
+  --db-danger-subtle: 251 226 219; /* #fbe2db */
+  --db-info: 0 104 217;
+  --db-info-subtle: 231 241 255;
 
-  /* Callout variants map onto the functional hues; `tip` is the brand accent. */
-  --db-note-info: 2 132 199;
-  --db-note-tip: 13 148 136;
-  --db-note-warning: 217 119 6;
-  --db-note-danger: 220 38 38;
+  /* Premium reuses the reference's orange, so the badge always reads the same way. */
+  --db-premium: 176 74 12;
+  --db-premium-subtle: 253 234 226;
+
+  /* Callout variants map onto the functional hues; `tip` is the brand blue. */
+  --db-note-info: 0 104 217;
+  --db-note-tip: 0 104 217;
+  --db-note-warning: 194 98 14;
+  --db-note-danger: 209 52 21;
 
   color-scheme: light;
 }
 
 /*
- * Dark mode. Accent steps lighten (teal 400/300) because a 600 that passes AA on white fails
- * badly on a dark surface - the ramp has to invert, not just the background.
+ * Opt-in dark theme. Deliberately NOT tied to `prefers-color-scheme`: DataBro is light-first, and
+ * following the OS meant a dark-mode machine saw a dark site the design never intended. Wire a
+ * toggle that sets `data-theme="dark"` if a dark mode is ever wanted.
  */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --db-surface: 15 20 30;
-    --db-surface-raised: 22 28 40;
-    --db-surface-sunken: 11 15 23;
-
-    --db-ink: 226 232 240;
-    --db-ink-muted: 156 170 189;
-    --db-ink-subtle: 122 136 156;
-    --db-ink-inverted: 15 20 30;
-
-    --db-border: 39 48 64;
-    --db-border-strong: 55 67 87;
-
-    --db-accent: 45 212 191;
-    --db-accent-hover: 94 234 212;
-    --db-accent-subtle: 19 45 46;
-    --db-accent-deep: 153 246 228;
-
-    --db-secondary: 167 139 250;
-    --db-secondary-hover: 196 181 253;
-    --db-secondary-subtle: 39 32 62;
-
-    --db-success: 52 211 153;
-    --db-success-subtle: 16 44 36;
-    --db-warning: 251 191 36;
-    --db-warning-subtle: 48 35 12;
-    --db-danger: 248 113 113;
-    --db-danger-subtle: 52 22 24;
-    --db-info: 56 189 248;
-    --db-info-subtle: 12 38 54;
-
-    --db-premium: 251 191 36;
-    --db-premium-subtle: 48 35 12;
-
-    --db-note-info: 56 189 248;
-    --db-note-tip: 45 212 191;
-    --db-note-warning: 251 191 36;
-    --db-note-danger: 248 113 113;
-
-    color-scheme: dark;
-  }
-}
-
-/* An explicit choice wins over the OS preference — including choosing dark on a light system. */
 :root[data-theme="dark"] {
   --db-surface: 15 20 30;
   --db-surface-raised: 22 28 40;
@@ -126,10 +88,10 @@
   --db-border: 39 48 64;
   --db-border-strong: 55 67 87;
 
-  --db-accent: 45 212 191;
-  --db-accent-hover: 94 234 212;
-  --db-accent-subtle: 19 45 46;
-  --db-accent-deep: 153 246 228;
+  --db-accent: 96 165 250;
+  --db-accent-hover: 147 197 253;
+  --db-accent-subtle: 23 37 62;
+  --db-accent-deep: 8 12 20;
 
   --db-secondary: 167 139 250;
   --db-secondary-hover: 196 181 253;
@@ -141,18 +103,31 @@
   --db-warning-subtle: 48 35 12;
   --db-danger: 248 113 113;
   --db-danger-subtle: 52 22 24;
-  --db-info: 56 189 248;
-  --db-info-subtle: 12 38 54;
+  --db-info: 96 165 250;
+  --db-info-subtle: 23 37 62;
 
   --db-premium: 251 191 36;
   --db-premium-subtle: 48 35 12;
 
-  --db-note-info: 56 189 248;
-  --db-note-tip: 45 212 191;
+  --db-note-info: 96 165 250;
+  --db-note-tip: 96 165 250;
   --db-note-warning: 251 191 36;
   --db-note-danger: 248 113 113;
 
   color-scheme: dark;
+}
+
+/*
+ * Page-header gradient band (docs/UI_PATTERNS.md §1.2). A class rather than a Tailwind utility
+ * because it is one specific brand gradient, not a composable colour.
+ */
+.db-gradient-band {
+  background-image: linear-gradient(
+    100deg,
+    rgb(var(--db-gradient-from)) 0%,
+    rgb(var(--db-gradient-via)) 55%,
+    rgb(var(--db-gradient-to)) 100%
+  );
 }
 
 /*

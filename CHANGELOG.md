@@ -1,5 +1,32 @@
 # DataBro Changelog
 
+## [2026-08-01 04:20:00 UTC]
+
+CHG-0016 — Match the reference palette; remove automatic dark mode
+
+- **Fixed: the site rendered dark for anyone whose OS was in dark mode.** The token layer keyed dark
+  mode off `prefers-color-scheme`, so a dark-OS visitor saw a theme the design never intended.
+  DataBro is a light-mode product; the automatic switch is gone. `[data-theme="dark"]` survives as an
+  explicit opt-in for a future toggle, but nothing enables it.
+- **Adopted the reference palette**, replacing the teal/violet set. Values were **sampled from the
+  screenshot pixels** rather than estimated: primary blue `#0068d9`, page-header gradient
+  `#e377b1 → #9274e4 → #7a73f4`, navy `#13293e` for headings and the footer, surface tint `#f6f8fd`,
+  and the functional hues taken from the reference's own button set.
+- **Restored the gradient page-header band.** An earlier revision replaced it with a flat band; the
+  brief is to match the reference, so the gradient is back — scoped to page-header bands only, since
+  it is a brand signature rather than a surface.
+- Category chips are now **mint**, as in the reference, which keeps them reading as labels rather
+  than competing with the blue title beneath.
+- CTA band is the reference's solid brand blue with a navy pill action; the footer moved onto the
+  same navy token, and the brand mark inverts to white there — blue-on-navy is the one place the mark
+  loses contrast.
+- Docs updated to match, including an explicit note recording *why* the teal palette was replaced, so
+  the earlier reasoning is still available if DataBro ever wants visual separation from the category.
+- Verified: no `prefers-color-scheme` remains in the built CSS, 59 frontend tests, clean typecheck,
+  production build, and live checks of the gradient band, chips, CTA and footer.
+
+---
+
 ## [2026-08-01 04:05:00 UTC]
 
 CHG-0015 — Marketing home: hero, category tiles, CTA band

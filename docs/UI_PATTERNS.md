@@ -31,12 +31,12 @@ DataBro:
 Reference: full-width **pink→violet gradient** band under the header. Centred white title; sometimes
 a subtitle; sometimes a breadcrumb above the title (`Home / All Elements`).
 
-DataBro: **flat, not gradient** (see DESIGN_SYSTEM §1.6). Two variants:
+DataBro: **the gradient band, as in the reference**, with centred white title and optional subtitle.
+Stops are sampled values applied via `.db-gradient-band` (DESIGN_SYSTEM §1.3).
 
-* **Marketing / index pages** — `surface-sunken` band, centred `4xl` title, `ink-muted` subtitle.
-* **Content pages** (article, category, tag) — no band. Left-aligned title on `surface`, because a
-  full-bleed band pushes the article body below the fold and costs reading time on the page that
-  matters most.
+Used on **index-style pages** (category, tag). The **article page has no band** — a full-bleed header
+pushes the body below the fold and costs reading time on the page that matters most. The **home page**
+uses its own hero instead, matching the reference, whose home is light rather than gradient.
 
 Breadcrumbs sit above the title, `sm`/`ink-subtle`, with the current page unlinked — and are mirrored
 by `BreadcrumbList` JSON-LD on category pages.
@@ -224,7 +224,6 @@ form on submit failure so the error is announced. This matches the existing
 
 | Reference pattern | Why not |
 |---|---|
-| Pink→violet gradient bands | Replaced by flat bands — DESIGN_SYSTEM §1.6 |
 | "Load More" button | Not crawlable; listings use numbered pagination — SEO.md |
 | Article sidebar | Competes with the 68ch measure on the page that matters most |
 | Newsletter band on every page | Omitted on article and error pages |

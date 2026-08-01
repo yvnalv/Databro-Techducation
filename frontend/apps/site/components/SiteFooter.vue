@@ -26,14 +26,15 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
 </script>
 
 <template>
-  <footer class="mt-24 bg-slate-900 text-slate-300">
+  <footer class="mt-24 bg-accent-deep text-white/70">
     <div class="mx-auto max-w-shell px-4 py-14 sm:px-6">
       <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <NuxtLink :to="localePath('/')" class="inline-flex text-accent">
-            <BrandMark class="text-accent [&>span:last-child]:text-white" />
+          <!-- White, not the brand blue: blue-on-navy is the one place the mark loses contrast. -->
+          <NuxtLink :to="localePath('/')" class="inline-flex text-white">
+            <BrandMark class="text-white [&>rect:first-child]:fill-white [&>span:last-child]:text-white" />
           </NuxtLink>
-          <p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
+          <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/65">
             {{ t("site.description") }}
           </p>
         </div>
@@ -44,7 +45,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
           </h2>
           <ul class="mt-4 space-y-2.5 text-sm">
             <li>
-              <NuxtLink :to="localePath('/')" class="text-slate-400 transition-colors hover:text-white">
+              <NuxtLink :to="localePath('/')" class="text-white/65 transition-colors hover:text-white">
                 {{ t("nav.articles") }}
               </NuxtLink>
             </li>
@@ -59,13 +60,13 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
             <li v-for="category in topCategories" :key="category.id">
               <NuxtLink
                 :to="localePath(`/categories/${category.slug}`)"
-                class="text-slate-400 transition-colors hover:text-white"
+                class="text-white/65 transition-colors hover:text-white"
               >
                 {{ category.name }}
               </NuxtLink>
             </li>
           </ul>
-          <p v-else class="mt-4 text-sm text-slate-500">{{ t("footer.topicsEmpty") }}</p>
+          <p v-else class="mt-4 text-sm text-white/50">{{ t("footer.topicsEmpty") }}</p>
         </div>
 
         <div>
@@ -76,7 +77,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
             <li>
               <a
                 href="mailto:hello@databro.id"
-                class="text-slate-400 transition-colors hover:text-white"
+                class="text-white/65 transition-colors hover:text-white"
               >
                 hello@databro.id
               </a>
@@ -86,7 +87,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
       </div>
 
       <div
-        class="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+        class="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between"
       >
         <p>&copy; {{ new Date().getFullYear() }} {{ t("site.name") }}. {{ t("footer.rights") }}</p>
       </div>

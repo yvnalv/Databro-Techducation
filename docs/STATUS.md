@@ -66,10 +66,10 @@ and scheduled publishing next**.
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
-* **Design pass complete for what exists.** Reference set studied and written up as
-  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) + [UI_PATTERNS.md](UI_PATTERNS.md). Tokens, primitives, chrome,
-  listings, article page and the home sections are all done. The reference's course grid, instructor
-  carousel and pricing table wait for Phase 2, since none of them have data behind them yet.
+* **Design pass complete for what exists**, matching the reference: sampled blue palette,
+  pink→violet page-header gradient, navy footer. **Light mode only** — the earlier
+  `prefers-color-scheme` switch made dark-OS visitors see a dark site and has been removed. The
+  reference's course grid, instructor carousel and pricing table wait for Phase 2 data.
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.

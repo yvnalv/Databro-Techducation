@@ -6,108 +6,102 @@ The token and component vocabulary for both frontend apps. Page-level compositio
 
 ## 0. Provenance and scope
 
-Structure, spacing, component anatomy and page composition are derived from the **LearnUp** reference
-set (34 screenshots, `UI UX References/`). What was taken is the *design language* — layout rhythm,
-component anatomy, interaction affordances. What was **not** taken:
+Structure, spacing, component anatomy, page composition **and colour** are derived from the
+**LearnUp** reference set (34 screenshots, `UI UX References/`). What was **not** taken:
 
-* **The colour palette.** LearnUp is bright blue + a pink→violet gradient. DataBro uses a different
-  palette (§1) — deliberately, both to differentiate from a generic LMS look and because DataBro's
-  subject matter is technical rather than consumer-education.
 * **Assets.** No illustrations, icons, photography or copy from the reference. Layout patterns are
   not protectable; artwork is.
 * **Code.** The reference is Next.js + React + Bootstrap. Nothing transfers to Nuxt + Tailwind.
 
-Values below were read visually from the screenshots and **rounded onto a scale**. They are
-intentionally systematic rather than pixel-exact.
+Colour values were **sampled from the screenshot pixels**, not estimated by eye — the primary blue,
+the page-header gradient stops, the navy footer and the surface tints are measured. Spacing and type
+values were read visually and rounded onto a scale.
 
-**Light mode is the primary theme.** Dark mode is supported (the token layer already resolves both)
-but light is what gets designed and reviewed first.
+> **Palette history.** An earlier revision used a teal/violet palette, on the reasoning that a blue
+> LMS is hard to tell apart from its competitors. That was overridden: the brief is to match the
+> reference, so the reference's blue is the palette. Recorded here because the teal reasoning is
+> still the argument to revisit if DataBro ever wants visual separation from the category.
+
+**Light mode only.** An earlier revision keyed dark mode off `prefers-color-scheme`, which meant a
+visitor whose OS was dark saw a dark site the design never intended. That automatic switch has been
+removed. `[data-theme="dark"]` remains as an explicit opt-in for a future toggle; nothing enables it
+today.
 
 ---
 
 ## 1. Colour
 
-### 1.1 Why not the reference palette
+### 1.1 Palette source
 
-LearnUp's blue is the default LMS choice and its pink→violet gradient reads consumer/lifestyle.
-DataBro teaches AI, data and software engineering to practitioners. The palette should read
-*technical and credible* rather than *bootcamp bright*, and should not be mistakable for the dozen
-other blue LMS products.
+All values below are sampled from the reference screenshots. The system is built on **one blue**
+(`#0068d9`), a **pink→violet gradient** used only on page-header bands, and a **deep navy**
+(`#13293e`) that carries both headings and the footer.
 
-**Chosen direction: deep teal primary, violet secondary, amber for premium.** Teal is uncommon in
-this category, carries data/terminal associations, and holds contrast well on white. Violet supplies
-an AI-adjacent secondary without becoming the primary. Amber is reserved so "premium" always reads
-the same way.
-
-### 1.2 Brand ramp — teal (primary)
+### 1.2 Brand ramp — blue (primary)
 
 | Step | Hex | Use |
 |---|---|---|
-| 50 | `#f0fdfa` | Tinted backgrounds, chip fills |
-| 100 | `#ccfbf1` | Hover on tinted surfaces |
-| 200 | `#99f6e4` | Borders on tinted surfaces |
-| 300 | `#5eead4` | Dark-mode accent text |
-| 400 | `#2dd4bf` | Dark-mode accent |
-| 500 | `#14b8a6` | Decorative only — fails AA on white for text |
-| **600** | **`#0d9488`** | **Primary actions, links (light mode)** |
-| 700 | `#0f766e` | Hover/pressed |
-| 800 | `#115e59` | Deep fills, CTA bands |
-| 900 | `#134e4a` | Rare, high-contrast fills |
+| 50 | `#e7f1ff` | Tinted backgrounds, soft buttons, chip fills |
+| 100 | `#cfe3ff` | Hover on tinted surfaces |
+| 200 | `#a5cbff` | Borders on tinted surfaces |
+| 300 | `#6fabff` | Decorative |
+| 400 | `#2f88f5` | Decorative |
+| 500 | `#0d74e6` | Decorative |
+| **600** | **`#0068d9`** | **Primary actions, links, the CTA band** — the reference's brand blue |
+| 700 | `#0057b8` | Hover/pressed |
+| 800 | `#084a95` | Deep fills |
+| 900 | `#13293e` | Navy — footer, headings, inverted bands |
 
-`600` on white is ~4.8:1 — passes AA for body text. `500` does **not**; it is decorative only.
+`#0068d9` on white is ~4.6:1, which passes AA for body text.
 
-### 1.3 Secondary ramp — violet
+### 1.3 Page-header gradient
 
-| Step | Hex | Use |
-|---|---|---|
-| 50 | `#f5f3ff` | Category tints, soft banners |
-| 100 | `#ede9fe` | Chip fills |
-| 200 | `#ddd6fe` | Borders |
-| 500 | `#8b5cf6` | Decorative, illustration |
-| 600 | `#7c3aed` | Secondary actions, category accents |
-| 700 | `#6d28d9` | Hover |
+Sampled left-to-right across the band: `#e377b1` → `#9274e4` → `#7a73f4`. Applied through the
+`.db-gradient-band` class rather than a Tailwind utility, because it is one specific brand gradient
+rather than a composable colour. **Only page-header bands use it** — it is not a general surface.
 
-### 1.4 Neutrals — slate
+### 1.4 Neutrals
 
-Text and surfaces. `#0f172a` … `#f8fafc` (Tailwind `slate`). Chosen over pure grey because the
-slight blue cast pairs with both teal and violet.
+Sampled from the reference. The blue cast is deliberate — it is what makes the neutrals sit with the
+brand blue rather than beside it.
 
 | Role | Light | Note |
 |---|---|---|
 | `surface` | `#ffffff` | Page background |
 | `surface-raised` | `#ffffff` | Cards — separated by border + shadow, not fill |
-| `surface-sunken` | `#f8fafc` | Alternating section bands, code blocks, table headers |
-| `ink` | `#0f172a` | Headings and body |
-| `ink-muted` | `#475569` | Secondary text, excerpts |
-| `ink-subtle` | `#64748b` | Meta, timestamps, captions |
-| `line` | `#e2e8f0` | Card and divider borders |
-| `line-strong` | `#cbd5e1` | Input borders, emphasis |
+| `surface-sunken` | `#f6f8fd` | Alternating section bands, code blocks, table headers |
+| `ink` | `#13293e` | Headings and body |
+| `ink-muted` | `#5b6b7f` | Secondary text, excerpts |
+| `ink-subtle` | `#8792a3` | Meta, timestamps, captions |
+| `line` | `#e6ebf2` | Card and divider borders |
+| `line-strong` | `#d5dde8` | Input borders, emphasis |
 
-Headings in the reference are a deep navy rather than black. DataBro keeps that: `ink` is
-`#0f172a`, not `#000`.
+Headings in the reference are a deep navy rather than black, and the same navy carries the footer.
+DataBro keeps both.
 
 ### 1.5 Functional colours
 
-| Role | Hex | Use |
-|---|---|---|
-| `success` | `#059669` | Confirmation, "published", check marks |
-| `warning` | `#d97706` | Caution callouts |
-| `danger` | `#dc2626` | Destructive actions, errors |
-| `info` | `#0284c7` | Informational callouts |
-| `premium` | `#b45309` (on `#fffbeb`) | Premium badge — the *only* amber in the system |
+Taken from the reference's button set.
 
-Callout variants map onto these: `info`, `tip` → teal `600`, `warning`, `danger`.
+| Role | Hex | Subtle fill | Use |
+|---|---|---|---|
+| `success` | `#2e9e6b` | `#e4f3ee` | Confirmation, "published", **category chips** |
+| `warning` | `#c2620e` | `#fff4e6` | Caution callouts |
+| `danger` | `#d13415` | `#fbe2db` | Destructive actions, errors |
+| `info` | `#0068d9` | `#e7f1ff` | Informational callouts |
+| `premium` | `#b04a0c` | `#fdeae2` | Premium badge |
+
+The category chip is **mint**, matching the reference: it reads as a label rather than a link, which
+keeps it from competing with the blue title beneath it.
 
 ### 1.6 Rules
 
 * **Never colour-only.** The reference leans on colour for status chips; DataBro pairs every colour
   signal with text, an icon, or an ARIA role. Callouts already do this via `role` + `data-variant`.
-* **No gradients as brand carriers.** The reference's pink→violet page header is replaced by a solid
-  `surface-sunken` band or a flat teal `800` band. Flat renders faster, prints and screenshots
-  predictably, and does not fight the light theme. A single subtle teal→cyan gradient is permitted
-  on the newsletter/CTA band only.
-* **Category tints** (reference uses nine pastel tiles) come from the `50` step of teal, violet, and
-  the functional hues — not from arbitrary new colours.
+* **The gradient belongs to page-header bands only.** It is a brand signature, not a surface; using
+  it elsewhere cheapens it and hurts text contrast.
+* **Category tints** (reference uses nine pastel tiles) come from the `50` step of the brand, violet
+  and functional hues — not from arbitrary new colours.
 
 ---
 
@@ -236,9 +230,9 @@ Height 40px (`md`), padding 16px horizontal, radius `md`, weight 500–600, 150m
 
 | Variant | Light mode |
 |---|---|
-| `primary` | teal `600` fill, white text; hover `700` |
-| `secondary` | violet `600` fill, white text |
-| `soft` | teal `50` fill, teal `700` text — the reference's "light" buttons |
+| `primary` | blue `600` fill, white text; hover `700` |
+| `secondary` | violet fill, white text |
+| `soft` | blue `50` fill, blue `700` text — the reference's "light" buttons |
 | `outline` | `line-strong` border, `ink` text, transparent fill |
 | `ghost` | No fill or border; `ink-muted` text |
 | `danger` | `danger` fill, white text |
@@ -248,8 +242,8 @@ Focus is always a visible 2px ring at 2px offset — never removed.
 
 ### 5.2 Inputs
 
-40px height, radius `md`, 1px `line-strong` border, white fill. Focus: teal `600` border + 2px
-teal `100` ring. Labels sit **above** in `sm`/`ink-muted`. Optional leading icon (the reference's
+40px height, radius `md`, 1px `line-strong` border, white fill. Focus: blue `600` border + 2px
+blue `100` ring. Labels sit **above** in `sm`/`ink-muted`. Optional leading icon (the reference's
 search field). Error state: `danger` border plus a message — never colour alone.
 
 ### 5.3 Cards
@@ -264,15 +258,15 @@ Radius `sm`, `xs` text, 500 weight, 8px/2px padding.
 
 | Kind | Style |
 |---|---|
-| Category | teal `50` fill, teal `700` text |
+| Category | mint `#e4f3ee` fill, `#2e9e6b` text |
 | Tag | white fill, `line` border, `ink-muted` text |
 | Status | Functional `50` fill + `700` text, always with a label |
-| Premium | `#fffbeb` fill, `#b45309` text |
+| Premium | `#fdeae2` fill, `#b04a0c` text |
 
 ### 5.5 Tabs
 
-Two styles, both in the reference. **Soft** — active pill has teal `50` fill and teal `700` text.
-**Underline** — active has a 2px teal `600` bottom border. Use soft for filters, underline for
+Two styles, both in the reference. **Soft** — active pill has blue `50` fill and blue `700` text.
+**Underline** — active has a 2px blue `600` bottom border. Use soft for filters, underline for
 content sections.
 
 ### 5.6 Accordion
@@ -288,7 +282,7 @@ Radius `card` with an overflow wrapper — a wide table scrolls itself, never th
 
 ### 5.8 Pagination
 
-Numbered, crawlable `<a>` elements — never buttons. Active is teal `600` fill, white text; others
+Numbered, crawlable `<a>` elements — never buttons. Active is blue `600` fill, white text; others
 `ink-muted` with a `surface-sunken` hover. Prev/next chevrons. Accompanied by a "Showing X to Y of
 Z" count on dashboards.
 
@@ -303,7 +297,7 @@ Variant conveyed by `role` (`note` / `alert`) and `data-variant` in addition to 
 
 Non-negotiable, and where the reference is silent we are stricter:
 
-* Body text ≥ 4.5:1, large text ≥ 3:1. Teal `500` is decorative only for this reason.
+* Body text ≥ 4.5:1, large text ≥ 3:1. Brand steps below `600` are decorative only.
 * Every interactive element has a visible focus ring.
 * Colour never carries meaning alone.
 * Links inside prose are **underlined**, not colour-only.

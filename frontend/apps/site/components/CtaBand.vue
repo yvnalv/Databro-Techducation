@@ -15,17 +15,18 @@ const localePath = useLocalePath();
 </script>
 
 <template>
-  <section class="bg-accent-deep">
+  <!-- Solid brand blue with a navy action, as in the reference's newsletter band. -->
+  <section class="bg-accent">
     <div class="mx-auto max-w-shell px-4 py-16 text-center sm:px-6 sm:py-20">
       <h2 class="font-display text-3xl font-bold tracking-tight text-white">
         {{ t("home.ctaTitle") }}
       </h2>
-      <p class="mx-auto mt-3 max-w-xl text-white/75">{{ t("home.ctaSubtitle") }}</p>
+      <p class="mx-auto mt-3 max-w-xl text-white/80">{{ t("home.ctaSubtitle") }}</p>
 
       <div class="mt-8">
         <NuxtLink
           :to="localePath('/')"
-          class="inline-flex h-12 items-center justify-center rounded-md bg-white px-6 text-base font-semibold text-accent transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent-deep"
+          class="inline-flex h-12 items-center justify-center rounded-full bg-accent-deep px-8 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent"
         >
           {{ t("home.ctaButton") }}
         </NuxtLink>

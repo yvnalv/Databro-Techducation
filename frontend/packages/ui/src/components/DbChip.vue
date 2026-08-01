@@ -15,7 +15,9 @@ const props = withDefaults(
 );
 
 const TONES: Record<Tone, string> = {
-  category: "bg-accent-subtle text-accent",
+  // Mint, matching the reference's post-category chip — it reads as a label rather than a link,
+  // which is what stops it competing with the blue title beneath it.
+  category: "bg-success-subtle text-success",
   tag: "border border-line bg-surface text-ink-muted",
   premium: "bg-premium-subtle text-premium",
   success: "bg-success-subtle text-success",

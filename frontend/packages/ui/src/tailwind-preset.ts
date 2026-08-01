@@ -15,29 +15,35 @@
 export const tokens = {
   colors: {
     /**
-     * Brand ramp — deep teal. `500` is decorative only: it fails AA for text on white, which is
-     * why `600` is the action/link step (docs/DESIGN_SYSTEM.md §1.2).
+     * Brand ramp, built around the reference's primary blue `#0068d9` (`600`), which was sampled
+     * from the screenshots rather than estimated (docs/DESIGN_SYSTEM.md §1.2).
      */
     brand: {
-      50: "#f0fdfa",
-      100: "#ccfbf1",
-      200: "#99f6e4",
-      300: "#5eead4",
-      400: "#2dd4bf",
-      500: "#14b8a6",
-      600: "#0d9488",
-      700: "#0f766e",
-      800: "#115e59",
-      900: "#134e4a",
+      50: "#e7f1ff",
+      100: "#cfe3ff",
+      200: "#a5cbff",
+      300: "#6fabff",
+      400: "#2f88f5",
+      500: "#0d74e6",
+      600: "#0068d9",
+      700: "#0057b8",
+      800: "#084a95",
+      900: "#13293e",
     },
-    /** Secondary ramp — violet. Category accents and secondary actions, never the primary. */
+    /** The page-header gradient's violet end, used for secondary accents. */
     violet: {
-      50: "#f5f3ff",
-      100: "#ede9fe",
-      200: "#ddd6fe",
-      500: "#8b5cf6",
-      600: "#7c3aed",
-      700: "#6d28d9",
+      50: "#f0eefe",
+      100: "#e0dcfd",
+      200: "#c6bffb",
+      500: "#9274e4",
+      600: "#7a73f4",
+      700: "#645ce0",
+    },
+    /** The gradient itself, exposed for anything that needs the stops directly. */
+    gradient: {
+      from: "#e377b1",
+      via: "#9274e4",
+      to: "#7a73f4",
     },
   },
   fontFamily: {
@@ -80,6 +86,7 @@ const preset: Partial<Config> = {
         // Raw ramps, for the rare case a specific step is genuinely wanted.
         brand: { ...tokens.colors.brand },
         violet: { ...tokens.colors.violet },
+        gradient: { ...tokens.colors.gradient },
 
         // Semantic surfaces and text. These are what components should use.
         surface: {
