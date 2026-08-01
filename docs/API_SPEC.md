@@ -123,6 +123,9 @@ These are contract-level guarantees, not incidental serializer behaviour:
   inbound values stays case-insensitive.
 * **`author` is a resolved object, not an id.** `{ id, displayName, avatarUrl }`. Content stores only
   an author id and resolves the name through the shared `IUserDirectory` contract (ADR-0008).
+* **Detail responses carry `author.bio`; list responses do not.** A page of twenty summaries has no
+  use for twenty bios, and this is the cached, read-heavy public path. The two shapes are distinct
+  types (`AuthorDto` vs `AuthorProfileDto`) rather than one type populated inconsistently.
 * **`author` is nullable.** It is null when the author can no longer be resolved (e.g. a deleted
   account). Clients render their own localized fallback — the API does not emit user-facing English.
   A missing author must never break an article page.

@@ -26,6 +26,12 @@ public sealed record SeoDto(
 /// </summary>
 public sealed record AuthorDto(Guid Id, string DisplayName, string? AvatarUrl);
 
+/// <summary>
+/// The byline plus the bio an author card renders. Only the article *detail* response carries it:
+/// a list of 20 summaries has no use for 20 bios, and this is the cached, read-heavy public path.
+/// </summary>
+public sealed record AuthorProfileDto(Guid Id, string DisplayName, string? AvatarUrl, string? Bio);
+
 /// <summary>A category or tag as the read surface exposes it.</summary>
 public sealed record TaxonomyTermDto(Guid Id, string Slug, string Name);
 
@@ -106,7 +112,7 @@ public sealed record ArticleDto(
     string Status,
     string Visibility,
     string Locale,
-    AuthorDto? Author,
+    AuthorProfileDto? Author,
     int CurrentVersion,
     int ReadingTimeMinutes,
     ContentDocumentDto Content,

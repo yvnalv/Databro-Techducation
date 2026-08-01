@@ -106,8 +106,12 @@ DataBro:
 * Title, summary/lead, then a meta row (author, read time, date), then a rule, then the body — the
   current implementation, which stays.
 * **Pull-quote** — adopted; already the `quote` block.
-* **Author bio card** — adopt below the article once Identity exposes bios (`ApplicationUser.Bio`
-  exists and is unused).
+* **Author bio card** — adopted, below the article. Runs horizontally rather than the reference's
+  centred column: there are no social links to show, and horizontal costs less vertical space between
+  the end of the article and the related links, which is where a finished reader should go. Renders
+  nothing at all when the author has no bio — a card with a name and empty space is worse than none.
+* **Related articles** — the replacement for the sidebar. Same category, current article excluded,
+  three across, at `shell` width rather than the prose measure because this is scanning, not reading.
 * **Comments** — Phase 4 (Community module). Not built now.
 * Related/topic links close the page: category chip + tag chips, already implemented.
 

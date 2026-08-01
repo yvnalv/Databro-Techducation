@@ -205,6 +205,14 @@ export interface AuthorSummary {
   avatarUrl?: string | null;
 }
 
+/**
+ * Byline plus bio. Only the article *detail* response carries it — a list of summaries has no use
+ * for a bio per item, and that is the cached, read-heavy public path.
+ */
+export interface AuthorProfile extends AuthorSummary {
+  bio?: string | null;
+}
+
 // ---- Taxonomy (docs/BUSINESS_RULES.md TX-1 … TX-3, CT-11) ----
 
 /** A category or tag as the read surface exposes it. */
@@ -244,6 +252,8 @@ export interface ArticleSummary {
 }
 
 export interface Article extends ArticleSummary {
+  /** Narrows the summary's author to the richer detail shape. */
+  author: AuthorProfile | null;
   content: ContentDocument;
   seo: SeoMetadata;
   currentVersion: number;

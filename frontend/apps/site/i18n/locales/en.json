@@ -18,7 +18,10 @@
     "publishedOn": "Published {date}",
     "byAuthor": "By {name}",
     "unknownAuthor": "DataBro",
-    "backToArticles": "Back to articles"
+    "backToArticles": "Back to articles",
+    "aboutAuthor": "About the author",
+    "relatedTitle": "Related articles",
+    "tagsLabel": "Tagged"
   },
   "categories": {
     "breadcrumbLabel": "Breadcrumb",

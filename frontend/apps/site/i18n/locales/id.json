@@ -18,7 +18,10 @@
     "publishedOn": "Diterbitkan {date}",
     "byAuthor": "Oleh {name}",
     "unknownAuthor": "DataBro",
-    "backToArticles": "Kembali ke artikel"
+    "backToArticles": "Kembali ke artikel",
+    "aboutAuthor": "Tentang penulis",
+    "relatedTitle": "Artikel terkait",
+    "tagsLabel": "Bertagar"
   },
   "categories": {
     "breadcrumbLabel": "Remah roti",

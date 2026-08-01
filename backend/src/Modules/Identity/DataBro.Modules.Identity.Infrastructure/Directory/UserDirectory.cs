@@ -22,13 +22,13 @@ internal sealed class UserDirectory(IdentityModuleDbContext db) : IUserDirectory
         var users = await db.Users
             .AsNoTracking()
             .Where(u => distinctIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.DisplayName, u.AvatarMediaId })
+            .Select(u => new { u.Id, u.DisplayName, u.AvatarMediaId, u.Bio })
             .ToListAsync(ct);
 
         // AvatarMediaId is a Media reference; resolving it to a URL is Media's job, so the avatar
         // stays null until that module lands rather than being guessed at here.
         return users.ToDictionary(
             u => u.Id,
-            u => new UserSummary(u.Id, u.DisplayName, AvatarUrl: null));
+            u => new UserSummary(u.Id, u.DisplayName, AvatarUrl: null, Bio: u.Bio));
     }
 }

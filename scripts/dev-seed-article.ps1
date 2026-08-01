@@ -78,6 +78,15 @@ Invoke-Api -Method POST -Path "/api/v1/auth/register" -Body @{
 
 & (Join-Path $PSScriptRoot "dev-grant-role.ps1") -Email $email -Role Editor | Out-Null
 
+# Author bio, so the article page's author card has something to render. There is no API surface for
+# editing a profile yet, so this goes straight into the Identity schema - dev convenience only, same
+# as the role grant above.
+$bio = "Writes about retrieval, embeddings and the unglamorous parts of shipping ML systems. " +
+       "Previously built data platforms; now mostly explains why the chunking was the problem."
+@"
+UPDATE identity."AspNetUsers" SET bio = '$bio' WHERE normalized_email = UPPER('$email');
+"@ | docker compose exec -T postgres psql -U databro -d databro -v ON_ERROR_STOP=1 | Out-Null
+
 $login = Invoke-Api -Method POST -Path "/api/v1/auth/login" -Body @{ email = $email; password = $password }
 $token = $login.data.accessToken
 

@@ -1,5 +1,34 @@
 # DataBro Changelog
 
+## [2026-08-01 03:55:00 UTC]
+
+CHG-0014 — Article page: author card, meta row, related articles
+
+- **Author bio flows through the cross-module contract.** `UserSummary` (ADR-0008) gains `Bio`, read
+  from `ApplicationUser.Bio`, which existed and was unused since the Identity module landed.
+- **Detail responses carry `author.bio`; list responses deliberately do not.** A page of twenty
+  summaries has no use for twenty bios, and this is the cached read-heavy public path. Expressed as
+  two distinct types — `AuthorDto` for bylines, `AuthorProfileDto` for the detail response — rather
+  than one type populated inconsistently, which is the kind of subtlety that bites later. A test
+  asserts both shapes.
+- **Author card** below the article, horizontal rather than the reference's centred column: there
+  are no social links to show, and horizontal costs less vertical space between the end of the
+  article and the related links. Renders nothing when the author has no bio — a card with a name and
+  empty space is worse than no card.
+- **Related articles** replace the reference's sidebar, which was rejected because it competes with
+  the ~68ch measure on the page where reading matters most. Same category, current article excluded,
+  three across at `shell` width rather than the prose measure, because this is scanning not reading.
+- **Meta row** rebuilt: category chip above the title, then author avatar + name, date and read time
+  on a bounded row, echoing the card footer so the two surfaces read as one system. The premium badge
+  moved into that row and the notice below it lost its duplicate label.
+- `dev-seed-article.ps1` now sets an author bio directly in the Identity schema (dev convenience, as
+  with the role grant) so the card has something to render.
+- Verified: 70 backend tests, 59 renderer/primitive tests, clean typecheck, production build, and
+  live checks confirming the bio appears on detail, is absent from summaries, and that an article
+  whose author has no bio simply omits the card.
+
+---
+
 ## [2026-08-01 03:45:00 UTC]
 
 CHG-0013 — Site chrome and listings to the reference design

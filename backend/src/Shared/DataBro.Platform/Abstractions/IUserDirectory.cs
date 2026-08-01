@@ -2,9 +2,14 @@ namespace DataBro.Platform.Abstractions;
 
 /// <summary>
 /// The public profile of a user, as other modules are allowed to see it. Deliberately minimal:
-/// only what a byline needs. Anything richer belongs to Identity's own API surface.
+/// a byline plus the short bio an author card renders. Anything richer belongs to Identity's own
+/// API surface.
 /// </summary>
-public sealed record UserSummary(Guid Id, string DisplayName, string? AvatarUrl = null);
+public sealed record UserSummary(
+    Guid Id,
+    string DisplayName,
+    string? AvatarUrl = null,
+    string? Bio = null);
 
 /// <summary>
 /// Read-only cross-module lookup of user profiles, owned by Identity and consumed by any module

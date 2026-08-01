@@ -100,6 +100,29 @@ public class ContentApiTests(ContentApiFactory factory) : IClassFixture<ContentA
     }
 
     [Fact]
+    public async Task Detail_carries_the_author_bio_but_summaries_do_not()
+    {
+        // The bio is only useful on the article page's author card. Twenty summaries have no use
+        // for twenty bios, and this is the cached public read path (see AuthorProfileDto).
+        var editor = await EditorClientAsync();
+        var anon = AnonymousClient();
+        var slug = $"bio-{Guid.NewGuid():N}";
+
+        var create = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/articles", DraftPayload(slug)));
+        var id = create.Root.GetProperty("data").GetProperty("id").GetGuid();
+        (await editor.PostAsync($"/api/v1/authoring/articles/{id}/publish", null)).EnsureSuccessStatusCode();
+
+        var detail = await ReadAsync(await anon.GetAsync($"/api/v1/articles/{slug}"));
+        Assert.True(detail.Root.GetProperty("data").GetProperty("author").TryGetProperty("bio", out _));
+
+        var list = await ReadAsync(await anon.GetAsync("/api/v1/articles"));
+        var summary = list.Root.GetProperty("data").EnumerateArray()
+            .Single(a => a.GetProperty("slug").GetString() == slug);
+
+        Assert.False(summary.GetProperty("author").TryGetProperty("bio", out _));
+    }
+
+    [Fact]
     public async Task List_endpoint_resolves_authors_for_every_item()
     {
         var editor = await EditorClientAsync();

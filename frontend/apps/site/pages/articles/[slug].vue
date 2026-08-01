@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentRenderer } from "@databro/ui";
+import { ContentRenderer, DbChip } from "@databro/ui";
 import type { Article } from "@databro/types";
 
 const { t, locale } = useI18n();
@@ -41,39 +41,72 @@ const formattedDate = computed(() =>
       })
     : "",
 );
+
+const authorName = computed(() => published.author?.displayName ?? t("articles.unknownAuthor"));
+const authorInitial = computed(() => authorName.value.trim().charAt(0).toUpperCase() || "D");
 </script>
 
 <template>
-  <!-- max-w-prose (~68ch) is the measure the whole reading experience hangs on. -->
-  <article class="mx-auto max-w-prose px-6 py-14 sm:py-20">
+  <!-- max-w-prose (~68ch) is the measure the whole reading experience hangs on. No page-header band
+       here on purpose: it would push the body below the fold (docs/UI_PATTERNS.md §1.2). -->
+  <article class="mx-auto max-w-prose px-4 py-12 sm:px-6 sm:py-16">
     <header>
+      <NuxtLink
+        v-if="published.category"
+        :to="localePath(`/categories/${published.category.slug}`)"
+        class="inline-block"
+      >
+        <DbChip tone="category">{{ published.category.name }}</DbChip>
+      </NuxtLink>
+
       <!-- The only h1 on the page; block headings start at h2 so the outline stays well-formed. -->
-      <h1 class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ published.title }}</h1>
+      <h1
+        class="font-display text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl"
+        :class="published.category ? 'mt-4' : ''"
+      >
+        {{ published.title }}
+      </h1>
 
-      <p class="mt-4 text-lg text-ink-muted sm:text-xl">{{ published.summary }}</p>
+      <p class="mt-4 text-lg leading-relaxed text-ink-muted sm:text-xl">{{ published.summary }}</p>
 
-      <p class="mt-5 text-sm text-ink-subtle">
-        <span>{{ t("articles.byAuthor", { name: published.author?.displayName ?? t("articles.unknownAuthor") }) }}</span>
-        <span aria-hidden="true"> · </span>
-        <span>{{ t("articles.readingTime", { minutes: published.readingTimeMinutes }) }}</span>
-        <template v-if="published.publishedAt">
-          <span aria-hidden="true"> · </span>
-          <time :datetime="published.publishedAt">{{ formattedDate }}</time>
-        </template>
-      </p>
+      <!-- Meta row: avatar + author on the left, date and read time on the right, echoing the
+           card footer so the two surfaces read as the same system. -->
+      <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-y border-line py-4">
+        <div class="flex items-center gap-2.5">
+          <img
+            v-if="published.author?.avatarUrl"
+            :src="published.author.avatarUrl"
+            alt=""
+            class="h-9 w-9 rounded-full object-cover"
+          />
+          <span
+            v-else
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent"
+            aria-hidden="true"
+          >
+            {{ authorInitial }}
+          </span>
+          <span class="text-sm font-semibold text-ink">{{ authorName }}</span>
+        </div>
+
+        <span class="flex flex-wrap items-center gap-x-3 text-sm text-ink-subtle">
+          <time v-if="published.publishedAt" :datetime="published.publishedAt">
+            {{ formattedDate }}
+          </time>
+          <span aria-hidden="true">·</span>
+          <span>{{ t("articles.readingTime", { minutes: published.readingTimeMinutes }) }}</span>
+        </span>
+
+        <DbChip v-if="isPremium" tone="premium" class="ms-auto">{{ t("premium.badge") }}</DbChip>
+      </div>
 
       <p
         v-if="isPremium"
-        class="mt-6 rounded-card border border-line bg-surface-sunken px-5 py-4 text-sm"
+        class="mt-6 rounded-card border border-line bg-surface-sunken px-5 py-4 text-sm text-ink-muted"
       >
-        <span class="font-semibold uppercase tracking-wide text-accent">
-          {{ t("premium.badge") }}
-        </span>
-        <span class="ml-2 text-ink-muted">{{ t("premium.previewNotice") }}</span>
+        {{ t("premium.previewNotice") }}
       </p>
     </header>
-
-    <hr class="mt-8 border-line" />
 
     <!-- The class is referenced by the JSON-LD `hasPart.cssSelector` that declares the gated
          region to search engines - keep the two in step (see useArticleSeo). -->
@@ -81,24 +114,15 @@ const formattedDate = computed(() =>
       <ContentRenderer :document="published.content" />
     </div>
 
-    <footer class="mt-16 border-t border-line pt-8">
-      <!-- Taxonomy links close the internal-linking loop: a reader (and a crawler) can move from
-           this article to the rest of its topic cluster. -->
-      <div v-if="published.category || published.tags.length" class="flex flex-wrap gap-2">
-        <NuxtLink
-          v-if="published.category"
-          :to="localePath(`/categories/${published.category.slug}`)"
-          class="rounded-card bg-accent-subtle px-3 py-1 text-sm font-medium text-accent"
-        >
-          {{ published.category.name }}
-        </NuxtLink>
-        <NuxtLink
-          v-for="tag in published.tags"
-          :key="tag.id"
-          :to="localePath(`/tags/${tag.slug}`)"
-          class="rounded-card border border-line px-3 py-1 text-sm text-ink-muted transition-colors hover:text-ink"
-        >
-          #{{ tag.name }}
+    <AuthorCard v-if="published.author" :author="published.author" class="mt-14" />
+
+    <footer class="mt-12 border-t border-line pt-8">
+      <!-- Tag links close the internal-linking loop: a reader (and a crawler) can move from this
+           article to the rest of its topic cluster. -->
+      <div v-if="published.tags.length" class="flex flex-wrap items-center gap-2">
+        <span class="text-sm text-ink-subtle">{{ t("articles.tagsLabel") }}</span>
+        <NuxtLink v-for="tag in published.tags" :key="tag.id" :to="localePath(`/tags/${tag.slug}`)">
+          <DbChip tone="tag">#{{ tag.name }}</DbChip>
         </NuxtLink>
       </div>
 
@@ -109,4 +133,9 @@ const formattedDate = computed(() =>
       </p>
     </footer>
   </article>
+
+  <!-- Full width, outside the prose measure: this is scanning, not reading. -->
+  <div class="mx-auto max-w-shell px-4 pb-20 sm:px-6">
+    <RelatedArticles :category-slug="published.category?.slug" :exclude-slug="published.slug" />
+  </div>
 </template>

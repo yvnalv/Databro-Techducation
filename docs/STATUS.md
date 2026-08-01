@@ -3,7 +3,7 @@
 Snapshot of where the project is, what's next, and what's open. Update this with every meaningful
 milestone.
 
-Last updated: 2026-07-30.
+Last updated: 2026-08-01.
 
 ## Current phase
 
@@ -12,7 +12,7 @@ and scheduled publishing next**.
 
 ## Done
 
-* Locked the load-bearing architecture decisions (ADR-0001 … ADR-0008).
+* Locked the load-bearing architecture decisions (ADR-0001 … ADR-0009).
 * Authored the foundational documentation set (CLAUDE.md + docs/).
 * Scaffolded the **backend** Modular Monolith and **frontend** pnpm monorepo.
 * **Local dev environment:** `docker-compose.yml` — infra by default (PostgreSQL on host port
@@ -60,7 +60,6 @@ and scheduled publishing next**.
 3. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
 4. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
 5. CI pipeline (build/test + architecture-fitness gate).
-6. Design system pass over the site (deferred deliberately — see below).
 
 ## Known gaps / deferred
 
@@ -68,9 +67,9 @@ and scheduled publishing next**.
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
 * **Design pass in progress.** Reference set studied and written up as
-  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) + [UI_PATTERNS.md](UI_PATTERNS.md). Tokens (teal/violet
-  palette, self-hosted fonts) and the primitive components are in. Still outstanding: chrome and
-  listing layout to reference spec, the article page refinements, and the marketing home sections.
+  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) + [UI_PATTERNS.md](UI_PATTERNS.md). Done: tokens (teal/violet
+  palette, self-hosted fonts), primitives, site chrome, listings, and the article page. Outstanding:
+  the marketing home sections (hero, category tiles, newsletter band).
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.
@@ -89,9 +88,10 @@ and scheduled publishing next**.
 
 ## Testing status
 
-* `dotnet test` — 69 passing: architecture-fitness (4) + Content & Identity unit/integration (65).
-* `pnpm --filter @databro/ui test` — 45 passing: block renderer, embed allowlist, inline rich text
-  (marks, unsafe hrefs, XSS), math, code output, and nested-block depth capping (Vitest).
+* `dotnet test` — 70 passing: architecture-fitness (4) + Content & Identity unit/integration (66).
+* `pnpm --filter @databro/ui test` — 59 passing: block renderer, embed allowlist, inline rich text
+  (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, and the primitives'
+  accessibility contracts (Vitest).
 * `pnpm typecheck` — clean across all five workspaces.
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).
 * `scripts/dev-smoke.ps1` — 10-step end-to-end check against a running stack; passes in both run
@@ -101,7 +101,6 @@ and scheduled publishing next**.
 
 ## Open questions / to be ADR'd later
 
-* Exact content-block type catalog (finalize before CMS build — see [CONTENT_MODEL.md](CONTENT_MODEL.md)).
 * Newsletter provider (Resend vs. ConvertKit) — decide end of Phase 1.
 * Playground execution strategy (client WASM vs. server sandbox) — Phase 3 ADR.
 * LLM provider(s) and embedding model — Phase 3 ADR.

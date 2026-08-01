@@ -69,6 +69,12 @@ internal static class ArticleMapping
             ? new AuthorDto(user.Id, user.DisplayName, user.AvatarUrl)
             : null;
 
+    // Detail responses carry the bio; summaries deliberately do not (see AuthorProfileDto).
+    private static AuthorProfileDto? ResolveAuthorProfile(this ArticleReferences refs, Guid authorId) =>
+        refs.Authors.TryGetValue(authorId, out var user)
+            ? new AuthorProfileDto(user.Id, user.DisplayName, user.AvatarUrl, user.Bio)
+            : null;
+
     // A soft-deleted or missing category resolves to null rather than a dangling id, matching how
     // an unresolvable author is handled.
     private static TaxonomyTermDto? ResolveCategory(this ArticleReferences refs, Guid? categoryId) =>
@@ -106,7 +112,7 @@ internal static class ArticleMapping
 
     private static ArticleDto ToDto(this Article a, ArticleReferences refs, ContentDocumentDto content) =>
         new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
-            a.Locale, refs.ResolveAuthor(a.AuthorId), a.CurrentVersion, a.ReadingTimeMinutes,
+            a.Locale, refs.ResolveAuthorProfile(a.AuthorId), a.CurrentVersion, a.ReadingTimeMinutes,
             content, a.Seo.ToDto(), a.PublishedAt, a.ScheduledFor,
             refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id));
 }
