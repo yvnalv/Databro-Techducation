@@ -48,7 +48,11 @@ being tidied away.
 
 ## In progress
 
-* Phase 1's exit criterion is met and **CI is running**. A **staging deploy** is the last item.
+* Phase 1's exit criterion is met and **CI is running**.
+* **The staging deploy is deferred, deliberately.** DigitalOcean is not provisioned yet and nothing
+  else depends on it — the whole stack runs locally through Docker Compose. Development continues
+  against the local stack; the deploy is picked up when there is infrastructure to deploy to. This
+  is a scheduling decision, not a gap in the phase.
 
 ## Recently done
 
@@ -132,13 +136,14 @@ being tidied away.
 
 ## Next up (proposed order)
 
-1. **Staging deploy on DigitalOcean** — the last Phase 1 item. Note that auto-migration is
+1. **Phase 2 — Learning**, or a short Phase 1 polish pass first (syntax highlighting, table-block
+   editor, a memorable dev login, ESLint). See the roadmap.
+2. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
+   real Search module). **Note:** ADR-0010 expires the moment Learning introduces a second
+   searchable aggregate, so this is a genuine Phase 2 prerequisite rather than housekeeping.
+3. **Staging deploy on DigitalOcean** — deferred until there is infrastructure. Auto-migration is
    `IsDevelopment()`-gated, so the deploy needs an explicit migration step or the schema will never
    move.
-2. **ESLint** — there is no linter config anywhere in the repo, so the root `lint` script is a
-   no-op and CI has nothing to run.
-3. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
-   real Search module).
 
 ## Known gaps / deferred
 
