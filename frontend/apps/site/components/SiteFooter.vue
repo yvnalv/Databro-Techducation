@@ -49,6 +49,14 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
                 {{ t("nav.articles") }}
               </NuxtLink>
             </li>
+            <li>
+              <!-- Plain <a>, not NuxtLink: the feed is a Nitro route, not a Vue page, so the
+                   router must not try to resolve it client-side. Not locale-prefixed either —
+                   there is one English feed (see server/routes/feed.xml.ts). -->
+              <a href="/feed.xml" class="text-white/65 transition-colors hover:text-white">
+                {{ t("footer.rss") }}
+              </a>
+            </li>
           </ul>
         </div>
 

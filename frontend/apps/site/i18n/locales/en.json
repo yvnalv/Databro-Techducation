@@ -60,7 +60,8 @@
     "learn": "Learn",
     "topics": "Topics",
     "topicsEmpty": "No topics yet.",
-    "contact": "Contact"
+    "contact": "Contact",
+    "rss": "RSS feed"
   },
   "home": {
     "heroTitle": "Learn the craft behind AI, data and software.",

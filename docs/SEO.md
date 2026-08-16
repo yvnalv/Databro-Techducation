@@ -7,8 +7,14 @@ the primary acquisition channel, so SEO is treated as load-bearing architecture,
 
 * **Content module** owns per-unit SEO *metadata* (slug, meta, canonical, OG, robots, structured data
   inputs) and the `redirects` table.
-* **Platform** owns site-wide artifacts (`sitemap.xml`, `robots.txt`, RSS) generated from content.
-* **`site` frontend** owns *rendering* SEO into the page (head tags, JSON-LD) and honoring redirects.
+* **`site` frontend** owns *rendering* SEO into the page (head tags, JSON-LD), honoring redirects,
+  and serving the site-wide artifacts (`sitemap.xml`, `robots.txt`, `feed.xml`).
+
+> **Correction (2026-08-16).** This document previously assigned the site-wide artifacts to
+> **Platform**. That is wrong in a two-origin deployment: a crawler fetches
+> `https://databro.id/robots.txt`, so the file must come from whichever host answers for that origin
+> — the `site` app, not the API. The API still owns the *data*; the site app reads it through the
+> public endpoints and renders the XML. See §6.
 
 ## 2. Per-article SEO metadata
 
@@ -60,9 +66,45 @@ Stored in the article's `seo` JSONB plus first-class columns:
 
 ## 6. Sitemaps, robots, feeds
 
-* `sitemap.xml` (indexed, split by type/section when large) regenerated on publish via Hangfire.
-* `robots.txt` allows content, disallows the `app`/authoring surfaces and API.
-* RSS/Atom feed for articles (also aids discovery + newsletter).
+All three are **Nitro server routes in the `site` app** (`frontend/apps/site/server/routes/`), built
+on the public API through `server/utils/catalogue.ts`. They must live on the site's own origin — see
+the correction in §1.
+
+### `robots.txt`
+
+* Allows everything by default: this is a content site whose entire strategy is being indexed.
+* Disallows `/*?page=` — paginated listings past page 1 are thin and near-duplicate, and every
+  article they contain is reachable from the sitemap anyway.
+* Points at `Sitemap: {siteUrl}/sitemap.xml`.
+* The authoring app is a **separate origin** and carries its own `X-Robots-Tag: noindex`, so it needs
+  no entry here.
+
+### `sitemap.xml`
+
+* Home, every published article (`lastmod` = `publishedAt`), every **populated** category, and every
+  tag. Empty categories are omitted for the same reason the home tiles omit them: a sitemap entry
+  for an empty listing is an invitation to a dead end.
+* Each URL is emitted **once per locale**, and every entry carries `xhtml:link` alternates for the
+  full locale set plus `x-default`. Listing only `en` would leave `/id/*` undiscovered; listing both
+  without alternates would read as duplicate content rather than translations.
+* A failing section is caught and skipped rather than 500ing the document — a partial sitemap still
+  gets most of the catalogue indexed; a 500 indexes nothing.
+
+### `feed.xml` (RSS 2.0)
+
+* Latest 25 published English articles. **English only, deliberately**: an RSS channel declares one
+  `language`, so mixing locales gives every subscriber half their items in a language they did not
+  ask for. `/id` gets its own feed when it has the content to justify one.
+* **Summaries only, never rendered bodies.** Bodies are typed blocks; rendering them to feed HTML
+  would mean a second renderer to keep in step with the real one.
+* `guid` is the permalink, which is safe precisely because slugs are immutable once published (§4) —
+  a reader will never be shown an old item as new.
+* Discoverable via `<link rel="alternate" type="application/rss+xml">` in the site head plus a footer
+  link.
+
+**Scale note.** `allPublishedArticles` pages the public listing 100 at a time (hard cap 50 pages).
+That is fine at the current catalogue size and wrong at ten thousand articles — the upgrade path is
+a bulk/`lastmod`-only endpoint plus a sitemap index, tracked in [STATUS.md](STATUS.md).
 
 ## 7. Premium content & SEO
 

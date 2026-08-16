@@ -75,6 +75,16 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: "en" },
       titleTemplate: "%s · DataBro",
+      link: [
+        // Feed autodiscovery. Without this tag a reader app cannot find the feed from the site URL
+        // alone, which is how most people actually subscribe.
+        {
+          rel: "alternate",
+          type: "application/rss+xml",
+          title: "DataBro",
+          href: "/feed.xml",
+        },
+      ],
     },
   },
 });

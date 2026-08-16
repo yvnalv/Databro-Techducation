@@ -1,5 +1,41 @@
 # DataBro Changelog
 
+## [2026-08-16 07:41:21 UTC]
+
+CHG-0025 — Discovery layer: robots.txt, sitemap.xml, RSS
+
+- **These moved from the API to the `site` app, and the docs were wrong.** `docs/SEO.md` §1 assigned
+  the site-wide artifacts to **Platform** and `docs/API_SPEC.md` listed `/sitemap.xml`, `/robots.txt`
+  and `/api/v1/feed.rss` as API endpoints. A crawler fetches `https://databro.id/robots.txt` — from
+  the host that answers for that origin, which is the site, not the API. Both documents now record
+  the correction rather than being quietly rewritten. The API still owns the data; the site reads it
+  through the existing public listings.
+- **`sitemap.xml`** — home, every published article (`lastmod` from `publishedAt`), every *populated*
+  category, and every tag. Each URL is emitted once per locale with `xhtml:link` alternates for the
+  full set plus `x-default`: listing only English would leave `/id/*` undiscovered, and listing both
+  without alternates would read as duplicate content instead of translations. Empty categories are
+  omitted for the same reason the home tiles omit them.
+- **`robots.txt`** — permissive by design, with one disallow: `/*?page=`. Paginated listings past the
+  first page are thin and near-duplicate, and every article on them is in the sitemap anyway. The
+  authoring app is a separate origin carrying its own `X-Robots-Tag`, so it needs no entry.
+- **`feed.xml`** — RSS 2.0, latest 25 articles, **English only and deliberately so**: a channel
+  declares one `language`, so a mixed feed hands every subscriber half their items in a language
+  they did not ask for. Summaries only, never rendered bodies — the body is typed blocks, and
+  rendering it to feed HTML would mean a second renderer to keep in step with the real one. `guid`
+  is the permalink, which is only safe because slugs are immutable once published (CT-2).
+- **XML escaping is not decoration.** One article title containing `&` produces a malformed document
+  that a crawler rejects wholesale — a single bad title would take the entire sitemap or feed
+  offline. Each section is also independently fault-tolerant: a failing fetch drops that section
+  rather than 500ing the document, because a partial sitemap still indexes most of the catalogue.
+- Feed autodiscovery `<link>` in the site head plus a footer link, in both locales.
+- Verified against the containerised stack: 74 sitemap URLs and 25 feed items, both parsing as
+  well-formed XML, correct content types, and article `canonical`/`hreflang` tags unaffected by the
+  new global head link.
+- Known limit, recorded in STATUS: the sitemap pages the public listing 100 at a time (cap 50 pages).
+  Fine now, wrong at ten thousand articles — that needs a bulk `lastmod` endpoint and a sitemap index.
+
+---
+
 ## [2026-08-16 07:35:00 UTC]
 
 CHG-0024 — Taxonomy management in the CMS

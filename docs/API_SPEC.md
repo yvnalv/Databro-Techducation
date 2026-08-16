@@ -79,9 +79,13 @@ GET    /api/v1/tags/{slug}/articles          articles by tag
 GET    /api/v1/authors/{id}                  author profile + articles
 GET    /api/v1/redirects?from={path}         resolve a moved path -> { toPath, statusCode } or 404
 GET    /api/v1/search?q=…                    keyword search over published content
-GET    /api/v1/feed.rss                      RSS
-GET    /sitemap.xml, /robots.txt             (platform, outside /api)
 ```
+
+**`sitemap.xml`, `robots.txt` and `feed.xml` are not API endpoints.** An earlier revision of this
+document listed them here (and an RSS endpoint at `/api/v1/feed.rss`). They are served by the `site`
+app as Nitro routes at `{siteUrl}/sitemap.xml`, `/robots.txt` and `/feed.xml`, because a crawler
+requests them from the site's origin, not the API's. The API's contribution is the data they are
+built from — the public article, category and tag listings above. See [SEO.md](SEO.md) §6.
 
 The `site` app calls `/api/v1/redirects` on a 404 to honor a moved slug with a 301 rather than
 serving a dead page (docs/SEO.md §4). `from` is the normalized path (leading slash, lowercased, no

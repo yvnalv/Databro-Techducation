@@ -3,12 +3,12 @@
 Snapshot of where the project is, what's next, and what's open. Update this with every meaningful
 milestone.
 
-Last updated: 2026-08-01.
+Last updated: 2026-08-16.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **authoring loop closed → search, media and the
-discovery layer next**.
+**Phase 1 — Foundation & Content.** Sub-stage: **CMS and discovery artifacts shipped → search and
+media are the last two Phase 1 items**.
 
 ## Done
 
@@ -28,10 +28,17 @@ discovery layer next**.
 
 ## In progress
 
-* The full read path is proven: author in the API → published → rendered on `site` with complete SEO
-  output. Picking up taxonomy, search, and media next.
+* Content can now be written, published, organised and crawled end to end. **PostgreSQL FTS search**
+  is the one remaining Phase 1 exit criterion; media upload follows.
 
 ## Recently done
+
+* **Discovery artifacts:** `robots.txt`, `sitemap.xml` and `feed.xml` (RSS 2.0), served as Nitro
+  routes from the `site` app. This **corrects [SEO.md](SEO.md) §1 and [API_SPEC.md](API_SPEC.md)**,
+  which had assigned them to Platform — a crawler fetches them from the site's origin, so they
+  cannot live on the API. The sitemap emits every URL per locale with `xhtml:link` alternates and
+  `x-default`; the feed is English-only with summaries, never rendered bodies. Verified against the
+  containerised stack: 74 sitemap URLs, 25 feed items, both well-formed XML.
 
 * **Scheduled publishing (CT-7):** `POST /api/v1/authoring/articles/{id}/schedule` (behind
   `Content.Publish`) sets a future publish time; a **Hangfire** recurring sweep (every minute, backed
@@ -66,9 +73,10 @@ discovery layer next**.
 
 ## Next up (proposed order)
 
-1. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-2. PostgreSQL FTS search; platform `sitemap.xml` / `robots.txt` / RSS; Media upload to MinIO/Spaces.
-3. CI pipeline (build/test + architecture-fitness gate).
+1. PostgreSQL FTS search — the last Phase 1 exit criterion.
+2. Media upload to MinIO/Spaces.
+3. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
+4. CI pipeline (build/test + architecture-fitness gate).
 
 ## Known gaps / deferred
 
@@ -92,7 +100,11 @@ discovery layer next**.
 * **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
   `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
   proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.
-* Inline rich text is renderable but not yet *authorable* — the editor lands with the CMS slice.
+* **The sitemap pages the public listing** 100 articles at a time (cap 50 pages). Correct and cheap
+  at the current size; at ten thousand articles it needs a bulk `lastmod`-only endpoint and a sitemap
+  index. Noted rather than pre-built.
+* **One RSS feed, English only.** A channel declares a single `language`; `/id` gets its own feed
+  when it has content to justify one.
 * **Hangfire** now runs the scheduled-publish sweep (PostgreSQL storage). Redis is still provisioned
   but unused. The scheduled-publish failure "alert" is a logged error for now — it becomes a real
   notification when the Notification module lands. The sweep assumes a single job server; a
