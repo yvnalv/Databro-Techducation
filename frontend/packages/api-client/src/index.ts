@@ -250,6 +250,80 @@ export class ApiClient {
     });
   }
 
+  // ---- Taxonomy authoring (Taxonomy.Manage) ----
+  // Slug changes are a *separate* endpoint from the general update on purpose: a term's slug is a
+  // live public URL, so moving it is an explicit act the API pairs with a 301 (CT-3).
+
+  createCategory(input: {
+    name: string;
+    slug?: string;
+    parentId?: string | null;
+    description?: string;
+    order?: number;
+  }): Promise<Category> {
+    return this.request<Category>("/api/v1/authoring/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateCategory(
+    id: string,
+    input: { name: string; description?: string; order?: number; parentId?: string | null },
+  ): Promise<Category> {
+    return this.request<Category>(`/api/v1/authoring/categories/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  changeCategorySlug(id: string, slug: string): Promise<Category> {
+    return this.request<Category>(`/api/v1/authoring/categories/${encodeURIComponent(id)}/slug`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+  }
+
+  /** Refused with a conflict while the category still classifies articles or has children (TX-2). */
+  deleteCategory(id: string): Promise<unknown> {
+    return this.request<unknown>(`/api/v1/authoring/categories/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  }
+
+  createTag(input: { name: string; slug?: string }): Promise<TaxonomyTerm> {
+    return this.request<TaxonomyTerm>("/api/v1/authoring/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateTag(id: string, input: { name: string }): Promise<TaxonomyTerm> {
+    return this.request<TaxonomyTerm>(`/api/v1/authoring/tags/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  changeTagSlug(id: string, slug: string): Promise<TaxonomyTerm> {
+    return this.request<TaxonomyTerm>(`/api/v1/authoring/tags/${encodeURIComponent(id)}/slug`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+  }
+
+  deleteTag(id: string): Promise<unknown> {
+    return this.request<unknown>(`/api/v1/authoring/tags/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  }
+
   // ---- Redirects ----
 
   /**

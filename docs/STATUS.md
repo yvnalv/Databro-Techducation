@@ -86,9 +86,9 @@ discovery layer next**.
   highlighter drops in later without touching page code.
 * **Authoring UI works end to end.** Sign-in, route guard, dashboard shell, article list, and a
   block editor with Tiptap rich text and live preview. An article can be written, saved, published
-  and read on the public site without touching a script. Remaining gaps: no table/grid editor (table
-  blocks render but have no form), no media upload, no version history or restore, and taxonomy has
-  no management screen.
+  and read on the public site without touching a script. Taxonomy has a management screen too. Remaining gaps: no
+  table/grid editor (table blocks render but have no form), no media upload, and no version history
+  or restore.
 * **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
   `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
   proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.
@@ -102,7 +102,6 @@ discovery layer next**.
   URL move are separate operations, and the URL move always records a 301 (CT-3).
 * No bulk "reassign all articles from category A to B" operation; deleting a category in use is
   refused and the editor reassigns manually.
-* Taxonomy has no authoring UI — terms are managed via the API until the CMS surface exists.
 
 ## Testing status
 

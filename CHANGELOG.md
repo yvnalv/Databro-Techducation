@@ -1,5 +1,31 @@
 # DataBro Changelog
 
+## [2026-08-16 07:35:00 UTC]
+
+CHG-0024 — Taxonomy management in the CMS
+
+- Categories and tags are now managed from `/taxonomy` instead of only through the API. One screen
+  for both: they are the same job — curating the vocabulary articles are filed under — and splitting
+  them would have produced two half-empty pages.
+- Categories show their **published article count** and their parent, so the hierarchy is visible
+  where it is edited rather than only on the public site.
+- **Slug changes are deliberately absent from the edit form.** A term's slug is a live public URL;
+  moving it is a separate act the API pairs with a 301 (CT-3), and the client method exists
+  (`changeCategorySlug` / `changeTagSlug`) but wiring it into the general edit form would make a
+  rename silently move a URL. The create form says the slug is immutable afterwards.
+- **TX-2 surfaces properly:** deleting a category that still classifies articles is refused by the
+  API with the count, and the screen shows that message rather than a generic failure. Verified
+  against the running stack — "This category still classifies 1 article(s)."
+- Every mutation runs through one helper so success and failure are reported the same way, and the
+  list refreshes from the server rather than being patched locally — the server is the authority on
+  what the counts and hierarchy now are.
+- Also fixes the dead `/taxonomy` link the sidebar has been pointing at since the shell was built,
+  which was logging a router warning on every dashboard render.
+- Verified: created, renamed and deleted a tag; confirmed a rename leaves the slug untouched;
+  confirmed the category delete guard refuses with its count. Clean typecheck across five workspaces.
+
+---
+
 ## [2026-08-16 07:30:00 UTC]
 
 CHG-0023 — Block editor: the authoring loop closes
