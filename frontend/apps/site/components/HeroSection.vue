@@ -19,7 +19,7 @@ const highlights = computed(() => [
 
 <template>
   <section class="border-b border-line bg-surface-sunken">
-    <div class="mx-auto max-w-shell px-4 py-16 sm:px-6 sm:py-24">
+    <div class="db-shell py-16 sm:py-24">
       <div class="max-w-3xl">
         <p
           class="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent"

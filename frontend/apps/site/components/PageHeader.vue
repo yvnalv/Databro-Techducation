@@ -17,7 +17,7 @@ withDefaults(
 <template>
   <div class="db-gradient-band">
     <div
-      class="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20"
+      class="db-shell py-14 sm:py-20"
       :class="align === 'center' ? 'text-center' : ''"
     >
       <slot name="breadcrumb" />

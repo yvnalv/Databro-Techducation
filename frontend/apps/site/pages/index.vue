@@ -17,8 +17,9 @@ const client = useApiClient();
 const page = computed(() => Number(route.query.page ?? 1) || 1);
 
 // useAsyncData so the page is complete in the initial HTML for crawlers. Both reads degrade to
-// empty rather than failing the prerender if the API hiccups during a build.
-const { data } = await useAsyncData(
+// empty rather than failing the prerender if the API hiccups during a build — but the page has to
+// say *which* happened, so an unreachable API does not masquerade as an empty site.
+const { data, error } = await useAsyncData(
   () => `home:${page.value}`,
   async () => {
     const [articles, categories] = await Promise.all([
@@ -40,6 +41,9 @@ const articles = computed(() => data.value?.articles.items ?? []);
 const meta = computed(() => data.value!.articles.meta);
 const categories = computed(() => data.value?.categories ?? []);
 
+// Distinguishes "the API did not answer" from "there is genuinely nothing published".
+const unavailable = computed(() => Boolean(error.value));
+
 assertPageInRange(meta.value);
 
 useListingSeo({
@@ -56,7 +60,7 @@ useListingSeo({
     <HeroSection v-if="meta.page === 1" />
 
     <section class="bg-surface">
-      <div class="mx-auto max-w-shell px-4 py-16 sm:px-6 sm:py-20">
+      <div class="db-shell py-16 sm:py-20">
         <div class="text-center">
           <h2 class="font-display text-3xl font-bold tracking-tight text-ink">
             {{ t("home.latestTitle") }}
@@ -64,7 +68,7 @@ useListingSeo({
           <p class="mx-auto mt-3 max-w-2xl text-ink-muted">{{ t("home.latestSubtitle") }}</p>
         </div>
 
-        <ArticleList :articles="articles" />
+        <ArticleList :articles="articles" :unavailable="unavailable" />
         <PaginationNav :meta="meta" base-path="/" />
       </div>
     </section>

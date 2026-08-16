@@ -115,7 +115,7 @@ useHead({
       </template>
     </PageHeader>
 
-    <div class="mx-auto max-w-shell px-4 py-14 sm:px-6 sm:py-20">
+    <div class="db-shell py-14 sm:py-20">
       <ArticleList :articles="articles.items" />
       <PaginationNav :meta="articles.meta" :base-path="`/categories/${slug}`" />
     </div>

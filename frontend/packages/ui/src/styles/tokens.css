@@ -118,6 +118,39 @@
 }
 
 /*
+ * The page shell: max width + centring + responsive gutters, in one place.
+ *
+ * A class rather than a repeated `mx-auto max-w-shell px-4 sm:px-6`, because the container width is
+ * the single most-tuned value in a layout and it should not be spread across a dozen templates.
+ *
+ * Width (docs/DESIGN_SYSTEM.md §3.2): the reference runs 1220px of content in a 1753px viewport
+ * (~0.70). DataBro runs wider — 1760px — because the earlier 1200px cap left too much dead margin on
+ * a large display. It is still *capped*: unbounded width makes card grids sprawl and looks broken on
+ * an ultrawide monitor.
+ *
+ * This is the *shell*, for listings, chrome and marketing. It is deliberately NOT the article body,
+ * which stays at the ~68ch reading measure no matter how wide the window gets.
+ */
+.db-shell {
+  width: 100%;
+  max-width: 1760px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .db-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .db-shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+/*
  * Page-header gradient band (docs/UI_PATTERNS.md §1.2). A class rather than a Tailwind utility
  * because it is one specific brand gradient, not a composable colour.
  */

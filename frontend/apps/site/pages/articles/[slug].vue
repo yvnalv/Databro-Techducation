@@ -139,7 +139,7 @@ const authorInitial = computed(() => authorName.value.trim().charAt(0).toUpperCa
   </article>
 
   <!-- Full width, outside the prose measure: this is scanning, not reading. -->
-  <div class="mx-auto max-w-shell px-4 pb-20 sm:px-6">
+  <div class="db-shell pb-20">
     <RelatedArticles :category-slug="published.category?.slug" :exclude-slug="published.slug" />
   </div>
 </template>

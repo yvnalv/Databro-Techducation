@@ -28,7 +28,7 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
 <template>
   <div class="flex min-h-screen flex-col bg-surface font-sans text-ink antialiased">
     <header class="border-b border-line">
-      <div class="mx-auto flex h-16 max-w-shell items-center px-4 sm:px-6">
+      <div class="db-shell flex h-16 items-center">
         <NuxtLink :to="localePath('/')" class="text-accent" :aria-label="t('site.name')">
           <BrandMark class="text-accent [&>span:last-child]:text-ink" />
         </NuxtLink>
@@ -36,7 +36,7 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
     </header>
 
     <main class="flex flex-1 items-center">
-      <div class="mx-auto w-full max-w-shell px-4 py-20 text-center sm:px-6">
+      <div class="db-shell py-20 text-center">
         <div class="relative">
           <!-- Decorative ghost numeral; the heading overlaid on it carries the meaning. -->
           <p

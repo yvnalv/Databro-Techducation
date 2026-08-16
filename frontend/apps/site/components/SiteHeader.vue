@@ -21,7 +21,7 @@ const navigation = computed(() => [
 
 <template>
   <header class="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur">
-    <div class="mx-auto flex h-16 max-w-shell items-center justify-between gap-6 px-4 sm:px-6">
+    <div class="db-shell flex h-16 items-center justify-between gap-6">
       <NuxtLink
         :to="localePath('/')"
         class="text-accent transition-opacity hover:opacity-80"

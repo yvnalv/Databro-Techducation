@@ -21,7 +21,8 @@
     "backToArticles": "Back to articles",
     "aboutAuthor": "About the author",
     "relatedTitle": "Related articles",
-    "tagsLabel": "Tagged"
+    "tagsLabel": "Tagged",
+    "listUnavailable": "We could not load the articles right now. Please try again shortly."
   },
   "categories": {
     "breadcrumbLabel": "Breadcrumb",

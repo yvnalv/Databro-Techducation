@@ -160,11 +160,38 @@ Tailwind's 4px base. Component padding uses 12/16/20/24; section rhythm uses 48/
 
 ### 3.2 Containers
 
-| Token | Width | Use |
-|---|---|---|
-| `prose` | ~68ch (~680px) | Article body |
-| `shell` | 1200px | Listings, chrome, dashboards |
-| Gutter | 24px (16px on mobile) | Both |
+Two containers, and keeping them separate is the whole point: **widening the shell must never widen
+the article body.**
+
+| Container | Width | Gutter | Use |
+|---|---|---|---|
+| `.db-shell` | fluid, max **1760px** | 16 / 24 / 40px | Listings, chrome, marketing, dashboards |
+| `max-w-prose` | ~68ch (~680px) | 16 / 24px | **Article body only** |
+
+`.db-shell` is a class in `tokens.css`, not a repeated utility string, because container width is the
+most-tuned value in any layout and should have exactly one definition.
+
+**How the width was chosen.** The reference was measured, not eyeballed: content occupies **1220px in
+a 1753px viewport** — a gutter of 265px each side, ratio **0.70** — and that holds across the blog
+grid, the home course cards, the element page and the footer.
+
+DataBro runs **wider than the reference**, because at 1200px the layout left conspicuous dead margin
+on a large display. Resulting geometry:
+
+| Viewport | Content starts at | Content width | Ratio |
+|---|---|---|---|
+| 1366 | 40px | 1286px | 0.94 |
+| 1536 | 40px | 1456px | 0.95 |
+| 1870 | 95px | 1680px | 0.90 |
+| 2560 | 440px | 1680px | 0.66 |
+
+The **cap matters as much as the width**. Fluid-to-infinity would stretch a card grid to absurd
+widths on an ultrawide monitor; 1760px is where it stops. Ratios above 0.9 on common laptop widths
+are intentional — this is a content site with card grids, not a text column.
+
+**Column counts step up with the container**, otherwise the extra width just inflates each card:
+listings and category tiles go 1 → 2 → 3 → **4** at `xl`. At 1870px that is a 402px card, which is
+close to the reference's card size; three columns would have produced ~550px banners.
 
 ### 3.3 Section rhythm
 

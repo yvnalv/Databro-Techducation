@@ -49,7 +49,7 @@ const populated = computed(() =>
 
 <template>
   <section v-if="populated.length" class="border-b border-line bg-surface">
-    <div class="mx-auto max-w-shell px-4 py-16 sm:px-6 sm:py-20">
+    <div class="db-shell py-16 sm:py-20">
       <div class="text-center">
         <h2 class="font-display text-3xl font-bold tracking-tight text-ink">
           {{ t("home.categoriesTitle") }}
@@ -57,7 +57,7 @@ const populated = computed(() =>
         <p class="mx-auto mt-3 max-w-2xl text-ink-muted">{{ t("home.categoriesSubtitle") }}</p>
       </div>
 
-      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <li v-for="category in populated" :key="category.id">
           <NuxtLink
             :to="localePath(`/categories/${category.slug}`)"

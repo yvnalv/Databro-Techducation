@@ -17,7 +17,7 @@ const localePath = useLocalePath();
 <template>
   <!-- Solid brand blue with a navy action, as in the reference's newsletter band. -->
   <section class="bg-accent">
-    <div class="mx-auto max-w-shell px-4 py-16 text-center sm:px-6 sm:py-20">
+    <div class="db-shell py-16 text-center sm:py-20">
       <h2 class="font-display text-3xl font-bold tracking-tight text-white">
         {{ t("home.ctaTitle") }}
       </h2>

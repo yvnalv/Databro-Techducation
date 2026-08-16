@@ -1,5 +1,33 @@
 # DataBro Changelog
 
+## [2026-08-16 05:15:00 UTC]
+
+CHG-0019 — Widen the page shell; stop an unreachable API reading as an empty site
+
+- **Widened the container.** The reference was measured rather than estimated: it runs **1220px of
+  content in a 1753px viewport** (gutter 265px, ratio 0.70), consistently across the blog grid, home
+  cards, element page and footer. DataBro now runs wider — fluid to a **1760px cap** with 16/24/40px
+  responsive gutters — because 1200px left conspicuous dead margin on a large display. At a 1870px
+  viewport content starts at 95px and spans 1680px.
+- The **cap** is deliberate: fluid-to-infinity stretches card grids to absurd widths on an ultrawide.
+  At 2560px the layout stops growing and re-centres.
+- Container width is now a single `.db-shell` class in `tokens.css` rather than a
+  `mx-auto max-w-shell px-4 sm:px-6` string repeated across eleven templates. It is the most-tuned
+  value in a layout and should have one definition; all eleven usages migrated.
+- **Column counts step up with the container** — listings and category tiles now go to 4 columns at
+  `xl`. Without that, the extra width simply inflated three cards to ~550px banners; at 1870px the
+  grid is now 402px cards, close to the reference's card size.
+- The **article body is untouched** at the ~68ch measure. Widening the shell must never widen the
+  reading column, which is why the two containers are separate.
+- **Fixed a misleading empty state.** The homepage degraded a failed article fetch to an empty list,
+  which rendered "No articles have been published yet" — indistinguishable from a genuinely empty
+  site, and untrue. An unreachable API now says so. The degradation itself stays: a build-time API
+  hiccup must not fail the prerender.
+- Verified: geometry computed across seven viewport widths, `.db-shell` survives the Tailwind purge,
+  59 frontend tests, clean typecheck, production build, and the live containerised stack.
+
+---
+
 ## [2026-08-01 15:29:53 UTC]
 
 CHG-0018 — Scheduled publishing via Hangfire (CT-7)

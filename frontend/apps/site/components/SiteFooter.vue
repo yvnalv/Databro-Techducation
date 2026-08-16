@@ -27,7 +27,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
 
 <template>
   <footer class="mt-24 bg-accent-deep text-white/70">
-    <div class="mx-auto max-w-shell px-4 py-14 sm:px-6">
+    <div class="db-shell py-14">
       <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <!-- White, not the brand blue: blue-on-navy is the one place the mark loses contrast. -->
