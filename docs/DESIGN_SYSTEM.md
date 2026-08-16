@@ -193,6 +193,37 @@ are intentional — this is a content site with card grids, not a text column.
 listings and category tiles go 1 → 2 → 3 → **4** at `xl`. At 1870px that is a 402px card, which is
 close to the reference's card size; three columns would have produced ~550px banners.
 
+### 3.2b Reading layout — why the article does *not* just get wider
+
+A centred 68ch column looks narrow on a 1870px display, and the instinct is to widen it. **Don't.**
+The research is unusually consistent:
+
+* Bringhurst's classic guidance, and [webtypography.net](http://webtypography.net/2.1.2), put the
+  comfortable measure at **45–75 characters**; 66 is the most-cited optimum.
+* [Baymard](https://baymard.com/blog/line-length-readability) and Dyson & Haselgrove find ~55–75 CPL
+  supports the best comprehension; beyond ~80 the return sweep starts missing the next line.
+* **WCAG 2.1 caps line length at 80 characters.** Widening the column to fill a 1870px viewport
+  would put it near 100 — outside both the research range and the accessibility guidance.
+
+The reference platforms do not widen the text either. DataCamp's content page is wide because it runs
+**two columns** — a reading column of roughly 865px plus a ~250px sidebar — not because its lines are
+long.
+
+So DataBro does the same. On `xl` and above the article page is a grid:
+
+| | |
+|---|---|
+| Reading column | `max-w-prose` (~68ch), unchanged |
+| Gutter | 48px |
+| Sidebar | 240px, sticky table of contents |
+| Grid max | 64rem (1024px), centred |
+
+At a 1870px viewport the article starts at **423px** instead of 595px — visually much wider — while
+every line stays the same length. Below `xl` the sidebar is hidden and the column re-centres.
+
+**The rule: use extra width for navigation, never for longer lines.** The same layout is what a
+Phase 2 Lesson page should use.
+
 ### 3.3 Section rhythm
 
 | Context | Vertical padding |

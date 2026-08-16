@@ -99,10 +99,17 @@ Tags Cloud.
 
 DataBro:
 
-* **Single column at `prose` measure, no sidebar, for the article body itself.** This is a deliberate
-  divergence. A 68ch measure is the core of the reading experience; a persistent sidebar either
-  narrows it or widens the page past comfortable reading. Sidebar content moves *below* the article
-  as a "related" region, where it still provides internal links without competing with the prose.
+* **Two columns on `xl` and above: the reading column plus a sticky table of contents** — the same
+  shape as the DataCamp reference, and the reason its content page looks wide (DESIGN_SYSTEM §3.2b).
+  The reading column keeps its ~68ch measure; the extra width carries *navigation*, never longer
+  lines. Below `xl` the sidebar is hidden and the column re-centres.
+* The reference's sidebar content (search, categories, trending) is **not** adopted — that is
+  browsing, and it belongs below the article, where a finished reader is. The contents list is
+  different: it serves the article you are currently in.
+* The TOC lists `h2` and `h3` only; an `h4` outlines rather than navigates. Its anchor ids come from
+  the **same** `headingAnchor` the renderer stamps onto the heading — two implementations would drift
+  and every link would scroll nowhere, so a test asserts they agree.
+* It appears only with **two or more headings**: a contents list of one is noise.
 * Title, summary/lead, then a meta row (author, read time, date), then a rule, then the body — the
   current implementation, which stays.
 * **Pull-quote** — adopted; already the `quote` block.

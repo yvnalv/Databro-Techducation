@@ -22,7 +22,9 @@
     "aboutAuthor": "About the author",
     "relatedTitle": "Related articles",
     "tagsLabel": "Tagged",
-    "listUnavailable": "We could not load the articles right now. Please try again shortly."
+    "listUnavailable": "We could not load the articles right now. Please try again shortly.",
+    "tocTitle": "On this page",
+    "tocLabel": "Table of contents"
   },
   "categories": {
     "breadcrumbLabel": "Breadcrumb",

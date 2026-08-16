@@ -22,7 +22,9 @@
     "aboutAuthor": "Tentang penulis",
     "relatedTitle": "Artikel terkait",
     "tagsLabel": "Bertagar",
-    "listUnavailable": "Kami tidak dapat memuat artikel saat ini. Silakan coba sesaat lagi."
+    "listUnavailable": "Kami tidak dapat memuat artikel saat ini. Silakan coba sesaat lagi.",
+    "tocTitle": "Di halaman ini",
+    "tocLabel": "Daftar isi"
   },
   "categories": {
     "breadcrumbLabel": "Remah roti",

@@ -1,5 +1,36 @@
 # DataBro Changelog
 
+## [2026-08-16 05:40:00 UTC]
+
+CHG-0020 — Two-column reading layout with a table of contents
+
+- **The article page now uses the width without stretching the text.** A centred 68ch column looked
+  narrow on a large display, but widening it was the wrong fix: Bringhurst and webtypography.net put
+  the comfortable measure at **45–75 characters**, Baymard finds comprehension falls off past ~80,
+  and **WCAG 2.1 caps line length at 80**. Filling a 1870px viewport would have put the column near
+  100 characters — outside both the research range and the accessibility guidance.
+- The DataCamp reference given as the target is wide for a different reason: it runs **two columns**
+  (a ~865px reading column plus a ~250px sidebar), not long lines. DataBro now does the same — on
+  `xl` and above, the reading column keeps its measure and a **sticky table of contents** occupies
+  the extra width. At a 1870px viewport the article starts at **423px** instead of 595px while every
+  line stays the same length.
+- The TOC lists `h2`/`h3` only, appears only with two or more headings, and highlights the section in
+  view via `IntersectionObserver` (not a scroll handler, so it costs nothing per frame). Entries are
+  real anchors, so they work without JS.
+- **Anchor generation is now shared.** `headingAnchor` moved into `@databro/ui` and is used by both
+  the heading renderer and the TOC builder. Two implementations would drift on the first odd heading
+  and every contents link would scroll nowhere; a test asserts the id the TOC links to is the id the
+  renderer stamps.
+- A test caught a real bug while writing it: `buildToc` coerced an `h4` to level 2 rather than
+  excluding it, which would have put sub-details in the contents claiming to be top-level sections.
+- The reference's other sidebar content (search, categories, trending) is still **not** adopted —
+  that is browsing, and it belongs below the article where a finished reader is. A contents list is
+  different: it serves the article you are already in.
+- Verified: 68 frontend tests (was 59), clean typecheck, production build, and live checks that the
+  rendered heading ids match the TOC's links.
+
+---
+
 ## [2026-08-16 05:15:00 UTC]
 
 CHG-0019 — Widen the page shell; stop an unreachable API reading as an empty site

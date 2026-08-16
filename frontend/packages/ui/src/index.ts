@@ -23,6 +23,7 @@ export { default as RichText } from "./blocks/RichText";
 export { blockRegistry, resolveBlockComponent } from "./blocks/registry";
 export { resolveEmbed, isSafeLink, type EmbedTarget } from "./blocks/embed-providers";
 export { toRichText, richTextToPlain, markToElement, safeHref } from "./blocks/rich-text";
+export { headingAnchor, buildToc, type TocEntry } from "./blocks/headings";
 export { renderMath } from "./blocks/katex";
 export {
   mediaResolverKey,

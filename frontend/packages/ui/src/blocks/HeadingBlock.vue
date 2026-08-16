@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { HeadingBlock } from "@databro/types";
+import { headingAnchor } from "./headings";
 
 const props = defineProps<{ data: HeadingBlock["data"] }>();
 
@@ -11,14 +12,9 @@ const tag = computed(() => {
   return level === 2 || level === 3 || level === 4 ? `h${level}` : "h2";
 });
 
-/** Stable anchor id so headings can be deep-linked and a table of contents can be built later. */
-const anchor = computed(() =>
-  props.data.text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-"),
-);
+// Shared with the table of contents (see headings.ts) so the id it links to is always the id
+// stamped here.
+const anchor = computed(() => headingAnchor(props.data.text ?? ""));
 </script>
 
 <template>

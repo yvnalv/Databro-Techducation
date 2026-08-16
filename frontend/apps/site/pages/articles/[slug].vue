@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentRenderer, DbChip } from "@databro/ui";
+import { ContentRenderer, DbChip, buildToc } from "@databro/ui";
 import type { Article } from "@databro/types";
 
 const { t, locale } = useI18n();
@@ -48,12 +48,31 @@ const formattedDate = computed(() =>
 
 const authorName = computed(() => published.author?.displayName ?? t("articles.unknownAuthor"));
 const authorInitial = computed(() => authorName.value.trim().charAt(0).toUpperCase() || "D");
+
+// Two entries is the threshold: a contents list of one is noise, and the layout falls back to a
+// single centred column so a short article is not left with an empty gutter.
+const toc = computed(() => buildToc(published.content));
+const hasToc = computed(() => toc.value.length >= 2);
 </script>
 
 <template>
-  <!-- max-w-prose (~68ch) is the measure the whole reading experience hangs on. No page-header band
-       here on purpose: it would push the body below the fold (docs/UI_PATTERNS.md §1.2). -->
-  <article class="mx-auto max-w-prose px-4 py-12 sm:px-6 sm:py-16">
+  <!--
+    Reading layout (docs/DESIGN_SYSTEM.md §3.2b). Two columns on large screens, as in the DataCamp
+    reference: the article keeps its ~68ch measure — research puts the comfortable range at 45–75
+    characters and WCAG caps it at 80 — and the extra width carries a table of contents rather than
+    longer lines. Below `xl` it collapses to one centred column.
+
+    No page-header band here on purpose: it would push the body below the fold (UI_PATTERNS §1.2).
+  -->
+  <div
+    class="mx-auto grid px-4 py-12 sm:px-6 sm:py-16"
+    :class="
+      hasToc
+        ? 'max-w-[64rem] gap-x-12 xl:grid-cols-[minmax(0,1fr)_15rem]'
+        : 'max-w-prose'
+    "
+  >
+    <article class="min-w-0 max-w-prose">
     <header>
       <NuxtLink
         v-if="published.category"
@@ -136,7 +155,14 @@ const authorInitial = computed(() => authorName.value.trim().charAt(0).toUpperCa
         </NuxtLink>
       </p>
     </footer>
-  </article>
+    </article>
+
+    <!-- Hidden below xl rather than reflowed: a non-sticky contents list stranded above the
+         article is worse than none. The headings themselves are still linkable. -->
+    <aside v-if="hasToc" class="hidden xl:block">
+      <ArticleToc :entries="toc" />
+    </aside>
+  </div>
 
   <!-- Full width, outside the prose measure: this is scanning, not reading. -->
   <div class="db-shell pb-20">
