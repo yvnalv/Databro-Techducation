@@ -80,6 +80,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # Media provisions its dev bucket at startup; without this the API can start first and log a
+      # warning instead, leaving uploads failing until it is restarted.
+      minio:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: "8080"
@@ -87,6 +91,13 @@ services:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-databro};Username=${POSTGRES_USER:-databro};Password=${POSTGRES_PASSWORD:-databro_dev_pw}"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: ${JWT_KEY:-dev-only-super-secret-signing-key-change-me-please-32b+}
+      # Two different addresses for the same MinIO, and they must stay different: the API reaches it
+      # over the container network, while an <img> tag is resolved by the reader's browser, which
+      # cannot resolve "minio".
+      Media__Endpoint: "http://minio:9000"
+      Media__PublicBaseUrl: "http://localhost:${MINIO_PORT:-9000}"
+      Media__AccessKey: ${MINIO_ROOT_USER:-databro}
+      Media__SecretKey: ${MINIO_ROOT_PASSWORD:-databro_dev_pw}
     ports:
       - "${API_PORT:-5158}:8080"
     volumes:

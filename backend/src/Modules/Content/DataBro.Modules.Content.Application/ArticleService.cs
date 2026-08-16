@@ -12,7 +12,8 @@ public sealed class ArticleService(
     RedirectService redirects,
     IClock clock,
     ICurrentUser currentUser,
-    IUserDirectory userDirectory)
+    IUserDirectory userDirectory,
+    IMediaDirectory mediaDirectory)
 {
     // Fallback author if a request is somehow unauthenticated (authoring endpoints require auth).
     private static readonly Guid SystemAuthorId = new("00000000-0000-0000-0000-0000000000a1");
@@ -306,6 +307,20 @@ public sealed class ArticleService(
         var allTagIds = tagIdsByArticle.Values.SelectMany(ids => ids).Distinct().ToArray();
         var tagMap = (await tags.GetByIdsAsync(allTagIds, ct)).ToDictionary(t => t.Id);
 
-        return new ArticleReferences(authors, categoryMap, tagMap, tagIdsByArticle);
+        // Media ids come from the blocks the caller will actually render, plus the share image.
+        // Both snapshots are scanned because this same resolution serves the public read (published
+        // blocks) and the CMS editor (draft blocks), and resolving only one would leave images
+        // unrendered on the other.
+        var mediaIds = articles
+            .SelectMany(a => ContentMedia.Collect(a.PublishedBlocks, a.Seo)
+                .Concat(ContentMedia.Collect(a.DraftBlocks)))
+            .Distinct()
+            .ToArray();
+
+        IReadOnlyDictionary<Guid, MediaSummary> mediaMap = mediaIds.Length == 0
+            ? new Dictionary<Guid, MediaSummary>()
+            : await mediaDirectory.GetMediaAsync(mediaIds, ct);
+
+        return new ArticleReferences(authors, categoryMap, tagMap, tagIdsByArticle, mediaMap);
     }
 }

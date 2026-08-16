@@ -13,13 +13,15 @@ internal sealed record ArticleReferences(
     IReadOnlyDictionary<Guid, UserSummary> Authors,
     IReadOnlyDictionary<Guid, Category> Categories,
     IReadOnlyDictionary<Guid, Tag> Tags,
-    IReadOnlyDictionary<Guid, IReadOnlyList<Guid>> TagIdsByArticle)
+    IReadOnlyDictionary<Guid, IReadOnlyList<Guid>> TagIdsByArticle,
+    IReadOnlyDictionary<Guid, MediaSummary> Media)
 {
     public static ArticleReferences Empty { get; } = new(
         new Dictionary<Guid, UserSummary>(),
         new Dictionary<Guid, Category>(),
         new Dictionary<Guid, Tag>(),
-        new Dictionary<Guid, IReadOnlyList<Guid>>());
+        new Dictionary<Guid, IReadOnlyList<Guid>>(),
+        new Dictionary<Guid, MediaSummary>());
 }
 
 /// <summary>Mapping between the Article aggregate and the API DTOs.</summary>
@@ -114,5 +116,22 @@ internal static class ArticleMapping
         new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
             a.Locale, refs.ResolveAuthorProfile(a.AuthorId), a.CurrentVersion, a.ReadingTimeMinutes,
             content, a.Seo.ToDto(), a.PublishedAt, a.ScheduledFor,
-            refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id));
+            refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id), refs.ResolveMedia());
+
+    /// <summary>
+    /// Keyed by the id's string form, because that is what the block's <c>mediaId</c> holds and what
+    /// a JSON object key must be — the client looks it up with the exact value it already has,
+    /// rather than having to normalise a GUID's formatting to make the lookup hit.
+    /// </summary>
+    private static IReadOnlyDictionary<string, MediaRefDto> ResolveMedia(this ArticleReferences refs) =>
+        refs.Media.ToDictionary(
+            entry => entry.Key.ToString(),
+            entry => new MediaRefDto(
+                entry.Value.Url,
+                entry.Value.AltText,
+                entry.Value.Width,
+                entry.Value.Height,
+                entry.Value.Variants
+                    .Select(v => new MediaVariantRefDto(v.Name, v.Url, v.Width, v.Height))
+                    .ToList()));
 }

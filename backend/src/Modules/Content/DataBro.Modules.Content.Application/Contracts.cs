@@ -116,6 +116,19 @@ public sealed record ArticleSummaryDto(
     TaxonomyTermDto? Category,
     IReadOnlyList<TaxonomyTermDto> Tags);
 
+public sealed record MediaVariantRefDto(string Name, string Url, int Width, int Height);
+
+/// <summary>
+/// A media reference resolved for rendering. Content stores ids; this is the id turned into
+/// something an <c>&lt;img&gt;</c> can use, fetched through <c>IMediaDirectory</c> (ADR-0008).
+/// </summary>
+public sealed record MediaRefDto(
+    string Url,
+    string AltText,
+    int Width,
+    int Height,
+    IReadOnlyList<MediaVariantRefDto> Variants);
+
 public sealed record ArticleDto(
     Guid Id,
     string Slug,
@@ -132,7 +145,14 @@ public sealed record ArticleDto(
     DateTimeOffset? PublishedAt,
     DateTimeOffset? ScheduledFor,
     TaxonomyTermDto? Category,
-    IReadOnlyList<TaxonomyTermDto> Tags);
+    IReadOnlyList<TaxonomyTermDto> Tags,
+    /// <summary>
+    /// Every media id this article references — image blocks and <c>og:image</c> — resolved to URLs
+    /// and keyed by id. Shipped with the article so the renderer needs no second request and no
+    /// client-side waterfall. An id absent from the map is one whose asset is gone; the renderer
+    /// falls back to a placeholder rather than a broken image.
+    /// </summary>
+    IReadOnlyDictionary<string, MediaRefDto> Media);
 
 /// <summary>
 /// A page of results. Endpoints put this in the envelope's <c>meta</c> (docs/API_SPEC.md §3), so a

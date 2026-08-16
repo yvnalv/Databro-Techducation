@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Modules.Content.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Platform.Web", "src\Shared\DataBro.Platform.Web\DataBro.Platform.Web.csproj", "{50C90DAB-21E4-4E30-A135-3F467C3C0428}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Modules.Media.Tests", "tests\DataBro.Modules.Media.Tests\DataBro.Modules.Media.Tests.csproj", "{81904A4E-61F2-4601-B6AC-A89A744BF39C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -329,6 +331,18 @@ Global
 		{50C90DAB-21E4-4E30-A135-3F467C3C0428}.Release|x64.Build.0 = Release|Any CPU
 		{50C90DAB-21E4-4E30-A135-3F467C3C0428}.Release|x86.ActiveCfg = Release|Any CPU
 		{50C90DAB-21E4-4E30-A135-3F467C3C0428}.Release|x86.Build.0 = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|x64.Build.0 = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Debug|x86.Build.0 = Debug|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|x64.ActiveCfg = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|x64.Build.0 = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|x86.ActiveCfg = Release|Any CPU
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -358,5 +372,6 @@ Global
 		{6ED05723-4E5C-408D-B135-4F62BF2611A1} = {C8E42992-5E42-0C2B-DBFE-AA848D06431C}
 		{E8C25CEF-9991-48F8-AEB4-71540294C913} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{50C90DAB-21E4-4E30-A135-3F467C3C0428} = {C8E42992-5E42-0C2B-DBFE-AA848D06431C}
+		{81904A4E-61F2-4601-B6AC-A89A744BF39C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
