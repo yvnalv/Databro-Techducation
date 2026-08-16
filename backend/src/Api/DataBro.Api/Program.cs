@@ -16,6 +16,33 @@ builder.Services
     .AddMediaModule(builder.Configuration)
     .AddSearchModule(builder.Configuration);
 
+// ---- CORS ----
+// The browser calls this API directly from the frontend apps, which are separate origins
+// (docs/FRONTEND_ARCHITECTURE.md). Without a policy every client-side call is blocked at the
+// preflight — which the public site never noticed, because its reads happen server-side during SSR,
+// but which stops the authoring app dead at sign-in.
+//
+// Origins are configured, never wildcarded: `AllowAnyOrigin` would let any site on the internet call
+// the API with a user's bearer token in a script it controls.
+const string FrontendCorsPolicy = "databro-frontends";
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyMethod()
+            // Authorization + Content-Type, and whatever a future client needs.
+            .AllowAnyHeader();
+
+        // Credentials are deliberately NOT allowed: auth travels as a bearer header, not a cookie,
+        // so the API never needs to accept cross-origin cookies — and allowing them would widen the
+        // CSRF surface for no benefit.
+    }));
+
 // ---- Background jobs (Hangfire) ----
 // The host owns the job server and its PostgreSQL storage; modules register their own recurring
 // jobs (see ContentJobsInitializer). Disabled as a unit for integration tests, which drive the job
@@ -35,6 +62,10 @@ if (hangfireEnabled)
 }
 
 var app = builder.Build();
+
+// Before authentication: a rejected preflight never carries credentials, and CORS headers must be
+// present on the 401 responses too, or the browser reports a CORS error instead of the real status.
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

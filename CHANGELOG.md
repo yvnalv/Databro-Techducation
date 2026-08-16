@@ -1,5 +1,36 @@
 # DataBro Changelog
 
+## [2026-08-16 07:15:00 UTC]
+
+CHG-0022 — Fix two bugs that only a browser could hit: fetch binding and missing CORS
+
+CMS sign-in failed with a generic error. Two independent faults, both invisible to every check made
+so far, because **every previous call reached the API from the server during SSR** — this was the
+first genuine browser-to-API request in the project.
+
+- **`fetch` lost its receiver.** `ApiClient` stored `globalThis.fetch` and later invoked it as
+  `this.fetchImpl(...)`, making `this` the client instance. A browser requires `fetch` to be called
+  on the global and throws `TypeError: Illegal invocation`; **Node's `fetch` does not care**, so
+  every server-rendered call worked. Fixed with `.bind(globalThis)`. Because the thrown value was a
+  `TypeError` rather than an `ApiClientError`, it fell through to the generic catch — which is why
+  the form said "sign-in failed" instead of anything about credentials.
+- **The API had no CORS policy at all.** The preflight answered `405` with no
+  `Access-Control-Allow-Origin`, so the browser blocked the request before it was sent. Origins now
+  come from configuration and are never wildcarded: `AllowAnyOrigin` would let any site call the API
+  with a user's bearer token from a script it controls. The base config ships **empty**, so a
+  deployed environment must state its own rather than inherit localhost.
+- `UseCors` sits **before** authentication so a 401 still carries CORS headers; without that the
+  browser reports an opaque CORS error and the app can never see the real status. Credentials are
+  deliberately not allowed — auth travels as a bearer header, not a cookie.
+- **Tests now cover the gap that let this through.** Eight `@databro/api-client` tests, including one
+  that installs a `fetch` which throws unless its receiver is the global, reproducing the browser's
+  rule where it can actually be asserted — it fails against the old code. Four API tests cover the
+  preflight, the allow header on real responses and on a 401, and refusal of an unlisted origin.
+- Note for contributors: adding a dependency changes the lockfile and crash-loops the containers,
+  which carry `node_modules` in the image. Rebuild, do not restart — as LOCAL_DEVELOPMENT.md says.
+
+---
+
 ## [2026-08-16 05:55:00 UTC]
 
 CHG-0021 — CMS foundation: authentication, dashboard shell, article list

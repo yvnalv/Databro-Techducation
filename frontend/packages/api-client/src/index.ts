@@ -43,7 +43,12 @@ export class ApiClient {
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
     this.getToken = options.getToken;
-    this.fetchImpl = options.fetch ?? globalThis.fetch;
+
+    // `.bind` is load-bearing, not tidiness. Stored on the instance, `globalThis.fetch` would be
+    // invoked as `this.fetchImpl(...)` — making `this` the ApiClient. Browsers require `fetch` to be
+    // called on the global and throw `TypeError: Illegal invocation`; Node's fetch does not care.
+    // That difference is why this survived every SSR path and only failed in the browser.
+    this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
   private async request<TData>(path: string, init?: RequestInit): Promise<TData> {
