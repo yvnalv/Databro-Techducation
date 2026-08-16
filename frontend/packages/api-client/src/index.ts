@@ -4,6 +4,7 @@
 import type {
   ApiResponse,
   Article,
+  ArticleDraftInput,
   ArticleSummary,
   AuthTokens,
   Category,
@@ -214,6 +215,27 @@ export class ApiClient {
   /** Full article by id, including the *draft* blocks — what the editor loads. */
   getAuthoringArticle(id: string): Promise<Article> {
     return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}`);
+  }
+
+  createArticle(input: ArticleDraftInput): Promise<Article> {
+    return this.request<Article>("/api/v1/authoring/articles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  /**
+   * Saves the draft. The API treats omitted taxonomy as "leave unchanged", so the editor always
+   * sends both fields — otherwise clearing a category would be indistinguishable from not touching
+   * it.
+   */
+  updateArticle(id: string, input: ArticleDraftInput): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
   }
 
   publishArticle(id: string): Promise<Article> {

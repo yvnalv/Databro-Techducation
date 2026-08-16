@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { DbChip } from "@databro/ui";
+import { DbButton, DbChip } from "@databro/ui";
 import type { ArticleSummary, Paged } from "@databro/types";
+
+// Resolved once: DbButton takes the component so `@databro/ui` need not import NuxtLink.
+const NuxtLink = resolveComponent("NuxtLink");
 
 /**
  * Article list — the CMS's home surface (docs/UI_PATTERNS.md §7).
@@ -55,6 +58,8 @@ useHead({ title: "Articles" });
         <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Articles</h1>
         <p class="mt-1 text-sm text-ink-muted">Every article, across all statuses.</p>
       </div>
+
+      <DbButton :as="NuxtLink" to="/articles/new">New article</DbButton>
     </div>
 
     <!-- Stat cards, per the reference dashboard. Scoped to the current page (see `counts`). -->
@@ -114,7 +119,12 @@ useHead({ title: "Articles" });
               class="border-t border-line align-middle"
             >
               <td class="px-4 py-3">
-                <span class="font-medium text-ink">{{ article.title }}</span>
+                <NuxtLink
+                  :to="`/articles/${article.id}`"
+                  class="font-medium text-ink transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  {{ article.title }}
+                </NuxtLink>
                 <span class="mt-0.5 block font-mono text-xs text-ink-subtle">/{{ article.slug }}</span>
               </td>
               <td class="px-4 py-3">

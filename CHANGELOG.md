@@ -1,5 +1,42 @@
 # DataBro Changelog
 
+## [2026-08-16 07:30:00 UTC]
+
+CHG-0023 — Block editor: the authoring loop closes
+
+An article can now be written, saved, published and read on the public site **without touching a
+script**. That was the binding constraint on the whole project since Phase 1 began.
+
+- **Tiptap for inline rich text, and the conversion is three lines.** That is ADR-0009 paying for
+  itself: DataBro stores inline content in ProseMirror's own shape, so "converting" is wrapping the
+  node array in a document and unwrapping it — no mark translation, no offset remapping, no lossy
+  round trip. Offset-range marks would have made this component the translation layer the ADR existed
+  to avoid.
+- Tiptap is configured with headings, lists, blockquotes and code blocks **off**. Block structure is
+  DataBro's content model, not the editor's; letting Tiptap create a heading inside a paragraph block
+  would produce a document the renderer cannot represent. Its link extension is restricted to
+  http/https, mirroring the renderer's allowlist so an unsafe scheme cannot survive a round trip.
+- **Block editor** for all eleven types: add, reorder, delete, and per-type forms. Reordering is
+  buttons rather than drag-and-drop — buttons are keyboard-operable and announced for free, where
+  drag needs a parallel keyboard affordance to be usable at all. Drag is an enhancement on top, never
+  a replacement.
+- **Live preview runs through the same `ContentRenderer` as the public site.** That shared registry
+  was built so preview and production cannot drift (ADR-0007), and this is the first time the claim
+  is actually exercised. Preview passes `showUnknownBlocks`: an author must see that a block exists
+  even when this build cannot render it, a reader must not.
+- The slug field **locks once the article has been published** (CT-2) rather than silently doing
+  nothing, since moving a public URL is a separate deliberate act that pairs with a 301 (CT-3).
+- Publish saves first: it snapshots the *saved* draft, so an unsaved edit would otherwise be silently
+  left out of what goes live.
+- Taxonomy is always sent as an explicit value, never omitted — the API reads an absent field as
+  "leave unchanged", so clearing a category has to be a deliberate null.
+- Verified the whole loop against the running stack: created an article with bold and link marks
+  through the editor's exact payload, published it, and confirmed it renders on the public site with
+  both marks intact and the link carrying `nofollow noopener noreferrer`. 110 backend tests, 76
+  frontend, clean typecheck across five workspaces.
+
+---
+
 ## [2026-08-16 07:15:00 UTC]
 
 CHG-0022 — Fix two bugs that only a browser could hit: fetch binding and missing CORS

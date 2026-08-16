@@ -262,6 +262,24 @@ export interface Article extends ArticleSummary {
   scheduledFor?: string;
 }
 
+/**
+ * What the editor sends when creating or saving an article.
+ *
+ * `slug` is create-only: it is immutable once published (CT-2) and moves through the dedicated
+ * slug-change endpoint, which pairs it with a 301 (CT-3).
+ */
+export interface ArticleDraftInput {
+  title: string;
+  summary: string;
+  content: ContentDocument;
+  slug?: string;
+  visibility?: Visibility;
+  locale?: string;
+  seo?: SeoMetadata;
+  categoryId?: string | null;
+  tagIds?: string[];
+}
+
 // ---- Auth (docs/API_SPEC.md §5 Auth, docs/SECURITY.md §1) ----
 
 export interface AuthTokens {

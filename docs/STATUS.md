@@ -7,8 +7,8 @@ Last updated: 2026-08-01.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **content + taxonomy render publicly → search, media,
-and scheduled publishing next**.
+**Phase 1 — Foundation & Content.** Sub-stage: **authoring loop closed → search, media and the
+discovery layer next**.
 
 ## Done
 
@@ -84,9 +84,11 @@ and scheduled publishing next**.
   gate on until Billing (Phase 3). Reserved, not enforced.
 * **Syntax highlighting is not wired.** Code blocks emit the standard `language-*` markup so a
   highlighter drops in later without touching page code.
-* **Authoring UI is partial.** `apps/app` now has sign-in, a route guard, the dashboard shell and a
-  read-only article list. The **block editor is not built**, so articles still cannot be written
-  through the UI — that is the remaining half of the binding constraint.
+* **Authoring UI works end to end.** Sign-in, route guard, dashboard shell, article list, and a
+  block editor with Tiptap rich text and live preview. An article can be written, saved, published
+  and read on the public site without touching a script. Remaining gaps: no table/grid editor (table
+  blocks render but have no form), no media upload, no version history or restore, and taxonomy has
+  no management screen.
 * **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
   `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
   proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.
