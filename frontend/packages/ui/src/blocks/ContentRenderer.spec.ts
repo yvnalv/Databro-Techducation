@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import type { ContentDocument } from "@databro/types";
 import ContentRenderer from "./ContentRenderer.vue";
 import { SUPPORTED_BLOCK_TYPES } from "../index";
-import { mediaResolverFor } from "./context";
+import { codeHighlighterFor, codeKey, mediaResolverFor } from "./context";
 
 function doc(blocks: ContentDocument["blocks"]): ContentDocument {
   return { version: 1, blocks };
@@ -157,6 +157,58 @@ describe("ContentRenderer", () => {
       "https://cdn.example/640.jpg 640w, https://cdn.example/960.jpg 960w, https://cdn.example/original.jpg 1600w",
     );
     expect(img.attributes("sizes")).toBeTruthy();
+  });
+
+  it("renders code as plain text when no highlighter is supplied", () => {
+    // The CMS preview supplies none. Plain code is still perfectly readable, and it must never be
+    // the case that a missing highlighter hides the sample.
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([
+          { id: "c", type: "code", data: { language: "python", code: "print('hi')" } },
+        ]),
+      },
+    });
+
+    expect(wrapper.get("code").text()).toBe("print('hi')");
+    expect(wrapper.get("pre").classes()).toContain("language-python");
+  });
+
+  it("uses server-computed highlighting when the host supplies it", () => {
+    const code = "print('hi')";
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([{ id: "c", type: "code", data: { language: "python", code } }]),
+        highlightCode: codeHighlighterFor({
+          [codeKey(code, "python")]: '<span style="color:#005CC5">print</span>',
+        }),
+      },
+    });
+
+    expect(wrapper.get("pre.databro-code").html()).toContain("color:#005CC5");
+  });
+
+  it("falls back to plain text when the sample is not in the highlight map", () => {
+    // A language whose grammar was not loaded, or a sample Shiki failed on. The key is absent and
+    // the block degrades rather than rendering empty.
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([
+          { id: "c", type: "code", data: { language: "brainfuck", code: "+[-->-[>>+>-" } },
+        ]),
+        highlightCode: codeHighlighterFor({ somethingElse: "<span>x</span>" }),
+      },
+    });
+
+    expect(wrapper.get("code").text()).toBe("+[-->-[>>+>-");
+    expect(wrapper.find("pre.databro-code").exists()).toBe(false);
+  });
+
+  it("keys highlights by content and language together", () => {
+    // The same source in two languages is two different highlights; the same source twice is one.
+    expect(codeKey("SELECT 1", "sql")).toBe(codeKey("SELECT 1", "sql"));
+    expect(codeKey("SELECT 1", "sql")).not.toBe(codeKey("SELECT 1", "python"));
+    expect(codeKey("SELECT 1", "sql")).not.toBe(codeKey("SELECT 2", "sql"));
   });
 
   it("omits srcset entirely while an asset is still processing", () => {

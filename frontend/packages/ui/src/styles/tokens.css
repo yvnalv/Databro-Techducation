@@ -195,6 +195,27 @@
   margin-top: 0.75rem;
 }
 
+/*
+ * Syntax-highlighted code (Shiki, server-rendered — see CodeBlock.vue).
+ *
+ * Shiki emits `<span style="color:#…">` per token plus a background colour of its own. The
+ * background is dropped so the block keeps the design system's surface rather than the theme's,
+ * which would be the one element on the page not using our palette. Token colours are kept:
+ * reproducing a whole theme as tokens would be a maintenance burden for no gain.
+ */
+.databro-code {
+  background-color: transparent;
+  color: rgb(var(--db-ink) / 1);
+}
+
+/*
+ * Shiki's own `--shiki-*` custom properties, in case a future theme pair emits them rather than
+ * literal colours. Declared here so the fallback is ours, not the theme's.
+ */
+.databro-code span {
+  background-color: transparent;
+}
+
 /* Respect a reduced-motion preference globally rather than per component. */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -138,6 +138,21 @@ first unexpected status. It is idempotent: every run uses a fresh user and slug.
 
 ## 5. Working with local data
 
+### Signing in to the CMS
+
+The API seeds an administrator on startup, so there is nothing to create by hand:
+
+```
+http://localhost:3001
+admin@databro.local
+Databro-Dev-1!
+```
+
+Seeded **only** where `IHostEnvironment.IsDevelopment()` is true. The gate sits at the call site in
+`IdentityInitializer` rather than inside the seeder, so the decision is visible where it is made — a
+seeded admin with a documented password is a back door in any other environment. It is idempotent:
+an existing account is left alone, password included, so a local change survives a restart.
+
 ```powershell
 # psql shell
 docker compose exec postgres psql -U databro -d databro

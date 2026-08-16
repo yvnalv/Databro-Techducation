@@ -111,6 +111,9 @@ jobs:
           done
           echo "Nuxt types present for both apps."
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Typecheck
         run: pnpm -r typecheck
 

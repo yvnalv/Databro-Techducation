@@ -3,9 +3,12 @@ import { computed, provide, reactive } from "vue";
 import type { ContentDocument } from "@databro/types";
 import BlockRenderer from "./BlockRenderer.vue";
 import {
+  codeHighlighterKey,
+  defaultCodeHighlighter,
   defaultMediaResolver,
   mediaResolverKey,
   rendererOptionsKey,
+  type CodeHighlighter,
   type MediaResolver,
 } from "./context";
 
@@ -25,14 +28,22 @@ const props = withDefaults(
      * {@link mediaResolverFor} over the `media` map the API ships with the article.
      */
     resolveMedia?: MediaResolver;
+    /**
+     * Returns pre-highlighted HTML for a code sample. Hosts pass {@link codeHighlighterFor} over a
+     * map computed on the server; omitting it renders code as plain text.
+     */
+    highlightCode?: CodeHighlighter;
   }>(),
-  { showUnknownBlocks: false, resolveMedia: undefined },
+  { showUnknownBlocks: false, resolveMedia: undefined, highlightCode: undefined },
 );
 
 // Provided rather than prop-drilled: only some leaf blocks need these, and threading them
 // through every block component would couple all ten to concerns two of them have.
 // Both stay reactive - a captured value would freeze the CMS preview's toggle.
 provide(mediaResolverKey, (mediaId: string) => (props.resolveMedia ?? defaultMediaResolver)(mediaId));
+provide(codeHighlighterKey, (code: string, language: string) =>
+  (props.highlightCode ?? defaultCodeHighlighter)(code, language),
+);
 provide(rendererOptionsKey, reactive({ showUnknownBlocks: computed(() => props.showUnknownBlocks) }));
 </script>
 

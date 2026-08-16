@@ -21,6 +21,12 @@ public sealed class IdentityInitializer(IServiceProvider services, IHostEnvironm
         }
 
         await IdentitySeeder.EnsureRolesAsync(services, cancellationToken);
+
+        // Roles first: the admin is assigned one the moment it is created. Development only, and
+        // the gate lives here rather than inside the seeder so the decision is visible at the call
+        // site — a seeded admin with a documented password is a back door in any other environment.
+        if (environment.IsDevelopment())
+            await IdentitySeeder.EnsureDevAdminAsync(services, cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

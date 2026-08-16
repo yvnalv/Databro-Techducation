@@ -56,6 +56,10 @@ being tidied away.
 
 ## Recently done
 
+* **Polish pass:** server-side syntax highlighting (Shiki — no highlighter in the client bundle,
+  verified against the built image), a table grid editor that keeps the grid rectangular, a seeded
+  `admin@databro.local` for local CMS access, and **ESLint** across the workspace, wired into CI
+  with `vue/no-v-html` escalated to an error so a third unjustified `v-html` fails the build.
 * **CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)): backend build + 180 tests
   (including the architecture-fitness gate) and frontend typecheck + 81 tests in parallel, then
   image builds. Every command was run locally before committing rather than trusted to be right —
@@ -136,8 +140,8 @@ being tidied away.
 
 ## Next up (proposed order)
 
-1. **Phase 2 — Learning**, or a short Phase 1 polish pass first (syntax highlighting, table-block
-   editor, a memorable dev login, ESLint). See the roadmap.
+1. **Phase 2 — Learning.** The polish pass is done (syntax highlighting, table editor, seeded dev
+   login, ESLint), so this is the next substantial step. See the roadmap.
 2. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
    real Search module). **Note:** ADR-0010 expires the moment Learning introduces a second
    searchable aggregate, so this is a genuine Phase 2 prerequisite rather than housekeeping.
@@ -157,12 +161,13 @@ being tidied away.
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.
-* **Syntax highlighting is not wired.** Code blocks emit the standard `language-*` markup so a
-  highlighter drops in later without touching page code.
-* **Authoring UI works end to end.** Sign-in, route guard, dashboard shell, article list, and a
-  block editor with Tiptap rich text and live preview. An article can be written, saved, published
-  and read on the public site without touching a script. Taxonomy, media, scheduling and version
-  history all have UI. Remaining gap: no table/grid editor — table blocks render but have no form.
+* **Syntax highlighting runs server-side only.** The CMS live preview therefore shows code as plain
+  text — deliberate: preview is for structure, and shipping a highlighter to the browser to colour a
+  draft would cost every reader the same bundle.
+* **Authoring UI is complete for every block type.** Sign-in, route guard, dashboard shell, article
+  list, and a block editor with Tiptap rich text and live preview. Taxonomy, media, scheduling,
+  version history and tables all have forms. An article can be written, saved, published and read
+  on the public site without touching a script.
 * **ImageSharp's licence must be re-checked before commercial launch.** The Six Labors Split License
   is free for open source and organisations under $1M revenue, which is DataBro today. It is confined
   behind `IImageProcessor` precisely because it is the most likely dependency to need swapping.

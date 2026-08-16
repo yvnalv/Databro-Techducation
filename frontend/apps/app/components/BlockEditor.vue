@@ -31,7 +31,9 @@ const EMPTY_DATA: Record<string, unknown> = {
   list: { ordered: false, items: [{ content: [] }] },
   divider: {},
   embed: { provider: "", url: "" },
-  table: { headers: [[]], rows: [[[]]] },
+  // Two columns and one body row: enough of a grid to see what it is, without pre-filling cells an
+  // author then has to delete.
+  table: { headers: [[], []], rows: [[[], []]] },
   math: { latex: "" },
 };
 
@@ -68,6 +70,93 @@ function remove(index: number) {
 function itemContent(item: unknown): RichText {
   if (typeof item === "string") return [{ type: "text", text: item }];
   return (item as { content?: RichText } | null)?.content ?? [];
+}
+
+// ---- Table editing ----
+//
+// Every mutation below returns a whole new `data` object and keeps the grid **rectangular**: the
+// renderer maps headers to `<th scope="col">` and each row's cells positionally, so a row that is
+// one cell short silently shifts every value after it into the wrong column. The editor is the only
+// place that can guarantee that, since the stored shape is free-form JSONB.
+
+/** A cell is inline content (ADR-0009) or a bare string from before it. */
+function tableCell(value: unknown): RichText {
+  if (typeof value === "string") return value ? [{ type: "text", text: value }] : [];
+  return Array.isArray(value) ? (value as RichText) : [];
+}
+
+function tableHeaders(data: unknown): RichText[] {
+  const headers = (data as { headers?: unknown[] } | null)?.headers ?? [];
+  return headers.length ? headers.map(tableCell) : [[]];
+}
+
+function tableRows(data: unknown): RichText[][] {
+  const rows = (data as { rows?: unknown[][] } | null)?.rows ?? [];
+  const columns = tableColumnCount(data);
+
+  // Padded on read as well as on write: a document authored elsewhere, or one edited before this
+  // form existed, can be ragged, and the editor should repair it rather than render a broken grid.
+  return rows.map((row) =>
+    Array.from({ length: columns }, (_, c) => tableCell((row ?? [])[c])),
+  );
+}
+
+function tableColumnCount(data: unknown): number {
+  const d = data as { headers?: unknown[]; rows?: unknown[][] } | null;
+  const widest = Math.max(
+    d?.headers?.length ?? 0,
+    ...(d?.rows ?? []).map((row) => row?.length ?? 0),
+    1,
+  );
+  return widest;
+}
+
+function tableData(headers: RichText[], rows: RichText[][]) {
+  return { headers, rows };
+}
+
+function setHeader(data: unknown, column: number, content: RichText) {
+  const headers = [...tableHeaders(data)];
+  headers[column] = content;
+  return tableData(headers, tableRows(data));
+}
+
+function setCell(data: unknown, row: number, column: number, content: RichText) {
+  const rows = tableRows(data).map((r) => [...r]);
+  if (rows[row]) rows[row][column] = content;
+  return tableData(tableHeaders(data), rows);
+}
+
+function addColumn(data: unknown) {
+  return tableData(
+    [...tableHeaders(data), []],
+    tableRows(data).map((row) => [...row, []]),
+  );
+}
+
+function removeColumn(data: unknown) {
+  const columns = tableColumnCount(data);
+  if (columns <= 1) return data; // A table with no columns is not a table.
+
+  return tableData(
+    tableHeaders(data).slice(0, columns - 1),
+    tableRows(data).map((row) => row.slice(0, columns - 1)),
+  );
+}
+
+function addRow(data: unknown) {
+  const columns = tableColumnCount(data);
+  return tableData(tableHeaders(data), [
+    ...tableRows(data),
+    Array.from({ length: columns }, () => [] as RichText),
+  ]);
+}
+
+function removeRow(data: unknown, row: number) {
+  return tableData(
+    tableHeaders(data),
+    tableRows(data).filter((_, r) => r !== row),
+  );
 }
 </script>
 
@@ -295,7 +384,87 @@ function itemContent(item: unknown): RichText {
           </DbButton>
         </template>
 
-        <!-- divider has no data; table is edit-by-JSON until it earns a grid editor -->
+        <!-- table -->
+        <template v-else-if="block.type === 'table'">
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th
+                    v-for="(header, c) in tableHeaders(block.data)"
+                    :key="`h${c}`"
+                    scope="col"
+                    class="border border-line bg-surface-sunken p-1 align-top"
+                  >
+                    <RichTextEditor
+                      :model-value="header"
+                      placeholder="Heading"
+                      @update:model-value="updateData(index, setHeader(block.data, c, $event))"
+                    />
+                  </th>
+                  <th class="w-9 border-b border-line p-1 align-top">
+                    <button
+                      type="button"
+                      class="h-8 w-8 rounded border border-line text-xs text-ink-muted hover:bg-surface-sunken"
+                      aria-label="Add column"
+                      title="Add column"
+                      @click="updateData(index, addColumn(block.data))"
+                    >
+                      +
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, r) in tableRows(block.data)" :key="`r${r}`">
+                  <td
+                    v-for="(cellValue, c) in row"
+                    :key="`r${r}c${c}`"
+                    class="border border-line p-1 align-top"
+                  >
+                    <RichTextEditor
+                      :model-value="cellValue"
+                      @update:model-value="updateData(index, setCell(block.data, r, c, $event))"
+                    />
+                  </td>
+                  <td class="p-1 align-top">
+                    <button
+                      type="button"
+                      class="h-8 w-8 rounded border border-line text-xs text-danger hover:bg-danger-subtle"
+                      :aria-label="`Remove row ${r + 1}`"
+                      title="Remove row"
+                      @click="updateData(index, removeRow(block.data, r))"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <DbButton size="sm" variant="soft" @click="updateData(index, addRow(block.data))">
+              Add row
+            </DbButton>
+            <DbButton
+              size="sm"
+              variant="ghost"
+              :disabled="tableColumnCount(block.data) <= 1"
+              @click="updateData(index, removeColumn(block.data))"
+            >
+              Remove last column
+            </DbButton>
+          </div>
+
+          <p class="text-xs text-ink-subtle">
+            Cells take inline formatting — bold, links and
+            <code class="font-mono">inline code</code> — because comparison tables lean on it. The
+            header row is what makes the table readable to a screen reader, so leave it filled in.
+          </p>
+        </template>
+
+        <!-- divider has no data -->
         <template v-else-if="block.type === 'divider'">
           <p class="text-sm text-ink-subtle">No settings.</p>
         </template>

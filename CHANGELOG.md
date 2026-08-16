@@ -1,5 +1,71 @@
 # DataBro Changelog
 
+## [2026-08-16 17:33:43 UTC]
+
+CHG-0030 — Polish pass: syntax highlighting, table editor, dev login, ESLint
+
+Four gaps that were each visible every time the app was opened locally.
+
+### Syntax highlighting (Shiki, server-side)
+
+- Code blocks emitted `language-*` markup and nothing highlighted it. On a site teaching Python and
+  SQL that was the most visible quality gap in the product.
+- **Highlighting runs on the server; the renderer does a lookup.** Shiki carries TextMate grammars
+  for every language it supports, and shipping those so a reader can look at a page we already
+  rendered is several hundred kilobytes for nothing. Verified against the built image: the client
+  bundle contains no Shiki and no Oniguruma; the server bundle does.
+- The article page now fetches through the site's own Nitro route (`/api/articles/[slug]`) rather
+  than calling the backend directly. Highlighting inside the page's own `useAsyncData` would only
+  have covered the first render — the handler re-runs in the browser on client-side navigation,
+  where Shiki deliberately does not exist — so code would have been highlighted on reload and plain
+  when followed from a link.
+- Keyed by an FNV-1a hash of code + language, so the payload does not carry every sample twice.
+- **`codeKey` lives in its own dependency-free module** exported as `@databro/ui/code-key`.
+  Importing it from the package root pulled every `.vue` component into the Nitro server bundle,
+  which Rollup cannot parse — the site failed to build at all until this was split out.
+- Unknown languages and any sample Shiki throws on fall back to plain text rather than rendering
+  empty.
+
+### Table block editor
+
+- The last block type that rendered but could not be authored. A grid of rich-text cells, with
+  add/remove row and column.
+- **Every mutation keeps the grid rectangular**, and reads repair a ragged one. The renderer maps
+  headers to `<th scope="col">` and each row's cells positionally, so a row one cell short silently
+  shifts every value after it into the wrong column — and the stored shape is free-form JSONB, so
+  the editor is the only place that can guarantee it.
+
+### Seeded development administrator
+
+- `admin@databro.local` / `Databro-Dev-1!`, seeded on startup. The only way into the CMS was an
+  account created by a script whose address was a timestamp, so signing in meant going to find the
+  string first.
+- Gated on `IsDevelopment()` **at the call site**, not inside the seeder, so the decision is visible
+  where it is made — a seeded admin with a documented password is a back door anywhere else.
+  Idempotent, and it does not reset an existing password.
+
+### ESLint
+
+- There was no linter config anywhere in the repo, so the root `lint` script was a no-op and CI had
+  nothing to run. Flat config at the frontend root, wired into CI, and the workspace is clean.
+- **`vue/no-v-html` escalated from the recommended `warn` to `error`.** This renderer's entire
+  security posture is that authored content becomes elements, never markup — a warning that still
+  lets CI pass is not a guard. Verified in both directions: clean as-is, and a new `v-html` in a
+  third component fails the run.
+- The sanctioned uses (KaTeX and Shiki) carry an inline disable with a reason at the line rather
+  than being exempted by filename, so the justification sits where a reviewer will read it.
+- Deliberately **not** type-aware linting: it needs a TS program per package, roughly triples the
+  run time, and mostly duplicates what `pnpm typecheck` already enforces.
+
+### Also
+
+- **Fixed the frontend containers failing to start.** When workspace dependencies drift, pnpm wants
+  to confirm before purging `node_modules`, finds no TTY, and aborts — which took the CMS container
+  down on boot. `CI=true` in the dev image is pnpm's own answer for non-interactive environments.
+- Backend 180 tests green, frontend 85, lint clean, typecheck clean across five workspaces.
+
+---
+
 ## [2026-08-16 16:30:59 UTC]
 
 CHG-0029 — CI, and a broken homepage caught on its way to production

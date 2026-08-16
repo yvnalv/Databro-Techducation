@@ -8,9 +8,15 @@
     "dev:app": "pnpm --filter @databro/app dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r --if-present lint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-plugin-vue": "^10.10.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.67.0",
+    "vue-eslint-parser": "^10.4.1"
   }
 }

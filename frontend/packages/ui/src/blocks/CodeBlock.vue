@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject } from "vue";
 import type { CodeBlock } from "@databro/types";
+import { codeHighlighterKey, defaultCodeHighlighter } from "./context";
 
 const props = defineProps<{ data: CodeBlock["data"] }>();
 
-// Syntax highlighting is intentionally not wired yet - it is a UI/UX decision (build-time
-// highlighting such as Shiki vs. a client-side highlighter) with real trade-offs for SSG payload
-// size and SEO. The markup below is the standard `language-*` convention every highlighter
-// consumes, so adding one later is a drop-in and touches no page code.
+/**
+ * Highlighting is looked up, never computed here (docs/DESIGN_SYSTEM.md).
+ *
+ * The host highlights on the server and passes the result down; a reader downloads no grammar set,
+ * and there is no hydration mismatch because server and client read the same map. When no
+ * highlighter is supplied — the CMS preview — this falls back to plain text, which is still
+ * perfectly readable code.
+ */
+const highlight = inject(codeHighlighterKey, defaultCodeHighlighter);
+
+const highlighted = computed(() => {
+  const code = props.data?.code;
+  return code ? highlight(code, props.data?.language ?? "") : null;
+});
+
 const languageClass = computed(() => {
   const language = props.data?.language?.trim().toLowerCase();
   // Restricted to a token shape so a hostile value cannot break out into other class names.
@@ -30,7 +42,26 @@ const output = computed(() => props.data?.output?.replace(/\s+$/, "") || null);
       {{ data.filename }}
     </figcaption>
 
+    <!-- The second and last deliberate `v-html` in this renderer, alongside KaTeX
+         (docs/SECURITY.md §5). Shiki HTML-escapes the sample it is given and emits only spans with
+         inline colours, so the author's code cannot become markup; the string is produced by us on
+         the server from plain text, never supplied by a client. -->
+    <!-- eslint-disable vue/no-v-html -- Shiki output: HTML we generate on the server from the
+         sample's plain text, never a string supplied by a client. Shiki escapes what it is given
+         and emits only coloured spans, so an author's code cannot become markup. See
+         apps/site/server/utils/highlight.ts and docs/SECURITY.md §5.
+         Scoped disable rather than disable-next-line: the attribute sits several lines into this
+         tag, and disable-next-line only covers the line immediately after it. -->
     <pre
+      v-if="highlighted"
+      :class="languageClass"
+      class="databro-code overflow-x-auto px-4 py-3.5 font-mono text-sm leading-relaxed"
+      v-html="highlighted"
+    ></pre>
+    <!-- eslint-enable vue/no-v-html -->
+
+    <pre
+      v-else
       :class="languageClass"
       class="overflow-x-auto px-4 py-3.5 font-mono text-sm leading-relaxed text-ink"
     ><code :class="languageClass">{{ data?.code }}</code></pre>

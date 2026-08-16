@@ -27,8 +27,11 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 * Payment provider specifics and entitlement model — Phase 3.
 * Search upgrade trigger and OpenSearch adoption — when FTS limits are hit.
 * Newsletter provider — end of Phase 1 / Phase 2.
-* Syntax highlighting strategy for code blocks (build-time e.g. Shiki vs. client-side) — decide with
-  the design system; the renderer already emits the `language-*` convention either way.
+* ~~Syntax highlighting strategy for code blocks (build-time e.g. Shiki vs. client-side)~~ —
+  **decided and built.** Shiki, run on the server, with the result travelling in the page payload
+  and the renderer doing a lookup rather than a computation. No highlighter reaches the browser
+  (verified against the built image: the client bundle contains no Shiki or Oniguruma). Too small
+  for its own ADR; the reasoning is in the CHANGELOG and `apps/site/server/utils/highlight.ts`.
 * Inline rich-text marks (bold/italic/link) inside a paragraph block — the `marks` field is reserved
   but unspecified; it must be a structured renderer, never raw HTML.
 

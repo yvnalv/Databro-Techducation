@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ContentRenderer, DbChip, buildToc, mediaResolverFor } from "@databro/ui";
+import {
+  ContentRenderer,
+  DbChip,
+  buildToc,
+  codeHighlighterFor,
+  mediaResolverFor,
+} from "@databro/ui";
 import type { Article } from "@databro/types";
 
 const { t, locale } = useI18n();
@@ -11,12 +17,19 @@ const nuxtApp = useNuxtApp();
 
 const slug = computed(() => String(route.params.slug));
 
-const { data: article, error } = await useAsyncData<Article>(
+// Fetched through this site's own Nitro route rather than straight from the API, so the response
+// carries server-computed syntax highlighting. Doing it in this handler instead would only cover
+// the first render: the handler re-runs in the browser on client-side navigation, where Shiki
+// deliberately does not exist, and code would be highlighted on reload but plain when followed
+// from a link.
+const { data, error } = await useAsyncData(
   () => `article:${slug.value}`,
   // Mapped inside the handler: useAsyncData re-wraps whatever a handler throws, and the API's
   // 404 would otherwise arrive here as a generic 500/503.
   () =>
-    client.getArticle(slug.value).catch((cause) => {
+    $fetch<{ article: Article; highlighted: Record<string, string> }>(
+      `/api/articles/${encodeURIComponent(slug.value)}`,
+    ).catch((cause) => {
       throw toNuxtError(cause);
     }),
   { watch: [slug] },
@@ -25,12 +38,15 @@ const { data: article, error } = await useAsyncData<Article>(
 // An unpublished or missing slug must surface as a real 404, not a 200 with empty content and
 // not a 503 - either would leave a dead URL indexed (docs/SEO.md). First, though, a slug that
 // moved resolves to a 301 rather than a dead end.
-if (error.value || !article.value) {
+if (error.value || !data.value) {
   await honorRedirect(`/articles/${slug.value}`, { nuxtApp, client, localePath });
   throw toNuxtError(error.value ?? createError({ statusCode: 404 }));
 }
 
-const published = article.value;
+const published = data.value.article;
+
+// A lookup over the map computed server-side — no highlighter runs in the browser.
+const highlightCode = codeHighlighterFor(data.value.highlighted);
 
 // Resolves image blocks against the map the API shipped with the article (ADR-0011).
 const resolveMedia = mediaResolverFor(published.media);
@@ -139,7 +155,11 @@ const hasToc = computed(() => toc.value.length >= 2);
     <div :class="isPremium ? 'databro-premium-body' : undefined" class="mt-10">
       <!-- The media map ships with the article, so resolving an image is a lookup rather than a
            request per figure on the cached read path (ADR-0011). -->
-      <ContentRenderer :document="published.content" :resolve-media="resolveMedia" />
+      <ContentRenderer
+        :document="published.content"
+        :resolve-media="resolveMedia"
+        :highlight-code="highlightCode"
+      />
     </div>
 
     <AuthorCard v-if="published.author" :author="published.author" class="mt-14" />

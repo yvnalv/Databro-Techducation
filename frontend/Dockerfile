@@ -39,7 +39,12 @@ ENV APP=${APP} \
     NODE_ENV=development \
     NUXT_HOST=0.0.0.0 \
     NUXT_PORT=3000 \
-    CHOKIDAR_USEPOLLING=true
+    CHOKIDAR_USEPOLLING=true \
+    # No TTY here. When the workspace's dependencies drift — a package added on the host, or a
+    # changed pnpm store path — pnpm wants to confirm before purging node_modules, finds no
+    # terminal to ask, and aborts, which takes the container down on start. `CI=true` is pnpm's own
+    # documented answer for non-interactive environments: proceed instead of asking.
+    CI=true
 
 COPY . .
 RUN pnpm --filter "@databro/${APP}" exec nuxt prepare
