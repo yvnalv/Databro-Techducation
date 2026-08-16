@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ContentRenderer, DbButton, DbChip, DbInput, mediaResolverFor } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
-import type { Article, Category, ContentDocument, TaxonomyTerm } from "@databro/types";
+import type {
+  Article,
+  ArticleVersionSummary,
+  Category,
+  ContentDocument,
+  TaxonomyTerm,
+} from "@databro/types";
 
 /**
  * Article editor.
@@ -130,6 +136,129 @@ async function togglePublish() {
   }
 }
 
+// ---- Scheduling (CT-7) ----
+
+const scheduling = ref(false);
+// `datetime-local` speaks local wall-clock with no zone; the API wants an instant. Converting at the
+// boundary keeps the editor thinking in their own timezone and the API in UTC.
+const scheduleAt = ref("");
+
+const isScheduled = computed(() => status.value === "scheduled");
+
+const scheduledForLabel = computed(() =>
+  article.value?.scheduledFor ? new Date(article.value.scheduledFor).toLocaleString() : "",
+);
+
+async function schedule() {
+  formError.value = null;
+
+  if (!scheduleAt.value) {
+    formError.value = "Pick a date and time to schedule this article.";
+    return;
+  }
+
+  const when = new Date(scheduleAt.value);
+  if (Number.isNaN(when.getTime()) || when <= new Date()) {
+    // The API rejects a past time too; catching it here means the editor is told before a round trip.
+    formError.value = "The scheduled time must be in the future.";
+    return;
+  }
+
+  scheduling.value = true;
+
+  try {
+    // Same reason as publish: scheduling acts on the *saved* draft, so an unsaved edit would not be
+    // what goes live next Tuesday.
+    await save();
+    if (formError.value) return;
+
+    const id = article.value?.id;
+    if (!id) return;
+
+    article.value = await withAuth((api) => api.scheduleArticle(id, when.toISOString()));
+    scheduleAt.value = "";
+  } catch (error) {
+    formError.value = describe(error);
+  } finally {
+    scheduling.value = false;
+  }
+}
+
+async function cancelSchedule() {
+  formError.value = null;
+  scheduling.value = true;
+
+  try {
+    const id = article.value?.id;
+    if (!id) return;
+
+    article.value = await withAuth((api) => api.unscheduleArticle(id));
+  } catch (error) {
+    formError.value = describe(error);
+  } finally {
+    scheduling.value = false;
+  }
+}
+
+// ---- Version history (CT-8) ----
+
+const versions = ref<ArticleVersionSummary[]>([]);
+const versionsOpen = ref(false);
+const versionsLoading = ref(false);
+const restoring = ref<number | null>(null);
+
+async function loadVersions() {
+  const id = article.value?.id;
+  if (!id) return;
+
+  versionsLoading.value = true;
+
+  try {
+    versions.value = await withAuth((api) => api.listArticleVersions(id));
+  } catch (error) {
+    formError.value = describe(error);
+  } finally {
+    versionsLoading.value = false;
+  }
+}
+
+async function toggleVersions() {
+  versionsOpen.value = !versionsOpen.value;
+  if (versionsOpen.value && versions.value.length === 0) await loadVersions();
+}
+
+async function restore(version: number) {
+  const id = article.value?.id;
+  if (!id) return;
+
+  // Restoring overwrites the editor's current draft, which is the one thing here that can lose
+  // unsaved work — so it asks first. Publishing does not, because it saves rather than discards.
+  if (!confirm(`Restore version ${version}? This replaces the current draft. Nothing published changes.`))
+    return;
+
+  formError.value = null;
+  restoring.value = version;
+
+  try {
+    const restored = await withAuth((api) => api.restoreArticleVersion(id, version));
+
+    // Pull the restored content back into the form; it is the draft now.
+    article.value = restored;
+    title.value = restored.title;
+    summary.value = restored.summary;
+    content.value = restored.content;
+  } catch (error) {
+    formError.value = describe(error);
+  } finally {
+    restoring.value = null;
+  }
+}
+
+// The list is stale the moment something is published, so it is refetched rather than patched.
+watch(() => article.value?.currentVersion, () => {
+  if (versionsOpen.value) void loadVersions();
+});
+
 function toggleTag(id: string) {
   tagIds.value = tagIds.value.includes(id)
     ? tagIds.value.filter((t) => t !== id)
@@ -147,8 +276,9 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
           {{ isNew ? "New article" : title || "Untitled" }}
         </h1>
-        <p class="mt-1 flex items-center gap-2 text-sm text-ink-muted">
+        <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ status }}</DbChip>
+          <span v-if="isScheduled">Publishes {{ scheduledForLabel }}</span>
           <span v-if="savedAt">Saved {{ savedAt }}</span>
         </p>
       </div>
@@ -233,6 +363,102 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">SEO</h2>
           <DbInput v-model="metaTitle" label="Meta title" hint="Falls back to the article title." />
           <DbInput v-model="metaDescription" label="Meta description" hint="Falls back to the summary." />
+        </section>
+
+        <!-- Scheduling (CT-7). Hidden while the article is published: a published article has to be
+             unpublished before it can be scheduled, and offering a control that always errors is
+             worse than not offering it. -->
+        <section
+          v-if="!isNew && !isPublished"
+          class="space-y-4 rounded-card border border-line bg-surface p-5"
+        >
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
+            Schedule
+          </h2>
+
+          <template v-if="isScheduled">
+            <p class="text-sm text-ink-muted">
+              Publishes automatically on
+              <strong class="text-ink">{{ scheduledForLabel }}</strong
+              >. Editing the draft before then is fine — whatever is saved at that moment goes live.
+            </p>
+            <DbButton variant="outline" size="sm" :disabled="scheduling" @click="cancelSchedule">
+              {{ scheduling ? "Working…" : "Cancel schedule" }}
+            </DbButton>
+          </template>
+
+          <template v-else>
+            <div>
+              <label for="schedule-at" class="mb-1.5 block text-sm font-medium text-ink-muted">
+                Publish at
+              </label>
+              <input
+                id="schedule-at"
+                v-model="scheduleAt"
+                type="datetime-local"
+                class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+              />
+              <p class="mt-1.5 text-xs text-ink-subtle">
+                Your local time. Saves the draft first, then schedules it.
+              </p>
+            </div>
+            <DbButton variant="outline" size="sm" :disabled="scheduling || saving" @click="schedule">
+              {{ scheduling ? "Scheduling…" : "Schedule" }}
+            </DbButton>
+          </template>
+        </section>
+
+        <!-- Version history (CT-8). Collapsed by default and loaded on demand: most edits never
+             need it, and it is one request per open rather than one per page load. -->
+        <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
+              Version history
+            </h2>
+            <button
+              type="button"
+              class="text-sm font-medium text-accent hover:underline"
+              :aria-expanded="versionsOpen"
+              @click="toggleVersions"
+            >
+              {{ versionsOpen ? "Hide" : "Show" }}
+            </button>
+          </div>
+
+          <template v-if="versionsOpen">
+            <p v-if="versionsLoading" class="text-sm text-ink-muted">Loading…</p>
+            <p v-else-if="versions.length === 0" class="text-sm text-ink-muted">
+              No versions yet — history starts at the first publish.
+            </p>
+
+            <ul v-else class="divide-y divide-line">
+              <li v-for="v in versions" :key="v.version" class="flex items-start gap-3 py-3">
+                <div class="min-w-0 flex-1">
+                  <p class="flex items-center gap-2 text-sm font-medium text-ink">
+                    v{{ v.version }}
+                    <DbChip v-if="v.isCurrent" tone="success">live</DbChip>
+                  </p>
+                  <p class="truncate text-sm text-ink-muted">{{ v.title }}</p>
+                  <p class="text-xs text-ink-subtle">
+                    {{ new Date(v.createdAt).toLocaleString() }} · {{ v.readingTimeMinutes }} min
+                  </p>
+                </div>
+                <DbButton
+                  variant="ghost"
+                  size="sm"
+                  :disabled="restoring !== null"
+                  @click="restore(v.version)"
+                >
+                  {{ restoring === v.version ? "Restoring…" : "Restore" }}
+                </DbButton>
+              </li>
+            </ul>
+
+            <p class="text-xs text-ink-subtle">
+              Restoring copies a version into the draft. History is never rewritten, and nothing
+              published changes until you publish again.
+            </p>
+          </template>
         </section>
       </div>
 

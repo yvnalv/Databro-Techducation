@@ -174,4 +174,127 @@ public class ArticleTests
         Assert.Equal(ArticleStatus.Unpublished, article.Status);
         Assert.Contains(article.DomainEvents, e => e is ArticleUnpublishedDomainEvent);
     }
+
+    // ---- Cancelling a schedule (CT-7) ----
+
+    [Fact]
+    public void Cancelling_a_schedule_returns_the_article_to_draft()
+    {
+        var article = NewDraft();
+        article.Schedule(Now.AddDays(7), Now);
+
+        var result = article.CancelSchedule();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ArticleStatus.Draft, article.Status);
+        Assert.Null(article.ScheduledFor);
+    }
+
+    [Fact]
+    public void Cancelling_a_schedule_leaves_the_draft_untouched()
+    {
+        // Cancelling is a decision about *when*, not about *what*.
+        var article = NewDraft(Doc("The body as written."));
+        article.Schedule(Now.AddDays(7), Now);
+
+        article.CancelSchedule();
+
+        Assert.True(article.DraftBlocks.HasContent);
+        Assert.Equal("Intro to ML", article.Title);
+    }
+
+    [Fact]
+    public void Only_a_scheduled_article_can_have_its_schedule_cancelled()
+    {
+        var article = NewDraft();
+
+        Assert.Equal("conflict", article.CancelSchedule().Error.Code);
+
+        article.Publish(Now);
+        Assert.Equal("conflict", article.CancelSchedule().Error.Code);
+    }
+
+    // ---- Version history (CT-8) ----
+
+    [Fact]
+    public void Restoring_a_version_copies_it_into_the_draft()
+    {
+        var article = NewDraft(Doc("First cut."));
+        article.Publish(Now);
+
+        article.UpdateDraft("Rewritten", "A new summary", Doc("Second cut."));
+        article.Publish(Now.AddDays(1));
+
+        var result = article.RestoreVersion(1);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Intro to ML", article.Title);
+        Assert.Equal("First cut.", article.DraftBlocks.Blocks[0].Data!["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void Restoring_never_mutates_history_or_what_a_reader_sees()
+    {
+        // The heart of CT-8. Restoring loads old content into the *draft*; the published copy and
+        // every version row stay exactly as they were, so a restore is itself recorded when it is
+        // published rather than rewriting the past.
+        var article = NewDraft(Doc("First cut."));
+        article.Publish(Now);
+        article.UpdateDraft("Rewritten", "A new summary", Doc("Second cut."));
+        article.Publish(Now.AddDays(1));
+
+        article.RestoreVersion(1);
+
+        Assert.Equal(2, article.Versions.Count);
+        Assert.Equal(2, article.CurrentVersion);
+        Assert.Equal(ArticleStatus.Published, article.Status);
+        Assert.Equal("Second cut.", article.PublishedBlocks!.Blocks[0].Data!["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void Publishing_a_restored_version_appends_rather_than_rewrites()
+    {
+        var article = NewDraft(Doc("First cut."));
+        article.Publish(Now);
+        article.UpdateDraft("Rewritten", "A new summary", Doc("Second cut."));
+        article.Publish(Now.AddDays(1));
+
+        article.RestoreVersion(1);
+        article.Publish(Now.AddDays(2));
+
+        Assert.Equal(3, article.CurrentVersion);
+        Assert.Equal(3, article.Versions.Count);
+        // Version 3 carries the restored content, and versions 1 and 2 are still their own selves.
+        Assert.Equal("First cut.", article.Versions.Single(v => v.Version == 3).Blocks.Blocks[0].Data!["text"]!.GetValue<string>());
+        Assert.Equal("Second cut.", article.Versions.Single(v => v.Version == 2).Blocks.Blocks[0].Data!["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void Restoring_recomputes_reading_time_from_the_restored_content()
+    {
+        // CT-12: reading time is derived, never carried over from whatever the draft happened to say.
+        var article = NewDraft(Doc(string.Join(" ", Enumerable.Repeat("word", 800))));
+        article.Publish(Now);
+        var longReadingTime = article.ReadingTimeMinutes;
+
+        article.UpdateDraft("Short", "A summary", Doc("Tiny."));
+        Assert.Equal(1, article.ReadingTimeMinutes);
+
+        article.RestoreVersion(1);
+
+        Assert.Equal(longReadingTime, article.ReadingTimeMinutes);
+        Assert.True(article.ReadingTimeMinutes > 1);
+    }
+
+    [Fact]
+    public void Restoring_a_version_that_does_not_exist_is_a_not_found()
+    {
+        var article = NewDraft();
+        article.Publish(Now);
+
+        var result = article.RestoreVersion(99);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("not_found", result.Error.Code);
+    }
 }

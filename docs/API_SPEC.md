@@ -120,14 +120,35 @@ POST   /api/v1/authoring/articles                       create draft
 GET    /api/v1/authoring/articles                       list (all statuses, own/all per role)
 GET    /api/v1/authoring/articles/{id}                  full article incl. draft_blocks + versions
 PATCH  /api/v1/authoring/articles/{id}                  update draft (blocks, meta, seo, taxonomy)
-POST   /api/v1/authoring/articles/{id}/publish          publish (Editor/Admin)
-POST   /api/v1/authoring/articles/{id}/schedule         { scheduledFor }
-POST   /api/v1/authoring/articles/{id}/unpublish
+POST   /api/v1/authoring/articles/{id}/publish          publish (Content.Publish)
+POST   /api/v1/authoring/articles/{id}/schedule         { scheduledFor } (Content.Publish)
+POST   /api/v1/authoring/articles/{id}/unschedule       cancel a pending schedule (Content.Publish)
+POST   /api/v1/authoring/articles/{id}/unpublish        (Content.Publish)
 PUT    /api/v1/authoring/articles/{id}/slug             change slug { slug }; 301 if published (CT-3)
 DELETE /api/v1/authoring/articles/{id}                  soft delete
-GET    /api/v1/authoring/articles/{id}/versions         version history
-POST   /api/v1/authoring/articles/{id}/restore/{version}
+GET    /api/v1/authoring/articles/{id}/versions         history, newest first (Content.Edit)
+GET    /api/v1/authoring/articles/{id}/versions/{n}     one snapshot, with its content (Content.Edit)
+POST   /api/v1/authoring/articles/{id}/versions/{n}/restore   copy into the draft (Content.Edit)
 ```
+
+**Version history and restore sit behind `Content.Edit`, not `Content.Publish`** — restoring copies a
+snapshot into the *draft* and changes nothing a reader sees until someone publishes afterwards, which
+writes a new version of its own (CT-8). An Author undoing their own work in progress does not need
+the publishing permission. Scheduling and *un*scheduling are the reverse: both are publishing acts
+(CT-4).
+
+`/unschedule` exists because scheduling was otherwise a one-way door: `/unpublish` only accepts a
+published article, so an editor who scheduled something and changed their mind had no way back to
+draft.
+
+The version list carries metadata only (`version`, `title`, `summary`, `readingTimeMinutes`,
+`createdAt`, `isCurrent`). Fetch a single version for its `content` — shipping every snapshot's body
+in the list would make it the heaviest response in the CMS.
+
+**Draft and published title/summary are separate** (CT-6). Public responses — the article detail,
+listings, search and RSS — carry the *published* values; authoring responses carry the draft. Before
+this separation existed, typing a new headline changed the live page, the sitemap and the search
+index the moment it was saved.
 
 ### Taxonomy (Editor/Admin)
 ```

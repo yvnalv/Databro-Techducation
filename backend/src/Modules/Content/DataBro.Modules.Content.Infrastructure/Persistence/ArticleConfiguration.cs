@@ -22,6 +22,11 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Property(a => a.Title).HasMaxLength(300).IsRequired();
         builder.Property(a => a.Summary).HasMaxLength(1000);
+
+        // Published snapshots of the title and summary (CT-6), mirroring published_blocks. Nullable
+        // because an article has none until it is first published.
+        builder.Property(a => a.PublishedTitle).HasMaxLength(300);
+        builder.Property(a => a.PublishedSummary).HasMaxLength(1000);
         builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(a => a.Visibility).HasConversion<string>().HasMaxLength(20);
         builder.Property(a => a.Locale).HasMaxLength(10).IsRequired();
@@ -110,6 +115,9 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
     /// passing mention in paragraph forty, and PostgreSQL's default weight multipliers
     /// (1.0/0.4/0.2/0.1) express exactly that.
     ///
+    /// Built from the <b>published</b> title and summary, not the draft ones (CT-6). Indexing the
+    /// draft columns made an in-progress headline searchable the moment it was typed.
+    ///
     /// The <c>CASE</c> picks the stemmer from the row's own locale, so "belajar" and "pembelajaran"
     /// collapse to one Indonesian stem instead of being treated as unrelated English words. Both
     /// branches are literal <c>regconfig</c> casts because only <c>to_tsvector(regconfig, text)</c>
@@ -117,8 +125,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
     /// depend on one.
     /// </summary>
     private const string SearchVectorSql = """
-        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(title, '')), 'A') ||
-        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(summary, '')), 'B') ||
+        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(published_title, '')), 'A') ||
+        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(published_summary, '')), 'B') ||
         setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(search_text, '')), 'C')
         """;
 }

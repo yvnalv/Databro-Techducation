@@ -7,10 +7,10 @@ Last updated: 2026-08-16.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **content is indexable and searchable; media, CI and
-two CMS surfaces remain.**
+**Phase 1 — Foundation & Content.** Sub-stage: **the exit criterion is met; CI and a staging deploy
+remain.**
 
-The [ROADMAP](ROADMAP.md) exit criterion is one compound sentence, and it is not met yet:
+The [ROADMAP](ROADMAP.md) exit criterion is one compound sentence:
 
 > "an editor can author, version, schedule, and publish an SEO-complete article that is indexed,
 > searchable, and served fast from the public site."
@@ -18,16 +18,17 @@ The [ROADMAP](ROADMAP.md) exit criterion is one compound sentence, and it is not
 | Verb | State |
 |---|---|
 | author | ✅ block editor |
-| version | ⚠️ versions are written on every publish, but there is **no UI to view or restore** one |
-| schedule | ⚠️ the API and Hangfire sweep work; **the CMS has no scheduling control**, so an editor cannot do this |
+| version | ✅ history panel with restore |
+| schedule | ✅ schedule and cancel, in the CMS |
 | publish | ✅ |
 | SEO-complete | ✅ including `og:image`, Twitter card and JSON-LD `image` |
 | indexed | ✅ sitemap, robots, feed, JSON-LD |
 | searchable | ✅ PostgreSQL FTS |
 | served fast | ✅ SSG/ISR |
 
-An earlier revision of this file claimed the exit criteria were met. That read "indexed and
-searchable" as the whole criterion and skipped the four verbs in front of it — corrected here.
+An earlier revision of this file claimed this was met while scheduling and version history had no
+CMS controls at all. It is met now — but the intermediate correction stays on the record rather than
+being tidied away.
 
 ## Done
 
@@ -47,11 +48,20 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
 
 ## In progress
 
-* Media is done. What is left before the Phase 1 exit criterion is the **scheduling and
-  version-history controls** in the CMS — both APIs exist, so it is UI-only work — followed by **CI**
-  and a staging deploy.
+* Phase 1's exit criterion is met. What remains for the phase is **CI** and a **staging deploy**.
 
 ## Recently done
+
+* **Scheduling and version history in the CMS**, plus the endpoints they needed. This was scoped as
+  "UI-only work" and was not: there was no endpoint to read or restore a version, and no way to
+  cancel a schedule once set (`/unpublish` only accepts a published article, so scheduling was a
+  one-way door).
+* **Fixed a CT-6 leak found by one of those tests.** `title` and `summary` were single columns shared
+  by the draft and the published copy — as if `published_blocks` had never been split from
+  `draft_blocks`. Editing a published article's draft title changed the live page, the listings, the
+  sitemap, the RSS feed and the search index the moment it was saved, including the fuzzy search
+  fallback, which matched on the draft column. Now `published_title` / `published_summary`, with a
+  migration that backfills existing rows. Three regression tests pin it.
 
 * **Media module** ([ADR-0011](adr/0011-media-storage-and-image-processing.md)). Upload to
   S3-compatible storage (MinIO dev / Spaces prod), images **re-encoded before storing** so the bytes
@@ -110,12 +120,10 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
 
 ## Next up (proposed order)
 
-1. **CMS scheduling + version history/restore** — both APIs already exist; this is UI-only work and
-   it is what literally closes the exit criterion.
-2. **CI pipeline** (build/test + architecture-fitness gate). 158 backend tests and 81 frontend tests
+1. **CI pipeline** (build/test + architecture-fitness gate). 180 backend tests and 81 frontend tests
    exist and nothing runs them on push.
-3. Staging deploy on DigitalOcean.
-4. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
+2. Staging deploy on DigitalOcean.
+3. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
    real Search module).
 
 ## Known gaps / deferred
@@ -134,10 +142,8 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
   highlighter drops in later without touching page code.
 * **Authoring UI works end to end.** Sign-in, route guard, dashboard shell, article list, and a
   block editor with Tiptap rich text and live preview. An article can be written, saved, published
-  and read on the public site without touching a script. Taxonomy and media both have UI. Remaining
-  gaps: no table/grid editor (table blocks render but have no form), **no scheduling control**, and
-  **no version history or restore** — the last two have working APIs and are what still blocks the
-  Phase 1 exit criterion.
+  and read on the public site without touching a script. Taxonomy, media, scheduling and version
+  history all have UI. Remaining gap: no table/grid editor — table blocks render but have no form.
 * **ImageSharp's licence must be re-checked before commercial launch.** The Six Labors Split License
   is free for open source and organisations under $1M revenue, which is DataBro today. It is confined
   behind `IImageProcessor` precisely because it is the most likely dependency to need swapping.

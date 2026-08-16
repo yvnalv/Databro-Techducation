@@ -157,6 +157,30 @@ public static class ContentModuleExtensions
             .AddEndpointFilter<ValidationFilter<ScheduleArticleRequest>>()
             .RequireAuthorization(Perm(Permissions.ContentPublish));
 
+        // Cancelling a schedule is the counterpart to setting one (CT-7). Without it, scheduling was
+        // a one-way door: unpublish only accepts a published article, so an editor who changed their
+        // mind about next Tuesday had no way back to draft.
+        group.MapPost("/{id:guid}/unschedule", async (Guid id, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.CancelScheduleAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+
+        // ---- Version history (CT-8). Reading and restoring are both *draft* operations, so they
+        // sit behind Content.Edit rather than Content.Publish: restoring copies a snapshot into the
+        // draft and changes nothing a reader sees until someone publishes afterwards. ----
+        group.MapGet("/{id:guid}/versions", async (Guid id, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.ListVersionsAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapGet("/{id:guid}/versions/{version:int}", async (
+            Guid id, int version, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetVersionAsync(id, version, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPost("/{id:guid}/versions/{version:int}/restore", async (
+            Guid id, int version, ArticleService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.RestoreVersionAsync(id, version, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
         // Changing a public URL is a publishing concern, not a drafting one (CT-3): behind
         // Content.Publish, alongside a 301 the service writes for an already-published article.
         group.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, ArticleService service, CancellationToken ct) =>

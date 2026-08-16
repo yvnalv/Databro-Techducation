@@ -116,6 +116,29 @@ public sealed record ArticleSummaryDto(
     TaxonomyTermDto? Category,
     IReadOnlyList<TaxonomyTermDto> Tags);
 
+/// <summary>
+/// One entry in an article's version history (CT-8). Deliberately without blocks: the history list
+/// is a navigation aid, and shipping every snapshot's full body would make it the heaviest response
+/// in the CMS. Fetch a single version to see its content.
+/// </summary>
+public sealed record ArticleVersionSummaryDto(
+    int Version,
+    string Title,
+    string Summary,
+    int ReadingTimeMinutes,
+    DateTimeOffset CreatedAt,
+    /// <summary>True for the version currently published — the one a reader sees right now.</summary>
+    bool IsCurrent);
+
+/// <summary>A single historical snapshot, with its content, for preview before restoring.</summary>
+public sealed record ArticleVersionDto(
+    int Version,
+    string Title,
+    string Summary,
+    DateTimeOffset CreatedAt,
+    bool IsCurrent,
+    ContentDocumentDto Content);
+
 public sealed record MediaVariantRefDto(string Name, string Url, int Width, int Height);
 
 /// <summary>

@@ -112,6 +112,73 @@ public sealed class ArticleService(
         return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
     }
 
+    /// <summary>Cancels a pending schedule, returning the article to draft (CT-7).</summary>
+    public async Task<Result<ArticleDto>> CancelScheduleAsync(Guid id, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null)
+            return Result.Failure<ArticleDto>(Error.NotFound("Article not found."));
+
+        var result = article.CancelSchedule();
+        if (result.IsFailure)
+            return Result.Failure<ArticleDto>(result.Error);
+
+        await repository.SaveChangesAsync(ct);
+        return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
+    }
+
+    // ---- Version history (CT-8) ----
+
+    /// <summary>
+    /// The article's version history, newest first. Metadata only — see
+    /// <see cref="GetVersionAsync"/> for a snapshot's content.
+    /// </summary>
+    public async Task<IReadOnlyList<ArticleVersionSummaryDto>?> ListVersionsAsync(
+        Guid id, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null) return null;
+
+        return article.Versions
+            .OrderByDescending(v => v.Version)
+            .Select(v => new ArticleVersionSummaryDto(
+                v.Version, v.Title, v.Summary, v.Blocks.EstimateReadingTimeMinutes(),
+                v.CreatedAt, v.Version == article.CurrentVersion))
+            .ToList();
+    }
+
+    public async Task<ArticleVersionDto?> GetVersionAsync(
+        Guid id, int version, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        var snapshot = article?.Versions.FirstOrDefault(v => v.Version == version);
+        if (article is null || snapshot is null) return null;
+
+        return new ArticleVersionDto(
+            snapshot.Version, snapshot.Title, snapshot.Summary, snapshot.CreatedAt,
+            snapshot.Version == article.CurrentVersion, snapshot.Blocks.ToDto());
+    }
+
+    /// <summary>
+    /// Copies a past version into the draft (CT-8). History is untouched, and so is what a reader
+    /// currently sees — the restored content only goes live if someone publishes afterwards, which
+    /// writes a new version of its own.
+    /// </summary>
+    public async Task<Result<ArticleDto>> RestoreVersionAsync(
+        Guid id, int version, CancellationToken ct = default)
+    {
+        var article = await repository.GetByIdAsync(id, ct);
+        if (article is null)
+            return Result.Failure<ArticleDto>(Error.NotFound("Article not found."));
+
+        var result = article.RestoreVersion(version);
+        if (result.IsFailure)
+            return Result.Failure<ArticleDto>(result.Error);
+
+        await repository.SaveChangesAsync(ct);
+        return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
+    }
+
     /// <summary>
     /// Changes an article's slug (CT-2/CT-3). If the article has ever been published its old
     /// <c>/articles/{slug}</c> path is indexed, so a 301 is recorded from it to the new path in the
@@ -184,13 +251,14 @@ public sealed class ArticleService(
         CancellationToken ct = default)
     {
         var result = await repository.ListPublishedAsync(page, categoryId, tagId, ct);
-        return await ToSummaryPageAsync(result, ct);
+        return await ToSummaryPageAsync(result, published: true, ct);
     }
 
+    /// <summary>The CMS list: shows the draft title, because that is what an editor is working on.</summary>
     public async Task<PagedResult<ArticleSummaryDto>> ListAllAsync(PageRequest page, CancellationToken ct = default)
     {
         var result = await repository.ListAllAsync(page, ct);
-        return await ToSummaryPageAsync(result, ct);
+        return await ToSummaryPageAsync(result, published: false, ct);
     }
 
     /// <summary>
@@ -213,14 +281,15 @@ public sealed class ArticleService(
 
         var exact = await repository.SearchPublishedAsync(trimmed, scope, page, fuzzy: false, ct);
         if (exact.Total > 0)
-            return new SearchResultDto(await ToSummaryPageAsync(exact, ct), SearchMatchModes.Exact);
+            return new SearchResultDto(
+                await ToSummaryPageAsync(exact, published: true, ct), SearchMatchModes.Exact);
 
         var fuzzy = await repository.SearchPublishedAsync(trimmed, scope, page, fuzzy: true, ct);
 
         // Reported as `exact` when the fallback also found nothing: there is no approximation to
         // apologise for, just no results.
         return new SearchResultDto(
-            await ToSummaryPageAsync(fuzzy, ct),
+            await ToSummaryPageAsync(fuzzy, published: true, ct),
             fuzzy.Total > 0 ? SearchMatchModes.Fuzzy : SearchMatchModes.Exact);
     }
 
@@ -268,11 +337,18 @@ public sealed class ArticleService(
 
     // ---- Reference resolution ----
 
+    /// <param name="published">
+    /// True for public-facing listings, which must show the published title and summary rather than
+    /// whatever the draft currently says (CT-6). False for the CMS list, where an editor needs to see
+    /// their work in progress.
+    /// </param>
     private async Task<PagedResult<ArticleSummaryDto>> ToSummaryPageAsync(
-        PagedResult<Article> page, CancellationToken ct)
+        PagedResult<Article> page, bool published, CancellationToken ct)
     {
         var refs = await ResolveAsync(page.Items, ct);
-        var items = page.Items.Select(a => a.ToSummaryDto(refs)).ToList();
+        var items = page.Items
+            .Select(a => published ? a.ToPublishedSummaryDto(refs) : a.ToSummaryDto(refs))
+            .ToList();
 
         return new PagedResult<ArticleSummaryDto>(items, page.Page, page.PageSize, page.Total);
     }

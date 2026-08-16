@@ -1,5 +1,52 @@
 # DataBro Changelog
 
+## [2026-08-16 16:19:52 UTC]
+
+CHG-0028 — Scheduling and version history in the CMS, and a draft-content leak closed
+
+Meets the Phase 1 exit criterion: an editor can now author, version, schedule and publish an
+SEO-complete article that is indexed, searchable and served fast.
+
+- **This was scoped as "UI-only work" and was not.** There was no endpoint to read or restore a
+  version — history rows had been written since the first publish and were unreachable — and no way
+  to cancel a schedule once set, because `/unpublish` only accepts a *published* article. Scheduling
+  was a one-way door.
+- **New endpoints:** `GET /versions`, `GET /versions/{n}`, `POST /versions/{n}/restore`, and
+  `POST /unschedule`.
+- **Restore sits behind `Content.Edit`, not `Content.Publish`.** It copies a snapshot into the draft
+  and changes nothing a reader sees until someone publishes afterwards — which appends a *new*
+  version rather than reverting the sequence (CT-8). An Author undoing their own work in progress
+  should not need the publishing permission. Scheduling and unscheduling are the reverse: both are
+  publishing acts (CT-4).
+- **Fixed a CT-6 leak that a test caught, and that predates this work.** `title` and `summary` were
+  single columns shared by the draft and the published copy — as if `published_blocks` had never been
+  split from `draft_blocks`. Editing a published article's draft title changed the **live page, the
+  listings, the sitemap, the RSS feed and the search index** the moment it was saved. A half-written
+  headline went public as it was typed. Reproduced on the running stack before fixing, not just in a
+  test.
+- The fix is `published_title` / `published_summary`, snapshotted on publish exactly like the blocks.
+  The generated search vector now indexes those columns, and **the fuzzy search fallback was leaking
+  independently** — it matched `word_similarity` against the draft `title`, so a draft headline was
+  findable through the typo path even once full-text correctly refused to index it. Caught by the
+  third regression test rather than by reading the code.
+- Migration `AddPublishedTitleAndSummary` backfills `published_title = title` for every row with a
+  `published_at`. That copy is correct precisely because, until this migration, the draft title *was*
+  the published title — there was nowhere else for it to live.
+- CMS: a schedule control that saves the draft first (so what goes live next Tuesday is what you
+  see), a cancel button, and a collapsible version-history panel loaded on demand. Restore asks for
+  confirmation — it is the one action here that can discard unsaved work; publishing saves rather
+  than discards, so it does not.
+- Also corrects STATUS again: the previous entry had marked scheduling and version history as
+  "UI-only work remaining", which understated them. Both the earlier overstatement and this
+  correction stay on the record.
+- Tests: 8 domain tests (restore semantics, reading-time recomputation on restore, cancel-schedule
+  guards), 14 API tests including three regressions for the leak — public detail, public listing, and
+  search — and the authorization split between Edit and Publish. Backend 180 green; frontend 81
+  green; clean typecheck. Verified against the running stack: restored a version and confirmed the
+  public page did not move.
+
+---
+
 ## [2026-08-16 13:48:11 UTC]
 
 CHG-0027 — Media module: upload, storage and responsive images (ADR-0011)

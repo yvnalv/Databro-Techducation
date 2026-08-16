@@ -53,8 +53,10 @@ keys across module boundaries (references across modules are by id + contract, n
 |---|---|---|
 | id | uuid PK | |
 | slug | citext unique | immutable once published |
-| title | text | |
-| summary | text | |
+| title | text | the **draft** title — what an editor is working on |
+| summary | text | the **draft** summary |
+| published_title | text null | title as last published; null until first publish |
+| published_summary | text null | summary as last published |
 | status | text | draft / scheduled / published / unpublished / archived |
 | visibility | text | public / premium (reserved; P1 = public) |
 | locale | text | e.g. en, id |
@@ -74,8 +76,19 @@ keys across module boundaries (references across modules are by id + contract, n
 Indexes: unique(`slug`), GIN on `draft_blocks`/`published_blocks` where queried, btree(`status`,
 `published_at`), (`category_id`), (`translation_group_id`).
 
-**article_versions** (id, article_id, version, blocks jsonb, title, summary, seo jsonb, created_at,
-created_by) — immutable history; one row per published/saved version.
+**article_versions** (id, article_id, version, blocks jsonb, title, summary, + audit) — immutable
+history, one row **per publish** (not per save). Append-only: restoring copies a row into the draft
+and never rewrites one, so publishing a restored version appends a *new* version rather than
+reverting the sequence (CT-8).
+
+> **`published_title` / `published_summary` are the reason these two exist.** `title` and `summary`
+> were originally single columns shared by the draft and the published copy, exactly as if
+> `published_blocks` had never been split from `draft_blocks`. Editing a published article's draft
+> title therefore changed the live page, the listings, the sitemap, the RSS feed and the search index
+> the moment it was saved — a half-written headline going public as it was typed. The body was
+> protected from day one; these two never were. Added by migration `AddPublishedTitleAndSummary`,
+> which backfills `published_title = title` for every article with a `published_at` — correct
+> precisely because, until then, the draft title *was* the published title.
 
 **categories** (id, parent_id null, name, slug unique, description, order). Hierarchical.
 **tags** (id, name, slug unique).

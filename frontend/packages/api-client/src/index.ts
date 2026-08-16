@@ -6,6 +6,8 @@ import type {
   Article,
   ArticleDraftInput,
   ArticleSummary,
+  ArticleVersion,
+  ArticleVersionSummary,
   AuthTokens,
   Category,
   CategoryWithAncestors,
@@ -283,6 +285,45 @@ export class ApiClient {
     return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}/unpublish`, {
       method: "POST",
     });
+  }
+
+  /** Schedules a future publish (CT-7). `scheduledFor` is an ISO timestamp and must be in the future. */
+  scheduleArticle(id: string, scheduledFor: string): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}/schedule`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheduledFor }),
+    });
+  }
+
+  /** Cancels a pending schedule, returning the article to draft. Leaves the draft untouched. */
+  unscheduleArticle(id: string): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}/unschedule`, {
+      method: "POST",
+    });
+  }
+
+  // ---- Version history (CT-8) ----
+  // Reading and restoring are draft operations behind `Content.Edit`, not publishing acts: a restore
+  // copies a snapshot into the draft and changes nothing a reader sees until someone publishes.
+
+  listArticleVersions(id: string): Promise<ArticleVersionSummary[]> {
+    return this.request<ArticleVersionSummary[]>(
+      `/api/v1/authoring/articles/${encodeURIComponent(id)}/versions`,
+    );
+  }
+
+  getArticleVersion(id: string, version: number): Promise<ArticleVersion> {
+    return this.request<ArticleVersion>(
+      `/api/v1/authoring/articles/${encodeURIComponent(id)}/versions/${version}`,
+    );
+  }
+
+  restoreArticleVersion(id: string, version: number): Promise<Article> {
+    return this.request<Article>(
+      `/api/v1/authoring/articles/${encodeURIComponent(id)}/versions/${version}/restore`,
+      { method: "POST" },
+    );
   }
 
   // ---- Taxonomy authoring (Taxonomy.Manage) ----

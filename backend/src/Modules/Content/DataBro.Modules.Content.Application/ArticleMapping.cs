@@ -97,23 +97,39 @@ internal static class ArticleMapping
             .ToList();
     }
 
+    /// <summary>
+    /// The draft-facing summary: what the CMS list shows, which is what an editor is working on.
+    /// </summary>
     public static ArticleSummaryDto ToSummaryDto(this Article a, ArticleReferences refs) =>
         new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
             a.Locale, refs.ResolveAuthor(a.AuthorId), a.ReadingTimeMinutes, a.PublishedAt,
             refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id));
 
+    /// <summary>
+    /// The public-facing summary — listings, search results, RSS. Uses the <em>published</em> title
+    /// and summary so an in-progress draft edit does not appear on the site (CT-6).
+    /// </summary>
+    public static ArticleSummaryDto ToPublishedSummaryDto(this Article a, ArticleReferences refs) =>
+        new(a.Id, a.Slug.Value, a.PublishedTitle ?? a.Title, a.PublishedSummary ?? a.Summary,
+            a.Status.ToWire(), a.Visibility.ToWire(),
+            a.Locale, refs.ResolveAuthor(a.AuthorId), a.ReadingTimeMinutes, a.PublishedAt,
+            refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id));
+
     public static ArticleDto ToDto(this Article a, ArticleReferences refs)
     {
-        // Public read serves the published snapshot; authoring views fall back to the draft.
+        // Public read serves the published snapshot throughout — blocks, title and summary alike.
+        // The `?? a.Title` fallback covers articles published before those columns existed; the
+        // migration backfills them, so it should never actually fire.
         var content = (a.PublishedBlocks ?? a.DraftBlocks).ToDto();
-        return a.ToDto(refs, content);
+        return a.ToDto(refs, content, a.PublishedTitle ?? a.Title, a.PublishedSummary ?? a.Summary);
     }
 
     public static ArticleDto ToDraftDto(this Article a, ArticleReferences refs) =>
-        a.ToDto(refs, a.DraftBlocks.ToDto());
+        a.ToDto(refs, a.DraftBlocks.ToDto(), a.Title, a.Summary);
 
-    private static ArticleDto ToDto(this Article a, ArticleReferences refs, ContentDocumentDto content) =>
-        new(a.Id, a.Slug.Value, a.Title, a.Summary, a.Status.ToWire(), a.Visibility.ToWire(),
+    private static ArticleDto ToDto(
+        this Article a, ArticleReferences refs, ContentDocumentDto content, string title, string summary) =>
+        new(a.Id, a.Slug.Value, title, summary, a.Status.ToWire(), a.Visibility.ToWire(),
             a.Locale, refs.ResolveAuthorProfile(a.AuthorId), a.CurrentVersion, a.ReadingTimeMinutes,
             content, a.Seo.ToDto(), a.PublishedAt, a.ScheduledFor,
             refs.ResolveCategory(a.CategoryId), refs.ResolveTags(a.Id), refs.ResolveMedia());

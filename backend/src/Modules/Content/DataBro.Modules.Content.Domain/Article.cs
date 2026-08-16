@@ -27,6 +27,19 @@ public sealed class Article : AggregateRoot
     public ContentDocument? PublishedBlocks { get; private set; }
 
     /// <summary>
+    /// The title as last published. Null until first publish.
+    ///
+    /// Separate from <see cref="Title"/> for exactly the reason <see cref="PublishedBlocks"/> is
+    /// separate from <see cref="DraftBlocks"/> (CT-6). Without it, editing a published article's
+    /// draft title changed the live page, the listings, the sitemap and the search index
+    /// immediately — a half-written headline going public the moment it was typed.
+    /// </summary>
+    public string? PublishedTitle { get; private set; }
+
+    /// <summary>The summary as last published. See <see cref="PublishedTitle"/>.</summary>
+    public string? PublishedSummary { get; private set; }
+
+    /// <summary>
     /// Plain-text projection of <see cref="PublishedBlocks"/>, feeding the generated search vector
     /// (ADR-0010). Written only on publish: search returns published content, so indexing a draft
     /// would make unpublished text findable.
@@ -146,6 +159,46 @@ public sealed class Article : AggregateRoot
     }
 
     /// <summary>
+    /// Cancels a pending schedule and returns the article to draft (CT-7).
+    ///
+    /// Without this, scheduling is a one-way door: <see cref="Unpublish"/> only accepts a
+    /// <c>Published</c> article, so an editor who scheduled something for next week and changed
+    /// their mind had no way back. Deliberately leaves the draft untouched — cancelling a schedule
+    /// is a decision about *when*, not about *what*.
+    /// </summary>
+    public Result CancelSchedule()
+    {
+        if (Status != ArticleStatus.Scheduled)
+            return Result.Failure(Error.Conflict("Only a scheduled article can have its schedule cancelled."));
+
+        Status = ArticleStatus.Draft;
+        ScheduledFor = null;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Copies a past version into the draft (CT-8).
+    ///
+    /// It <b>never mutates history</b>: the version rows are append-only, and the published copy is
+    /// untouched. Restoring loads old content into the draft, and publishing it afterwards writes a
+    /// *new* version — so a restore is itself recorded, rather than rewriting the past. That is why
+    /// this is a draft operation behind <c>Content.Edit</c> and not a publishing act.
+    /// </summary>
+    public Result RestoreVersion(int version)
+    {
+        var snapshot = _versions.FirstOrDefault(v => v.Version == version);
+        if (snapshot is null)
+            return Result.Failure(Error.NotFound($"Version {version} does not exist for this article."));
+
+        Title = snapshot.Title;
+        Summary = snapshot.Summary;
+        DraftBlocks = snapshot.Blocks;
+        ReadingTimeMinutes = snapshot.Blocks.EstimateReadingTimeMinutes();
+
+        return Result.Success();
+    }
+
+    /// <summary>
     /// Publishes the article: snapshots the draft into the published copy, writes an immutable
     /// version row, and increments the version — atomically (rules CT-1, CT-5, CT-6, CT-8).
     /// </summary>
@@ -159,6 +212,10 @@ public sealed class Article : AggregateRoot
 
         CurrentVersion += 1;
         PublishedBlocks = DraftBlocks;
+        // Snapshotted alongside the blocks, not left pointing at the mutable draft fields — that is
+        // what keeps an in-progress headline off the live page (CT-6).
+        PublishedTitle = Title;
+        PublishedSummary = Summary;
         SearchText = DraftBlocks.ToPlainText();
         Status = ArticleStatus.Published;
         PublishedAt = now;

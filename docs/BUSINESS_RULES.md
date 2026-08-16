@@ -23,9 +23,14 @@ Domain layer. Rules are grouped by area and will grow per phase.
   create and edit drafts only.
 * CT-5: Publishing snapshots `draft_blocks` into `published_blocks`, writes an immutable version row,
   and increments `current_version` — atomically.
-* CT-6: Public consumers only ever receive `published_blocks`; drafts are never publicly visible.
+* CT-6: Public consumers only ever receive the published snapshot — `published_blocks`,
+  `published_title` and `published_summary`; drafts are never publicly visible. This covers every
+  public surface, not just the article page: listings, search (including the fuzzy fallback), the
+  sitemap and RSS all read the published values.
 * CT-7: A scheduled article publishes automatically at `scheduled_for`; if publish validation fails at
-  that time, it remains scheduled and an alert is raised (it does not silently drop).
+  that time, it remains scheduled and an alert is raised (it does not silently drop). A pending
+  schedule can be cancelled, which returns the article to draft and leaves the draft untouched —
+  cancelling is a decision about *when*, not about *what*.
 * CT-8: `article_versions` is append-only; a published version is immutable. Restoring a version copies
   it into the draft; it never mutates history.
 * CT-9: Deleting an article is a soft delete; it is removed from public listings/search but history is

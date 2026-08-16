@@ -79,9 +79,12 @@ internal sealed class ArticleRepository(ContentDbContext db) : IArticleRepositor
             // Generation, End to End" scores 0.14 and matches nothing, no matter how obvious the
             // typo. `word_similarity` finds the best matching run of words inside the title instead
             // and scores the same pair 0.43 — which is the behaviour a typo fallback needs.
+            // Matched against the *published* title, like the tsvector above (CT-6). Using `Title`
+            // here made the fuzzy path a way to find a draft headline that full-text correctly
+            // refused to index.
             ? published
-                .Where(a => EF.Functions.TrigramsWordSimilarity(query, a.Title) > FuzzyThreshold)
-                .OrderByDescending(a => EF.Functions.TrigramsWordSimilarity(query, a.Title))
+                .Where(a => EF.Functions.TrigramsWordSimilarity(query, a.PublishedTitle ?? a.Title) > FuzzyThreshold)
+                .OrderByDescending(a => EF.Functions.TrigramsWordSimilarity(query, a.PublishedTitle ?? a.Title))
                 .ThenByDescending(a => a.PublishedAt)
             // `websearch_to_tsquery` rather than `to_tsquery`: it accepts whatever a person types
             // into a search box — quotes, OR, a stray operator — without throwing, and supports

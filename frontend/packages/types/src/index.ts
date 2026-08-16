@@ -291,6 +291,32 @@ export interface MediaAsset extends MediaRef {
   createdAt: string;
 }
 
+// ---- Version history (CT-8) ----
+
+/**
+ * One entry in an article's history. Without `content` on purpose: the list is a navigation aid, and
+ * shipping every snapshot's body would make it the heaviest response in the CMS.
+ */
+export interface ArticleVersionSummary {
+  version: number;
+  title: string;
+  summary: string;
+  readingTimeMinutes: number;
+  createdAt: string;
+  /** True for the version currently published — what a reader sees right now. */
+  isCurrent: boolean;
+}
+
+/** A single snapshot with its content, for previewing before a restore. */
+export interface ArticleVersion {
+  version: number;
+  title: string;
+  summary: string;
+  createdAt: string;
+  isCurrent: boolean;
+  content: ContentDocument;
+}
+
 export interface Article extends ArticleSummary {
   /** Narrows the summary's author to the richer detail shape. */
   author: AuthorProfile | null;
