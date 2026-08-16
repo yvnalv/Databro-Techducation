@@ -7,8 +7,27 @@ Last updated: 2026-08-16.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **both exit criteria met — content is indexable and
-searchable. Media upload is the last substantive Phase 1 item.**
+**Phase 1 — Foundation & Content.** Sub-stage: **content is indexable and searchable; media, CI and
+two CMS surfaces remain.**
+
+The [ROADMAP](ROADMAP.md) exit criterion is one compound sentence, and it is not met yet:
+
+> "an editor can author, version, schedule, and publish an SEO-complete article that is indexed,
+> searchable, and served fast from the public site."
+
+| Verb | State |
+|---|---|
+| author | ✅ block editor |
+| version | ⚠️ versions are written on every publish, but there is **no UI to view or restore** one |
+| schedule | ⚠️ the API and Hangfire sweep work; **the CMS has no scheduling control**, so an editor cannot do this |
+| publish | ✅ |
+| SEO-complete | ✅ — except `og:image`, which needs Media |
+| indexed | ✅ sitemap, robots, feed, JSON-LD |
+| searchable | ✅ PostgreSQL FTS |
+| served fast | ✅ SSG/ISR |
+
+An earlier revision of this file claimed the exit criteria were met. That read "indexed and
+searchable" as the whole criterion and skipped the four verbs in front of it — corrected here.
 
 ## Done
 
@@ -28,8 +47,9 @@ searchable. Media upload is the last substantive Phase 1 item.**
 
 ## In progress
 
-* Both Phase 1 exit criteria are met: content is indexable and searchable. Next is media upload,
-  then the CI pipeline.
+* Discovery and search are done. What stands between here and the Phase 1 exit criterion is **Media**
+  (the image block and `og:image` are both unusable without it), the **scheduling and version-history
+  controls** in the CMS, and **CI**.
 
 ## Recently done
 
@@ -81,9 +101,14 @@ searchable. Media upload is the last substantive Phase 1 item.**
 
 ## Next up (proposed order)
 
-1. Media upload to MinIO/Spaces — the last substantive Phase 1 module.
-2. CI pipeline (build/test + architecture-fitness gate).
-3. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
+1. **Media upload** to MinIO/Spaces with responsive variants — the last unbuilt Phase 1 module, and
+   the reason the editor's image block and `og:image` are both dead controls today.
+2. **CMS scheduling + version history/restore** — both APIs already exist; this is UI-only work and
+   it is what literally closes the exit criterion.
+3. **CI pipeline** (build/test + architecture-fitness gate). 129 backend tests and 11 client tests
+   exist and nothing runs them on push.
+4. Staging deploy on DigitalOcean.
+5. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
    real Search module).
 
 ## Known gaps / deferred
