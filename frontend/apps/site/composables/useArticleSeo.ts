@@ -28,6 +28,13 @@ export function useArticleSeo(article: Article) {
   // Premium bodies are gated, but the metadata is not - so this stays the real description.
   const isPremium = article.visibility === "premium";
 
+  // The share image (ADR-0011). Resolved from the media map the API ships with the article, so this
+  // is a lookup rather than a second request. Absolute because a relative og:image is ignored by
+  // every crawler that reads it, and the *original* rather than a variant: social platforms fetch
+  // once and re-encode, so handing them a 640px thumbnail wastes the one chance to look sharp.
+  const ogImageId = article.seo.ogImageMediaId?.trim();
+  const ogImage = ogImageId ? article.media?.[ogImageId] : undefined;
+
   useHead({
     htmlAttrs: { lang: locale.value },
     link: [
@@ -60,12 +67,22 @@ export function useArticleSeo(article: Article) {
     ogSiteName: "DataBro",
     ogLocale: locale.value,
 
+    ogImage: ogImage?.url,
+    ogImageWidth: ogImage?.width,
+    ogImageHeight: ogImage?.height,
+    // Falls back to the article's own alt text; a share card with no image alt is an accessibility
+    // gap on every platform that renders one.
+    ogImageAlt: ogImage ? ogImage.altText || title : undefined,
+
     articlePublishedTime: article.publishedAt,
     articleAuthor: article.author ? [article.author.displayName] : undefined,
 
-    twitterCard: "summary_large_image",
+    // `summary_large_image` promises a large image; without one Twitter silently downgrades the
+    // card, so the type follows what is actually available.
+    twitterCard: ogImage ? "summary_large_image" : "summary",
     twitterTitle: title,
     twitterDescription: description,
+    twitterImage: ogImage?.url,
   });
 
   // JSON-LD. `isAccessibleForFree` + `hasPart` is the Google-documented way to declare paywalled
@@ -82,6 +99,9 @@ export function useArticleSeo(article: Article) {
           url: canonical,
           mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
           inLanguage: article.locale,
+          // schema.org/Article recommends an image, and Google's rich-result guidance treats one as
+          // effectively required for article results. Omitted rather than faked when absent.
+          ...(ogImage ? { image: [ogImage.url] } : {}),
           datePublished: article.publishedAt,
           author: article.author
             ? { "@type": "Person", name: article.author.displayName }

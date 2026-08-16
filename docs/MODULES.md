@@ -64,19 +64,33 @@ Emits: `ArticlePublished`, `ArticleUnpublished`, `ArticleUpdated`, `ArticleDelet
 
 ---
 
-## Media (P1)
+## Media (P1) — built
 
-Asset upload and delivery.
+Asset upload and delivery ([ADR-0011](adr/0011-media-storage-and-image-processing.md)).
 
-* Upload images to DigitalOcean Spaces (S3-compatible).
-* Generate responsive variants; store metadata (dimensions, alt text, checksum).
-* Serve stable URLs referenced by content blocks.
+* Uploads images to S3-compatible storage: MinIO in development, DigitalOcean Spaces in production,
+  through one adapter behind `IMediaStorage`.
+* **Re-encodes every image before storing it.** The stored bytes are always ours, which closes the
+  polyglot-file class of attack by construction and strips EXIF (GPS coordinates) as a side effect.
+  Format comes from magic bytes; the `Content-Type` header and the file extension are never trusted.
+* Storage keys are generated (`media/{yyyy}/{MM}/{assetId}/{variant}.{ext}`), never derived from the
+  client's filename.
+* Generates responsive variants (640/960/1280/1920, never upscaling) in a **Hangfire job**, so the
+  upload request returns immediately. An asset is usable at full size while `Pending`.
+* Stores metadata: dimensions, alt text, and a checksum of the **stored** bytes.
 
 Owns: `media_assets`, `media_variants`.
 
-Exposes (contract): `IMediaReadService` (id → URL + variants + alt).
+Exposes (contract): **`IMediaDirectory`** in Platform — batch id → URL + variants + alt. Named for
+symmetry with `IUserDirectory` and batch-shaped for the same reason (ADR-0008): one article can
+carry a dozen figures, and a per-item lookup would be an N+1 on the cached public read path.
 
-Emits: `MediaUploaded`.
+Consumed by: **Content**, which resolves the media ids in its image blocks and `og:image` and ships
+the resolved map with the article DTO.
+
+Not built yet: no `MediaUploaded` event (nothing consumes one, and the outbox does not exist), no
+orphan sweep — deleting an asset is a soft delete that deliberately leaves the stored objects, since
+a published article may still reference them.
 
 ---
 

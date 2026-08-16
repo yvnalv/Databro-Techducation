@@ -219,12 +219,9 @@ function itemContent(item: unknown): RichText {
 
         <!-- image -->
         <template v-else-if="block.type === 'image'">
-          <input
-            :value="(block.data as any).mediaId"
-            class="h-9 w-full rounded-md border border-line-strong bg-surface px-3 font-mono text-sm"
-            placeholder="Media id (Media module not built yet)"
-            aria-label="Media id"
-            @input="updateData(index, { ...(block.data as any), mediaId: ($event.target as HTMLInputElement).value })"
+          <MediaPicker
+            :model-value="(block.data as any).mediaId"
+            @update:model-value="updateData(index, { ...(block.data as any), mediaId: $event })"
           />
           <input
             :value="(block.data as any).alt"
@@ -233,6 +230,12 @@ function itemContent(item: unknown): RichText {
             aria-label="Alt text"
             @input="updateData(index, { ...(block.data as any), alt: ($event.target as HTMLInputElement).value })"
           />
+          <!-- Per-block, not per-asset, on purpose: the same image can carry different meaning in
+               different articles, and the renderer prefers this over the asset's stored text. -->
+          <p class="text-xs text-ink-subtle">
+            Alt text describes the image in <em>this</em> article. Leave empty only if the image is
+            purely decorative.
+          </p>
         </template>
 
         <!-- embed -->

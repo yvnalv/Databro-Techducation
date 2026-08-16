@@ -1,11 +1,15 @@
 import type { InjectionKey } from "vue";
+import type { MediaRef } from "@databro/types";
 
 /**
- * Resolves an ImageBlock's `mediaId` to a URL. The Media module does not exist yet, so the
- * default resolver returns null and images render as a placeholder. When Media lands, only this
- * function changes - no block component does.
+ * Resolves an ImageBlock's `mediaId` to a renderable asset (ADR-0011).
+ *
+ * Returns the whole {@link MediaRef}, not just a URL, so the block can emit a `srcset` from the
+ * asset's variants. Null means the id cannot be resolved — an asset that was deleted, or one whose
+ * host has supplied no resolver — and the block falls back to a placeholder rather than a broken
+ * image.
  */
-export type MediaResolver = (mediaId: string) => string | null;
+export type MediaResolver = (mediaId: string) => MediaRef | null;
 
 export interface RendererOptions {
   /**
@@ -36,4 +40,17 @@ export const nestingDepthKey: InjectionKey<number> = Symbol("databro.nestingDept
 export const MAX_NESTING_DEPTH = 1;
 
 export const defaultMediaResolver: MediaResolver = () => null;
+
+/**
+ * Builds a resolver over the `media` map the API ships with an article.
+ *
+ * The map is keyed by media id, which is exactly what a block's `mediaId` holds — so this is a
+ * lookup, not a fetch. That is the point: resolving media client-side would mean a request per
+ * image on the cached read path.
+ */
+export function mediaResolverFor(
+  media: Record<string, MediaRef> | undefined | null,
+): MediaResolver {
+  return (mediaId: string) => media?.[mediaId] ?? null;
+}
 export const defaultRendererOptions: RendererOptions = { showUnknownBlocks: false };

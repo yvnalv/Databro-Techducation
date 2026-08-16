@@ -144,10 +144,37 @@ a live page (one hop).
 
 ### Media (Author/Editor/Admin)
 ```
-POST   /api/v1/media                        upload (multipart) -> asset + variants
+POST   /api/v1/media                        upload (multipart, field: file; optional altText)
+GET    /api/v1/media                        library listing, newest first (paginated)
 GET    /api/v1/media/{id}
-DELETE /api/v1/media/{id}
+PATCH  /api/v1/media/{id}                   { altText }
+DELETE /api/v1/media/{id}                   soft delete (requires Content.Delete)
 ```
+
+All of these require **`Media.Upload`** except `DELETE`, which requires `Content.Delete`. The listing
+is protected too: the stored *files* are public, but the index of them is not a public gallery.
+
+Upload accepts **JPEG, PNG, WebP and GIF**, identified by magic bytes — the declared `Content-Type`
+and the filename extension are ignored (ADR-0011). SVG is refused and must stay refused: it is XML,
+it can execute script, and unlike a raster format it cannot be neutralised by re-encoding. Limits:
+10 MB, 12,000px per side, 50 megapixels.
+
+The response is the asset, with `processingStatus` `pending` until the variant job finishes:
+
+```json
+{ "success": true, "data": {
+  "id": "…", "url": "https://…/original.jpg", "fileName": "chart.jpg",
+  "mimeType": "image/jpeg", "byteSize": 32657, "width": 1600, "height": 900,
+  "altText": "…", "processingStatus": "pending", "processingError": null,
+  "createdAt": "…", "variants": [] } }
+```
+
+A client needing a `srcset` re-reads the asset once processing completes; `variants` is empty until
+then, and consumers render the original at full size rather than a half-built `srcset`.
+
+**Article responses carry a resolved `media` map** keyed by media id, covering every image block plus
+`og:image`. That is what lets the renderer resolve an image with a lookup instead of a request per
+figure on the cached read path.
 
 ## 6. Contracts & types
 

@@ -87,9 +87,25 @@ the tombstone row. Chains are collapsed on write, so a live redirect always poin
 
 ### media
 
-**media_assets** (id, storage_key, url, mime_type, byte_size, width, height, alt_text, checksum,
-uploaded_by, + audit).
-**media_variants** (id, media_asset_id, variant, width, height, url) — responsive sizes.
+**media_assets** (id, storage_key, file_name, mime_type, byte_size, width, height, alt_text,
+checksum, processing_status, processing_error, uploaded_by, + audit).
+
+* `storage_key` — generated, never derived from the uploader's filename (ADR-0011). Unique, filtered
+  on `is_deleted = false`.
+* `file_name` — the uploader's name, kept for display in the picker only.
+* `checksum` — SHA-256 of the **stored** bytes, not the uploaded ones: after re-encoding, the upload
+  is no longer what we hold, so hashing the input would describe a file that does not exist.
+  Indexed but **not unique** — two articles legitimately use the same image.
+* `processing_status` — `Pending` / `Ready` / `Failed`. Variants arrive from a background job, so an
+  asset is usable at full size before it is responsive. `Failed` still serves the original: a failed
+  resize must not cost an author their upload.
+* No `url` column: a URL is composed from the key and current storage configuration. Persisting one
+  would go stale the moment the CDN or bucket moves.
+
+**media_variants** (id, media_asset_id, name, storage_key, width, height, byte_size, + audit) —
+responsive sizes. Unique on `(media_asset_id, name)`, **filtered on `is_deleted = false`**: deletes
+are soft, so an unfiltered unique index would make a regenerated variant collide with its own
+tombstone.
 
 ### search
 

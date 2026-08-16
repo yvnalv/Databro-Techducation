@@ -30,6 +30,7 @@ export {
   rendererOptionsKey,
   nestingDepthKey,
   defaultMediaResolver,
+  mediaResolverFor,
   defaultRendererOptions,
   MAX_NESTING_DEPTH,
   type MediaResolver,

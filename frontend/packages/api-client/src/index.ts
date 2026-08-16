@@ -11,6 +11,7 @@ import type {
   CategoryWithAncestors,
   Paged,
   PageMeta,
+  MediaAsset,
   Redirect,
   SearchMatchMode,
   SearchResults,
@@ -355,6 +356,57 @@ export class ApiClient {
   deleteTag(id: string): Promise<unknown> {
     return this.request<unknown>(`/api/v1/authoring/tags/${encodeURIComponent(id)}`, {
       method: "DELETE",
+    });
+  }
+
+  // ---- Media (Media.Upload; ADR-0011) ----
+
+  /**
+   * Uploads an image.
+   *
+   * `Content-Type` is deliberately **not** set: the browser must set it itself so it can append the
+   * multipart boundary, and setting it by hand produces a body the server cannot parse. The API
+   * ignores the declared type anyway and identifies the file by its magic bytes.
+   *
+   * Resolves as soon as the original is stored. `processingStatus` is `pending` until the variant
+   * job finishes, so a caller that needs a `srcset` polls {@link getMediaAsset}.
+   */
+  uploadMedia(file: File, altText?: string): Promise<MediaAsset> {
+    const form = new FormData();
+    form.append("file", file);
+    if (altText) form.append("altText", altText);
+
+    return this.request<MediaAsset>("/api/v1/media", { method: "POST", body: form });
+  }
+
+  async listMedia(params?: { page?: number; pageSize?: number }): Promise<Paged<MediaAsset>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<MediaAsset[]>(`/api/v1/media${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getMediaAsset(id: string): Promise<MediaAsset> {
+    return this.request<MediaAsset>(`/api/v1/media/${encodeURIComponent(id)}`);
+  }
+
+  updateMedia(id: string, altText: string): Promise<MediaAsset> {
+    return this.request<MediaAsset>(`/api/v1/media/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ altText }),
     });
   }
 

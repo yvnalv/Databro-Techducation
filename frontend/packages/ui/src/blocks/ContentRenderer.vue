@@ -20,16 +20,19 @@ const props = withDefaults(
     document: ContentDocument;
     /** Show a placeholder for unrenderable block types. Off for readers, on for CMS preview. */
     showUnknownBlocks?: boolean;
-    /** Resolves an ImageBlock mediaId to a URL. Supplied once the Media module exists. */
-    resolveMediaUrl?: MediaResolver;
+    /**
+     * Resolves an ImageBlock's `mediaId` to a renderable asset. Hosts usually pass
+     * {@link mediaResolverFor} over the `media` map the API ships with the article.
+     */
+    resolveMedia?: MediaResolver;
   }>(),
-  { showUnknownBlocks: false, resolveMediaUrl: undefined },
+  { showUnknownBlocks: false, resolveMedia: undefined },
 );
 
 // Provided rather than prop-drilled: only some leaf blocks need these, and threading them
 // through every block component would couple all ten to concerns two of them have.
 // Both stay reactive - a captured value would freeze the CMS preview's toggle.
-provide(mediaResolverKey, (mediaId: string) => (props.resolveMediaUrl ?? defaultMediaResolver)(mediaId));
+provide(mediaResolverKey, (mediaId: string) => (props.resolveMedia ?? defaultMediaResolver)(mediaId));
 provide(rendererOptionsKey, reactive({ showUnknownBlocks: computed(() => props.showUnknownBlocks) }));
 </script>
 

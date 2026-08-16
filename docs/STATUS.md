@@ -21,7 +21,7 @@ The [ROADMAP](ROADMAP.md) exit criterion is one compound sentence, and it is not
 | version | ⚠️ versions are written on every publish, but there is **no UI to view or restore** one |
 | schedule | ⚠️ the API and Hangfire sweep work; **the CMS has no scheduling control**, so an editor cannot do this |
 | publish | ✅ |
-| SEO-complete | ✅ — except `og:image`, which needs Media |
+| SEO-complete | ✅ including `og:image`, Twitter card and JSON-LD `image` |
 | indexed | ✅ sitemap, robots, feed, JSON-LD |
 | searchable | ✅ PostgreSQL FTS |
 | served fast | ✅ SSG/ISR |
@@ -47,11 +47,20 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
 
 ## In progress
 
-* Discovery and search are done. What stands between here and the Phase 1 exit criterion is **Media**
-  (the image block and `og:image` are both unusable without it), the **scheduling and version-history
-  controls** in the CMS, and **CI**.
+* Media is done. What is left before the Phase 1 exit criterion is the **scheduling and
+  version-history controls** in the CMS — both APIs exist, so it is UI-only work — followed by **CI**
+  and a staging deploy.
 
 ## Recently done
+
+* **Media module** ([ADR-0011](adr/0011-media-storage-and-image-processing.md)). Upload to
+  S3-compatible storage (MinIO dev / Spaces prod), images **re-encoded before storing** so the bytes
+  are always ours, EXIF stripped, format from magic bytes, generated storage keys, decompression-bomb
+  check on header dimensions. Responsive variants in a Hangfire job. Content resolves media ids
+  through `IMediaDirectory` in Platform and ships a resolved map with the article, so the renderer
+  does a lookup rather than a request per figure. CMS gets an upload-or-choose picker; the site gets
+  real `srcset`/`sizes` and a working `og:image`. 29 Media tests plus renderer coverage; the full
+  path verified against the running stack including rejection of an executable renamed `.jpg`.
 
 * **PostgreSQL full-text search** ([ADR-0010](adr/0010-fts-lives-in-content.md)). Implemented inside
   **Content**, not the Search module: a `tsvector GENERATED ALWAYS … STORED` column on `articles`,
@@ -101,14 +110,12 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
 
 ## Next up (proposed order)
 
-1. **Media upload** to MinIO/Spaces with responsive variants — the last unbuilt Phase 1 module, and
-   the reason the editor's image block and `og:image` are both dead controls today.
-2. **CMS scheduling + version history/restore** — both APIs already exist; this is UI-only work and
+1. **CMS scheduling + version history/restore** — both APIs already exist; this is UI-only work and
    it is what literally closes the exit criterion.
-3. **CI pipeline** (build/test + architecture-fitness gate). 129 backend tests and 11 client tests
+2. **CI pipeline** (build/test + architecture-fitness gate). 158 backend tests and 81 frontend tests
    exist and nothing runs them on push.
-4. Staging deploy on DigitalOcean.
-5. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
+3. Staging deploy on DigitalOcean.
+4. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
    real Search module).
 
 ## Known gaps / deferred
@@ -127,9 +134,18 @@ searchable" as the whole criterion and skipped the four verbs in front of it —
   highlighter drops in later without touching page code.
 * **Authoring UI works end to end.** Sign-in, route guard, dashboard shell, article list, and a
   block editor with Tiptap rich text and live preview. An article can be written, saved, published
-  and read on the public site without touching a script. Taxonomy has a management screen too. Remaining gaps: no
-  table/grid editor (table blocks render but have no form), no media upload, and no version history
-  or restore.
+  and read on the public site without touching a script. Taxonomy and media both have UI. Remaining
+  gaps: no table/grid editor (table blocks render but have no form), **no scheduling control**, and
+  **no version history or restore** — the last two have working APIs and are what still blocks the
+  Phase 1 exit criterion.
+* **ImageSharp's licence must be re-checked before commercial launch.** The Six Labors Split License
+  is free for open source and organisations under $1M revenue, which is DataBro today. It is confined
+  behind `IImageProcessor` precisely because it is the most likely dependency to need swapping.
+* **No orphan sweep for media.** Deleting an asset soft-deletes the row and deliberately leaves the
+  stored objects, since a published article may still reference them. Reclaiming bytes needs
+  something that tracks which content references which asset — it does not exist yet.
+* **Media has no integration event.** `MediaUploaded` is unbuilt because nothing consumes one and the
+  outbox does not exist.
 * **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
   `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
   proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.

@@ -49,8 +49,31 @@ authorization, data protection, and abuse prevention.
 * All input validated server-side (never trust the client).
 * Content blocks are sanitized on render: rich-text marks are allowlisted; `embed` blocks only render
   **allowlisted providers**; no arbitrary HTML/iframes/script. Prevents stored XSS via authored content.
-* File uploads: validate MIME/type/size; store in DO Spaces with generated keys; never execute; serve
-  from a separate origin/CDN.
+### File uploads (implemented — [ADR-0011](adr/0011-media-storage-and-image-processing.md))
+
+File upload is the single most abused endpoint shape on the web, and "an Author is a trusted user"
+is not a security model. The defences, and what each one is actually for:
+
+* **Identified by magic bytes.** The `Content-Type` header and the filename extension are both
+  supplied by the caller, and the caller uploading something hostile is exactly the one who will lie
+  about them. Neither is consulted.
+* **Re-encoded, never passed through.** Validating an upload and then storing the original still
+  stores the original: a polyglot that is a valid JPEG *and* a valid HTML document passes every
+  header check and is then served from our domain. Decoding to pixels and re-encoding cannot carry
+  the non-image portion. This is the load-bearing defence — the allowlist alone is not.
+* **EXIF, IPTC and XMP stripped.** A phone photo routinely carries GPS coordinates; an author
+  dragging one into the editor is not consenting to publish their location.
+* **No SVG.** It is XML, it can execute script, and unlike a raster format it cannot be neutralised
+  by re-encoding. If vector assets are ever needed they get their own decision and sanitiser.
+* **Dimensions read from the header before decoding.** The byte limit does not catch a decompression
+  bomb: a 100 MB flat-colour PNG is a few hundred KB compressed and roughly 14 GB decoded. Caps are
+  10 MB, 12,000px per side, and 50 megapixels — the last catches shapes the per-side cap misses.
+* **Storage keys are generated**, never derived from the client's filename, so a filename of
+  `../../../etc/passwd.php` cannot influence where anything lands or what it is called.
+* **Served from a separate origin** (object storage / CDN), never from the API's, so a stored file
+  can never inherit the API's origin privileges.
+* Uploading requires `Media.Upload`; the library listing requires it too — the *files* are public,
+  the index of them is not.
 
 ## 6. Web app protections
 

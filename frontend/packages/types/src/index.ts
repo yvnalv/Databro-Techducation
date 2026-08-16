@@ -253,6 +253,44 @@ export interface ArticleSummary {
   tags: TaxonomyTerm[];
 }
 
+// ---- Media (ADR-0011) ----
+
+export type MediaProcessingStatus = "pending" | "ready" | "failed";
+
+export interface MediaVariant {
+  /** The variant's width as a string — "640". Also its name in storage. */
+  name: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * A media reference resolved for rendering.
+ *
+ * `variants` is empty while an asset is still processing: the original renders at full size and the
+ * `srcset` is simply omitted, never a broken image.
+ */
+export interface MediaRef {
+  url: string;
+  altText: string;
+  width: number;
+  height: number;
+  variants: MediaVariant[];
+}
+
+/** The full asset as the CMS library sees it. The public site only ever needs {@link MediaRef}. */
+export interface MediaAsset extends MediaRef {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  byteSize: number;
+  processingStatus: MediaProcessingStatus;
+  /** Why variant generation failed. Null unless `processingStatus` is `failed`. */
+  processingError: string | null;
+  createdAt: string;
+}
+
 export interface Article extends ArticleSummary {
   /** Narrows the summary's author to the richer detail shape. */
   author: AuthorProfile | null;
@@ -260,6 +298,12 @@ export interface Article extends ArticleSummary {
   seo: SeoMetadata;
   currentVersion: number;
   scheduledFor?: string;
+  /**
+   * Every media id this article references — image blocks and `og:image` — resolved to URLs and
+   * keyed by id. Shipped with the article so the renderer needs no second request. An id missing
+   * from the map is one whose asset is gone; render a placeholder, not a broken image.
+   */
+  media: Record<string, MediaRef>;
 }
 
 /**

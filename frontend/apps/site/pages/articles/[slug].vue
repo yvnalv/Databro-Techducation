@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentRenderer, DbChip, buildToc } from "@databro/ui";
+import { ContentRenderer, DbChip, buildToc, mediaResolverFor } from "@databro/ui";
 import type { Article } from "@databro/types";
 
 const { t, locale } = useI18n();
@@ -31,6 +31,9 @@ if (error.value || !article.value) {
 }
 
 const published = article.value;
+
+// Resolves image blocks against the map the API shipped with the article (ADR-0011).
+const resolveMedia = mediaResolverFor(published.media);
 
 useArticleSeo(published);
 
@@ -134,7 +137,9 @@ const hasToc = computed(() => toc.value.length >= 2);
     <!-- The class is referenced by the JSON-LD `hasPart.cssSelector` that declares the gated
          region to search engines - keep the two in step (see useArticleSeo). -->
     <div :class="isPremium ? 'databro-premium-body' : undefined" class="mt-10">
-      <ContentRenderer :document="published.content" />
+      <!-- The media map ships with the article, so resolving an image is a lookup rather than a
+           request per figure on the cached read path (ADR-0011). -->
+      <ContentRenderer :document="published.content" :resolve-media="resolveMedia" />
     </div>
 
     <AuthorCard v-if="published.author" :author="published.author" class="mt-14" />

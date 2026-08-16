@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import type { ContentDocument } from "@databro/types";
 import ContentRenderer from "./ContentRenderer.vue";
 import { SUPPORTED_BLOCK_TYPES } from "../index";
+import { mediaResolverFor } from "./context";
 
 function doc(blocks: ContentDocument["blocks"]): ContentDocument {
   return { version: 1, blocks };
@@ -102,7 +103,9 @@ describe("ContentRenderer", () => {
     expect(wrapper.find("hr").exists()).toBe(true);
   });
 
-  it("falls back to a placeholder for images until Media can resolve the id", () => {
+  it("falls back to a placeholder when an id cannot be resolved", () => {
+    // A deleted asset, or a host that supplied no resolver. Either way a reader must not see a
+    // broken image, and the caption must survive.
     const wrapper = mount(ContentRenderer, {
       props: { document: doc([{ id: "i", type: "image", data: { mediaId: "abc", alt: "A diagram" } }]) },
     });
@@ -114,13 +117,64 @@ describe("ContentRenderer", () => {
     const wrapper = mount(ContentRenderer, {
       props: {
         document: doc([{ id: "i", type: "image", data: { mediaId: "abc", alt: "A diagram" } }]),
-        resolveMediaUrl: (id: string) => `https://cdn.example/${id}.png`,
+        resolveMedia: mediaResolverFor({
+          abc: { url: "https://cdn.example/abc.png", altText: "stored alt", width: 1600, height: 900, variants: [] },
+        }),
       },
     });
     const img = wrapper.get("img");
     expect(img.attributes("src")).toBe("https://cdn.example/abc.png");
-    expect(img.attributes("alt")).toBe("A diagram");
     expect(img.attributes("loading")).toBe("lazy");
+    // Intrinsic dimensions prevent the layout shift a lazy image otherwise causes.
+    expect(img.attributes("width")).toBe("1600");
+    expect(img.attributes("height")).toBe("900");
+    // The block's alt wins over the asset's: the same image means different things in different
+    // articles, and the block-level text is the one written for this context.
+    expect(img.attributes("alt")).toBe("A diagram");
+  });
+
+  it("emits a srcset from the asset's variants, widest candidate last", () => {
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([{ id: "i", type: "image", data: { mediaId: "abc", alt: "A diagram" } }]),
+        resolveMedia: mediaResolverFor({
+          abc: {
+            url: "https://cdn.example/original.jpg",
+            altText: "",
+            width: 1600,
+            height: 900,
+            variants: [
+              { name: "640", url: "https://cdn.example/640.jpg", width: 640, height: 360 },
+              { name: "960", url: "https://cdn.example/960.jpg", width: 960, height: 540 },
+            ],
+          },
+        }),
+      },
+    });
+
+    const img = wrapper.get("img");
+    expect(img.attributes("srcset")).toBe(
+      "https://cdn.example/640.jpg 640w, https://cdn.example/960.jpg 960w, https://cdn.example/original.jpg 1600w",
+    );
+    expect(img.attributes("sizes")).toBeTruthy();
+  });
+
+  it("omits srcset entirely while an asset is still processing", () => {
+    // Variants arrive from a background job (ADR-0011). A half-built srcset would be worse than
+    // none: the browser would have no candidate wide enough and pick badly.
+    const wrapper = mount(ContentRenderer, {
+      props: {
+        document: doc([{ id: "i", type: "image", data: { mediaId: "abc", alt: "A diagram" } }]),
+        resolveMedia: mediaResolverFor({
+          abc: { url: "https://cdn.example/original.jpg", altText: "", width: 1600, height: 900, variants: [] },
+        }),
+      },
+    });
+
+    const img = wrapper.get("img");
+    expect(img.attributes("src")).toBe("https://cdn.example/original.jpg");
+    expect(img.attributes("srcset")).toBeUndefined();
+    expect(img.attributes("sizes")).toBeUndefined();
   });
 
   // Unknown blocks: content outlives renderers, so this must degrade, never throw.

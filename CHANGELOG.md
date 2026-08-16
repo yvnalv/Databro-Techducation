@@ -1,5 +1,62 @@
 # DataBro Changelog
 
+## [2026-08-16 13:48:11 UTC]
+
+CHG-0027 — Media module: upload, storage and responsive images (ADR-0011)
+
+The last unbuilt Phase 1 module. It closes two features that shipped dead: the editor's image block
+had no way to get an image, and `og:image` could never be set, so every share card fell back to
+nothing.
+
+- **ADR-0011** covers three decisions that constrain each other: where bytes live, how variants are
+  produced, and what we accept from an authenticated uploader.
+- **One S3 adapter for both environments.** MinIO in development, DigitalOcean Spaces in production —
+  they differ by endpoint and credentials, not by API, so the upload path is exercised locally
+  exactly as it runs live.
+- **Images are re-encoded before anything is stored, and that is the security decision.** Validating
+  an upload and then storing the original still stores the original: a polyglot file that is a valid
+  JPEG *and* a valid HTML document passes every header check and is then served from our domain.
+  Decoding to pixels and re-encoding cannot carry the non-image portion, because it was never pixels.
+  A test asserts exactly this against a real PNG with a `<script>` tag appended.
+- **EXIF, IPTC and XMP are stripped.** Privacy, not size: a phone photo routinely carries GPS
+  coordinates, and an author dragging one into the editor is not consenting to publish their
+  location.
+- **Format comes from magic bytes.** The `Content-Type` header and the filename extension are both
+  attacker-controlled. Verified against the live endpoint: an executable renamed `cat.jpg` is
+  refused, and so is an SVG — SVG is XML, executes script, and cannot be neutralised by re-encoding.
+- **Decompression bombs are caught on header dimensions, before any decode.** The byte limit does not
+  catch them at all: a 100 MB flat-colour PNG is a few hundred KB compressed and roughly 14 GB
+  decoded. Caps are 10 MB, 12,000px per side, and 50 megapixels — the last catches the shape the
+  per-side cap misses (11,000 × 11,000 passes it and is still 121 megapixels).
+- **Storage keys are generated**, never derived from the client's filename. A test uploads
+  `../../../etc/passwd.php` and asserts the key contains none of it.
+- **Variants run in a Hangfire job** so the upload request returns at once. An asset is usable at
+  full size while `Pending` and gains a `srcset` when `Ready`; a failed resize leaves the original
+  serving rather than costing an author their upload. Never upscales — a 640px original does not get
+  sharper by being written out at 1920px.
+- **Content resolves media ids through `IMediaDirectory` in Platform**, the same cross-module pattern
+  as `IUserDirectory` (ADR-0008), and ships a resolved map with the article DTO. Resolution is a
+  lookup rather than a request per figure on the cached read path.
+- Site: real `srcset`/`sizes`, intrinsic `width`/`height` to prevent layout shift, and a working
+  `og:image` with `twitter:card` following what is actually available plus JSON-LD `image`.
+- CMS: an upload-or-choose picker, with a session cache so a just-uploaded image renders in the live
+  preview instead of waiting for save-and-reload.
+- **Two schema details worth recording.** The unique indexes on `media_variants(media_asset_id, name)`
+  and `media_assets(storage_key)` are filtered on `is_deleted = false`, because deletes here are soft
+  and a regenerated variant would otherwise collide with its own tombstone. And `SetVariants`
+  reconciles in place rather than clear-and-re-add, matching `Article.SetTags` — the job retries, so
+  it must converge rather than accumulate.
+- Also corrects STATUS, which had claimed the Phase 1 exit criteria were met: that read the criterion
+  as "indexed and searchable" and skipped the four verbs in front of it. Scheduling and version
+  history have working APIs but no CMS controls, so an editor still cannot do either.
+- Tests: 29 Media tests (sniffing, polyglot, EXIF, bomb, key generation, variant convergence, failure
+  handling), 4 renderer tests for `srcset` behaviour. Backend 158 green including the
+  architecture-fitness gate; frontend 81 green; clean typecheck across five workspaces. Verified
+  end to end on the running stack: upload → re-encode → three variants → published article rendering
+  a responsive image with a working share card.
+
+---
+
 ## [2026-08-16 08:07:46 UTC]
 
 CHG-0026 — PostgreSQL full-text search (ADR-0010)

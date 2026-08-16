@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentRenderer, DbButton, DbChip, DbInput } from "@databro/ui";
+import { ContentRenderer, DbButton, DbChip, DbInput, mediaResolverFor } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
 import type { Article, Category, ContentDocument, TaxonomyTerm } from "@databro/types";
 
@@ -43,6 +43,11 @@ const tagIds = ref<string[]>(article.value?.tags.map((t) => t.id) ?? []);
 const metaTitle = ref(article.value?.seo?.metaTitle ?? "");
 const metaDescription = ref(article.value?.seo?.metaDescription ?? "");
 const content = ref<ContentDocument>(article.value?.content ?? { version: 1, blocks: [] });
+
+// The preview resolves images through the article's saved media map *plus* anything picked in this
+// session, so an image just uploaded renders immediately instead of after a save-and-reload.
+const { merged } = useMediaCache();
+const resolveMedia = computed(() => mediaResolverFor(merged(article.value?.media)));
 
 const saving = ref(false);
 const publishing = ref(false);
@@ -246,7 +251,11 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
             <hr class="my-4 border-line" />
             <!-- showUnknownBlocks: an author must see that a block exists even when this build
                  cannot render it; a reader must not (CONTENT_MODEL invariants). -->
-            <ContentRenderer :document="content" show-unknown-blocks />
+            <ContentRenderer
+              :document="content"
+              :resolve-media="resolveMedia"
+              show-unknown-blocks
+            />
           </div>
         </div>
       </aside>
