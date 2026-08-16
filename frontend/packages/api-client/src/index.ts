@@ -5,12 +5,14 @@ import type {
   ApiResponse,
   Article,
   ArticleSummary,
+  AuthTokens,
   Category,
   CategoryWithAncestors,
   Paged,
   PageMeta,
   Redirect,
   TaxonomyTerm,
+  UserProfile,
 } from "@databro/types";
 
 export class ApiClientError extends Error {
@@ -145,6 +147,80 @@ export class ApiClient {
 
   getTag(slug: string): Promise<TaxonomyTerm> {
     return this.request<TaxonomyTerm>(`/api/v1/tags/${encodeURIComponent(slug)}`);
+  }
+
+  // ---- Auth ----
+  // Deliberately not wrapped in the token-bearing paths below: login and refresh are how a token is
+  // obtained, so they must work without one.
+
+  login(email: string, password: string): Promise<AuthTokens> {
+    return this.request<AuthTokens>("/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  refresh(refreshToken: string): Promise<AuthTokens> {
+    return this.request<AuthTokens>("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  }
+
+  /** The signed-in user. Requires a bearer token, so it doubles as a session probe. */
+  me(): Promise<UserProfile> {
+    return this.request<UserProfile>("/api/v1/me");
+  }
+
+  // ---- Authoring ----
+  // Everything here requires a permission (docs/SECURITY.md §2); an unauthenticated call is a 401
+  // and an under-privileged one a 403, both surfaced as ApiClientError with those statuses.
+
+  /**
+   * Articles across every status — the CMS list. Distinct from the public `listArticles`, which
+   * serves only published content and is the cached, indexable surface.
+   */
+  async listAuthoringArticles(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<Paged<ArticleSummary>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<ArticleSummary[]>(
+      `/api/v1/authoring/articles${suffix}`,
+    );
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  /** Full article by id, including the *draft* blocks — what the editor loads. */
+  getAuthoringArticle(id: string): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}`);
+  }
+
+  publishArticle(id: string): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}/publish`, {
+      method: "POST",
+    });
+  }
+
+  unpublishArticle(id: string): Promise<Article> {
+    return this.request<Article>(`/api/v1/authoring/articles/${encodeURIComponent(id)}/unpublish`, {
+      method: "POST",
+    });
   }
 
   // ---- Redirects ----

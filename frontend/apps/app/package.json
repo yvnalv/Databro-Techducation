@@ -14,7 +14,11 @@
     "@databro/api-client": "workspace:*",
     "@databro/types": "workspace:*",
     "@databro/ui": "workspace:*",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@nuxtjs/i18n": "^10.5.0",
+    "katex": "^0.18.1",
     "nuxt": "^4.0.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"

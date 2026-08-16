@@ -84,8 +84,12 @@ and scheduled publishing next**.
   gate on until Billing (Phase 3). Reserved, not enforced.
 * **Syntax highlighting is not wired.** Code blocks emit the standard `language-*` markup so a
   highlighter drops in later without touching page code.
-* **No authoring UI.** Articles and taxonomy are API-only; `apps/app` is still a stub. This is the
-  binding constraint on content production and the reason the CMS editor is next.
+* **Authoring UI is partial.** `apps/app` now has sign-in, a route guard, the dashboard shell and a
+  read-only article list. The **block editor is not built**, so articles still cannot be written
+  through the UI — that is the remaining half of the binding constraint.
+* **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
+  `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
+  proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.
 * Inline rich text is renderable but not yet *authorable* — the editor lands with the CMS slice.
 * **Hangfire** now runs the scheduled-publish sweep (PostgreSQL storage). Redis is still provisioned
   but unused. The scheduled-publish failure "alert" is a logged error for now — it becomes a real

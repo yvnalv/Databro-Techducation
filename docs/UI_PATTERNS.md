@@ -200,7 +200,7 @@ sidebar + main split.
   edit/delete icon buttons in tinted squares. Footer has "Showing 1 to 8 of 20 entries" and numbered
   pagination.
 
-DataBro CMS mapping:
+DataBro CMS mapping (**shell, auth and article list implemented**; editor next):
 
 * Same sidebar + main shell, **without** the gradient/overlap flourish — the CMS is a tool, and the
   overlap costs vertical space on the surface where density matters.

@@ -262,6 +262,23 @@ export interface Article extends ArticleSummary {
   scheduledFor?: string;
 }
 
+// ---- Auth (docs/API_SPEC.md §5 Auth, docs/SECURITY.md §1) ----
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresInSeconds: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  emailConfirmed: boolean;
+  /** Role names. Permissions live in the JWT; the UI branches on roles for coarse affordances. */
+  roles: string[];
+}
+
 // ---- Paging ----
 
 /**

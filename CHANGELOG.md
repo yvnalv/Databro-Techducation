@@ -1,5 +1,43 @@
 # DataBro Changelog
 
+## [2026-08-16 05:55:00 UTC]
+
+CHG-0021 — CMS foundation: authentication, dashboard shell, article list
+
+First half of the authoring UI. `apps/app` was a stub that rendered "Learner app"; it now signs a
+user in and lists articles. The block editor is the next slice.
+
+- **Session** in a `useAuth` composable: cookie-backed (not `localStorage`, because SSR has to read
+  the token — otherwise every authenticated page renders empty and re-fetches on the client), with
+  refresh-on-401-and-retry. Only a 401 triggers a refresh: a 403 means the token is fine and the role
+  is not, so refreshing would loop without ever fixing it.
+- **Cookies are not `httpOnly`** — the app sets them from JS, so they cannot be. Mitigated with
+  `sameSite=strict`, `secure` outside development, a short access-token lifetime, and the renderer's
+  refusal to inject author content as HTML. The real hardening is a backend-for-frontend that proxies
+  login and sets cookies the browser never reads; recorded in STATUS as a deliberate follow-up rather
+  than left as a silent gap.
+- **Global route guard**, not per-page: the CMS is authenticated by default, so forgetting a
+  `definePageMeta` must not expose a page. It is a UX guard, not a security boundary — the API
+  enforces permissions on every request. It also probes the session, so an expired cookie lands on
+  the login screen instead of a page full of failed requests, and carries the intended destination
+  through login.
+- **Login** rejects with an identical message for a wrong password and an unknown address, so the
+  form is not an account-enumeration oracle, and only accepts same-origin redirect targets.
+- **Dashboard shell** — sidebar + main, per the reference, minus its gradient band and overlapping
+  profile card: the CMS is a tool, and that flourish costs vertical space where density matters.
+- **Article list** reads the *authoring* endpoint (every status), distinct from the public listing
+  (published only, cached, indexable). Dark table header — the one sanctioned use of it
+  (DESIGN_SYSTEM §5.7). Status chips carry the status word as well as the tint.
+- Stat cards label their own scope (`this page` vs `all pages`) rather than deriving a total from one
+  page and presenting it as a total, which would be wrong the moment there is a second page.
+- The CMS reuses the site's tokens, fonts and `@databro/ui` primitives — it is a different surface,
+  not a different product, and a second design language would be a second thing to maintain.
+- Verified in the containerised stack: unauthenticated `/` 302s to `/login?redirect=/`, and an
+  authenticated request server-renders the dashboard with real rows, the signed-in user, stat cards
+  and pagination. 68 frontend tests, clean typecheck, both apps build.
+
+---
+
 ## [2026-08-16 05:40:00 UTC]
 
 CHG-0020 — Two-column reading layout with a table of contents
