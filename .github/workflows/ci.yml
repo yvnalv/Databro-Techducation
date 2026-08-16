@@ -1,0 +1,185 @@
+name: CI
+
+# Runs on every push to main and every pull request. The two stacks are independent, so their jobs
+# run in parallel rather than in sequence — a backend failure should not hide a frontend one.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch makes the first run's answer irrelevant. Cancel it rather than
+# paying for both. `main` is excluded: its runs are the record of what was merged.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (.NET 9)
+    runs-on: ubuntu-latest
+    # Integration tests spin up PostgreSQL through Testcontainers and the image pull dominates the
+    # first run. Generous, but bounded: a hung test should fail, not run for six hours.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # From global.json, so CI and a developer's machine cannot drift onto different SDKs.
+          global-json-file: backend/global.json
+
+      # Restore is its own step so a dependency failure is legible in the log rather than buried in
+      # a build. `--locked-mode` is deliberately absent: this repo has no lock file yet, and
+      # pretending otherwise would fail every run.
+      - name: Restore
+        run: dotnet restore backend/DataBro.sln
+
+      - name: Build
+        run: dotnet build backend/DataBro.sln --no-restore --configuration Release
+
+      # Covers three things at once: unit tests, integration tests against a real PostgreSQL
+      # container, and the NetArchTest fitness rules that enforce module boundaries
+      # (docs/ARCHITECTURE.md). The fitness tests are the reason this gate matters most — a
+      # boundary violation compiles perfectly and is invisible in review.
+      # No fixed LogFileName: the solution has three test projects, and a fixed name makes each
+      # overwrite the last, leaving a single file that looks like a complete result and is not.
+      # The default naming is unique per project.
+      - name: Test
+        run: >
+          dotnet test backend/DataBro.sln
+          --no-build
+          --configuration Release
+          --logger trx
+          --results-directory artifacts/test-results
+
+      - name: Upload test results
+        if: always() # The failing run is the one whose results are worth reading.
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: artifacts/test-results
+          retention-days: 7
+
+  frontend:
+    name: Frontend (Node 24 / pnpm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # No version pinned here on purpose: the action reads `packageManager` from package.json, so
+      # the version lives in exactly one place.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # --frozen-lockfile fails rather than silently updating the lock file, so CI installs exactly
+      # what a developer committed.
+      #
+      # Both Nuxt apps run `nuxt prepare` from a postinstall hook, which generates
+      # .nuxt/tsconfig.json and the auto-import types. Without those the app typechecks pass
+      # vacuously — that is precisely how a route rule that was never valid shipped once before —
+      # so this step is load-bearing for the one after next, not just for node_modules.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Fails loudly if the postinstall hook ever stops running: a vacuous typecheck is worse than
+      # no typecheck, because it reports success.
+      - name: Verify Nuxt types were generated
+        run: |
+          for app in apps/site apps/app; do
+            if [ ! -f "$app/.nuxt/tsconfig.json" ]; then
+              echo "::error::$app/.nuxt/tsconfig.json is missing. The nuxt prepare postinstall hook"
+              echo "::error::did not run, and the typecheck below would pass without checking anything."
+              exit 1
+            fi
+          done
+          echo "Nuxt types present for both apps."
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r test
+
+  images:
+    name: Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Only after both stacks are green: an image built from code that does not compile tells us
+    # nothing we did not already know, and image builds are the slowest thing here.
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Builds only, never pushed. The point is catching Dockerfile rot — a missing stage, a broken
+      # COPY path — before a deploy does. Publishing images is the deploy pipeline's job.
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          target: runtime
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build CMS image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          target: runtime
+          build-args: APP=app
+          push: false
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+
+      - name: Build site image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          target: runtime
+          build-args: APP=site
+          push: false
+          load: true # Needed so the guard below can inspect the built image.
+          tags: databro-site:ci
+          cache-from: type=gha,scope=site
+          cache-to: type=gha,mode=max,scope=site
+
+      # Regression guard for a real deployment landmine.
+      #
+      # The homepage was configured `prerender: true`, so `nuxt build` rendered it at image-build
+      # time — when no API is reachable. The image shipped with the "we could not load the articles"
+      # fallback baked in, containing zero article links, and a prerendered page is never
+      # re-rendered, so it would have served that error forever.
+      #
+      # Nothing on this site can be correctly prerendered at image-build time: every page's content
+      # comes from the API. If prerendered HTML appears here, someone has reintroduced the bug.
+      - name: Fail if any page was prerendered without an API
+        run: |
+          baked=$(docker run --rm --entrypoint sh databro-site:ci -c \
+            'find /app/public -name "*.html" 2>/dev/null | head -20')
+          if [ -n "$baked" ]; then
+            echo "::error::Prerendered HTML found in the site image. It was rendered without a"
+            echo "::error::reachable API and would ship a broken page. Use ISR, not prerender."
+            echo "$baked"
+            exit 1
+          fi
+          echo "No prerendered HTML in the image — correct."

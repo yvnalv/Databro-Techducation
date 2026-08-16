@@ -1,5 +1,45 @@
 # DataBro Changelog
 
+## [2026-08-16 16:30:59 UTC]
+
+CHG-0029 — CI, and a broken homepage caught on its way to production
+
+- **`.github/workflows/ci.yml`** — the repo had 261 tests and nothing running them on push. Three
+  jobs: `backend` (Release build + all 180 tests, including the architecture-fitness rules) and
+  `frontend` (frozen-lockfile install, typecheck, 81 tests) in parallel, then `images`.
+- The fitness rules are why this gate matters most: a module-boundary violation compiles perfectly
+  and is invisible in review.
+- **Every CI command was run locally before committing**, which caught two mistakes that would have
+  failed the first run: `pnpm -r --if-present exec` is not valid (`--if-present` applies to `run`,
+  not `exec`), and a fixed `LogFileName` made all three test projects overwrite each other's TRX,
+  leaving one file that looks like a complete result and is not.
+- CI verifies `.nuxt/tsconfig.json` exists before typechecking. Without it the app typechecks pass
+  **vacuously** — worse than not running them, because they report success — and that is exactly how
+  a route rule that was never valid shipped once before.
+
+**The find:** the production site image shipped a permanently broken homepage.
+
+- `routeRules: { "/": { prerender: true } }` means `nuxt build` renders the homepage at image-build
+  time. No API is reachable then, so the HTML baked into the image was the "we could not load the
+  articles right now" fallback containing **zero article links** — and a prerendered page is never
+  re-rendered, so it would have served that until the next deploy.
+- This had never been exercised: the containers run the `dev` target, so nothing had ever built the
+  production image. It was found by building it deliberately while wiring the `images` job, then
+  extracting `.output/public/index.html` and reading it.
+- Fixed by moving `/` to `isr: 600`, joining the article, category and tag routes. That also fixes a
+  second bug hiding behind the first: a prerendered homepage would never show a newly published
+  article until someone redeployed.
+- CI now fails if any prerendered HTML appears in the site image. Nothing here can be correctly
+  prerendered at image-build time — every page's content comes from the API. The guard was tested
+  in both directions: it passes on the fixed image and trips on a deliberately poisoned one.
+- Also recorded in DEPLOYMENT: auto-migration is `IsDevelopment()`-gated, so a deployed environment
+  will not migrate itself and the deploy's migration step is the only thing that will apply schema
+  changes.
+- Not in CI and now explicit in STATUS: **no linter exists in the repo**, so the root `lint` script
+  is a no-op; and no vulnerability scan.
+
+---
+
 ## [2026-08-16 16:19:52 UTC]
 
 CHG-0028 — Scheduling and version history in the CMS, and a draft-content leak closed

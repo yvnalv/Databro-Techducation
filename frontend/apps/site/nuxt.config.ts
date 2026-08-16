@@ -65,7 +65,12 @@ export default defineNuxtConfig({
 
   // Hybrid rendering: static content, revalidated periodically (ISR).
   routeRules: {
-    "/": { prerender: true },
+    // ISR, **not** `prerender: true`. Prerendering runs at image-build time, when no API is
+    // reachable — so the shipped HTML was the "we could not load the articles" fallback with zero
+    // article links, served forever because a prerendered page is never re-rendered. It was also
+    // wrong on its own terms: a homepage listing the latest articles cannot be frozen at build time
+    // or publishing something new would never appear until the next deploy.
+    "/": { isr: 600 },
     "/articles/**": { isr: 3600 },
     "/categories/**": { isr: 3600 },
     "/tags/**": { isr: 3600 },

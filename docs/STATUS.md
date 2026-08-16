@@ -48,9 +48,21 @@ being tidied away.
 
 ## In progress
 
-* Phase 1's exit criterion is met. What remains for the phase is **CI** and a **staging deploy**.
+* Phase 1's exit criterion is met and **CI is running**. A **staging deploy** is the last item.
 
 ## Recently done
+
+* **CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)): backend build + 180 tests
+  (including the architecture-fitness gate) and frontend typecheck + 81 tests in parallel, then
+  image builds. Every command was run locally before committing rather than trusted to be right —
+  which caught an invalid `pnpm --if-present exec` flag and three test projects overwriting each
+  other's TRX file.
+* **Found and fixed a deployment landmine while wiring CI.** The production site image baked a
+  broken homepage: `prerender: true` renders `/` at image-build time with no API reachable, so the
+  shipped HTML was the error fallback with zero article links — served forever, since a prerendered
+  page is never re-rendered. Now `isr: 600`, which also fixes a second bug hiding behind the first:
+  a prerendered homepage would never show a newly published article until the next deploy. CI now
+  fails if any prerendered HTML appears in the image.
 
 * **Scheduling and version history in the CMS**, plus the endpoints they needed. This was scoped as
   "UI-only work" and was not: there was no endpoint to read or restore a version, and no way to
@@ -120,9 +132,11 @@ being tidied away.
 
 ## Next up (proposed order)
 
-1. **CI pipeline** (build/test + architecture-fitness gate). 180 backend tests and 81 frontend tests
-   exist and nothing runs them on push.
-2. Staging deploy on DigitalOcean.
+1. **Staging deploy on DigitalOcean** — the last Phase 1 item. Note that auto-migration is
+   `IsDevelopment()`-gated, so the deploy needs an explicit migration step or the schema will never
+   move.
+2. **ESLint** — there is no linter config anywhere in the repo, so the root `lint` script is a
+   no-op and CI has nothing to run.
 3. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
    real Search module).
 

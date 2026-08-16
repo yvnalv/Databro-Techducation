@@ -51,13 +51,43 @@ so a fresh clone self-provisions. Deployed environments never auto-migrate — s
 
 ## 4. CI/CD (GitHub Actions)
 
-* **CI (every PR):** restore/build, unit + integration tests (Testcontainers), architecture-fitness,
-  lint/typecheck, vulnerability scan. Frontend: build affected workspaces (pnpm filter), typecheck,
-  component tests.
-* **CD:** on merge to the release branch → build images → deploy to **staging** automatically →
+### CI — built, in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+
+Runs on every push to `main` and every pull request. Three jobs:
+
+* **backend** — restore, Release build, then the whole test suite: unit tests, integration tests
+  against a real PostgreSQL container (Testcontainers), and the **architecture-fitness rules**. The
+  fitness rules are the reason this gate matters most: a module-boundary violation compiles
+  perfectly and is invisible in review. TRX results upload on failure as well as success, since the
+  failing run is the one worth reading.
+* **frontend** — `pnpm install --frozen-lockfile`, typecheck, and the package tests. Explicitly
+  verifies that `nuxt prepare` produced `.nuxt/tsconfig.json` for both apps first: without it the
+  app typechecks pass **vacuously**, which is worse than not running them, and is exactly how a
+  route rule that was never valid shipped once before.
+* **images** — builds the API, CMS and site images (never pushes; publishing is CD's job) to catch
+  Dockerfile rot before a deploy does. Carries a guard described below.
+
+`backend` and `frontend` run in parallel — a failure in one should not hide the other. `images`
+waits for both, because an image built from code that does not compile tells us nothing new.
+
+**The prerender guard.** The site image is inspected for prerendered HTML, and CI fails if any is
+found. The homepage was configured `prerender: true`, so `nuxt build` rendered it at image-build
+time, when no API is reachable — the image shipped with the "we could not load the articles"
+fallback baked in and zero article links, and a prerendered page is never re-rendered, so it would
+have served that error until the next deploy. Nothing on this site can be correctly prerendered at
+image-build time: every page's content comes from the API. Use ISR.
+
+Not yet in CI: **no linter** (no ESLint config exists in the repo — worth adding, then wiring here)
+and **no vulnerability scan**.
+
+### CD — not built
+
+* **Planned:** on merge to the release branch → build images → deploy to **staging** automatically →
   **production** on manual approval (solo-friendly gate).
-* **Migrations:** applied as an explicit, ordered deploy step (never auto-migrate on app start in prod);
-  forward-only, reviewed.
+* **Migrations:** applied as an explicit, ordered deploy step, forward-only and reviewed. Note that
+  the app's auto-migration is `IsDevelopment()`-gated (`ContentInitializer`, `MediaInitializer`,
+  Identity's), so a deployed environment **will not migrate itself** — the deploy step is not
+  optional, it is the only thing that will apply schema changes.
 
 ## 5. Secrets & configuration
 
