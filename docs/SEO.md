@@ -75,6 +75,10 @@ the correction in §1.
 * Allows everything by default: this is a content site whose entire strategy is being indexed.
 * Disallows `/*?page=` — paginated listings past page 1 are thin and near-duplicate, and every
   article they contain is reachable from the sitemap anyway.
+* Disallows `/search` and `/*/search` — internal search results are thin, near-duplicate and
+  infinitely generatable. The page *also* sends `noindex, follow` as both a meta tag and an
+  `X-Robots-Tag` header, which the disallow deliberately does not replace: a crawler that obeys the
+  disallow never fetches the page and so never sees the tag. Belt and braces, on purpose.
 * Points at `Sitemap: {siteUrl}/sitemap.xml`.
 * The authoring app is a **separate origin** and carries its own `X-Robots-Tag: noindex`, so it needs
   no entry here.

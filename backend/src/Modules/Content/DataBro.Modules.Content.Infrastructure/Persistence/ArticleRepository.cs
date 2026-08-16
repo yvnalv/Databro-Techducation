@@ -2,6 +2,7 @@ using DataBro.Modules.Content.Application;
 using DataBro.Modules.Content.Domain;
 using DataBro.Platform.Results;
 using Microsoft.EntityFrameworkCore;
+using NpgsqlTypes;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 
@@ -57,6 +58,63 @@ internal sealed class ArticleRepository(ContentDbContext db) : IArticleRepositor
 
     public async Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default)
         => await PageAsync(db.Articles.OrderByDescending(a => a.CreatedAt), page, ct);
+
+    public async Task<PagedResult<Article>> SearchPublishedAsync(
+        string query,
+        string locale,
+        PageRequest page,
+        bool fuzzy = false,
+        CancellationToken ct = default)
+    {
+        // Locale-scoped, and not merely as a filter: the row's stemmer was chosen by its locale, so
+        // querying with the other configuration would compare differently-stemmed tokens and quietly
+        // under-match.
+        var config = SearchConfigFor(locale);
+
+        var published = db.Articles.Where(a => a.Status == ArticleStatus.Published && a.Locale == locale);
+
+        var ranked = fuzzy
+            // `word_similarity`, not `similarity`. Plain similarity compares whole strings, so it
+            // divides by the length of the title: searching "Retreival" against "Retrieval-Augmented
+            // Generation, End to End" scores 0.14 and matches nothing, no matter how obvious the
+            // typo. `word_similarity` finds the best matching run of words inside the title instead
+            // and scores the same pair 0.43 — which is the behaviour a typo fallback needs.
+            ? published
+                .Where(a => EF.Functions.TrigramsWordSimilarity(query, a.Title) > FuzzyThreshold)
+                .OrderByDescending(a => EF.Functions.TrigramsWordSimilarity(query, a.Title))
+                .ThenByDescending(a => a.PublishedAt)
+            // `websearch_to_tsquery` rather than `to_tsquery`: it accepts whatever a person types
+            // into a search box — quotes, OR, a stray operator — without throwing, and supports
+            // quoted phrases. `to_tsquery` raises a syntax error on input as ordinary as `a & `.
+            : published
+                .Where(a => EF.Property<NpgsqlTsVector>(a, ArticleConfiguration.SearchVectorProperty)
+                    .Matches(EF.Functions.WebSearchToTsQuery(config, query)))
+                .OrderByDescending(a => EF.Property<NpgsqlTsVector>(a, ArticleConfiguration.SearchVectorProperty)
+                    .Rank(EF.Functions.WebSearchToTsQuery(config, query)))
+                .ThenByDescending(a => a.PublishedAt);
+
+        return await PageAsync(ranked, page, ct);
+    }
+
+    /// <summary>
+    /// Word-similarity floor for the fuzzy fallback. 0.3 is pg_trgm's own default threshold, and
+    /// measurement backs it here: a transposed letter scores ~0.43 while unrelated titles score 0,
+    /// so the gap is wide. Lower turns the fallback into "here is the catalogue".
+    ///
+    /// This predicate is not index-accelerated — the GIN trigram index answers the `&lt;%` operator,
+    /// which carries its own session-level threshold rather than an explicit one. A sequential scan
+    /// is acceptable while the fallback only runs on queries that matched nothing at all; it stops
+    /// being acceptable at a catalogue size where a full scan is slow, which is one of the triggers
+    /// for the OpenSearch upgrade (ADR-0006).
+    /// </summary>
+    private const double FuzzyThreshold = 0.3;
+
+    /// <summary>
+    /// Must mirror the <c>CASE</c> in <see cref="ArticleConfiguration"/>'s generated vector — the
+    /// query has to be stemmed the same way the index was.
+    /// </summary>
+    private static string SearchConfigFor(string locale)
+        => locale == "id" ? "indonesian" : "english";
 
     public async Task<IReadOnlyList<Article>> ListDueScheduledAsync(DateTimeOffset now, CancellationToken ct = default)
         // Versions loaded so Publish can append the new one against a tracked collection, matching

@@ -1,5 +1,56 @@
 # DataBro Changelog
 
+## [2026-08-16 08:07:46 UTC]
+
+CHG-0026 — PostgreSQL full-text search (ADR-0010)
+
+Closes the second Phase 1 exit criterion. Content is now both indexable and searchable.
+
+- **ADR-0010: search lives in Content, not the Search module** — a deliberate departure from
+  ADR-0006, which specified a `Search`-owned `search_documents` table fed by integration events.
+  That design needs a **transactional outbox that does not exist**; without one, "publish an article"
+  and "update the search row" are two writes with no atomicity between them, and the first partial
+  failure leaves an index that silently disagrees with the catalogue. A wrong search index is worse
+  than a slow one. ADR-0006 is annotated, not rewritten; its core choice still stands.
+- **The index is a generated column, and that is the whole point.**
+  `search_vector tsvector GENERATED ALWAYS AS (…) STORED` weights title **A**, summary **B**, body
+  **C**. PostgreSQL recomputes it on every write, so it *cannot* fall out of step with the row —
+  no reindex job, no drift, nothing to operate.
+- **Per-locale stemming** via `CASE WHEN locale = 'id' THEN 'indonesian' ELSE 'english' END`, so
+  "belajar" and "pembelajaran" collapse to one stem. Both branches are literal `regconfig` casts
+  because only `to_tsvector(regconfig, text)` is `IMMUTABLE` — the one-argument form reads a session
+  setting, which a generated column may not depend on. Queries pick the same configuration, so the
+  query is stemmed the way the index was.
+- **`word_similarity`, not `similarity`, for the typo fallback.** Whole-string similarity divides by
+  the title's length: "Retreival" against "Retrieval-Augmented Generation, End to End" scores 0.14
+  and matches nothing, however obvious the typo. `word_similarity` scores the best matching run of
+  words inside the title — 0.43 for the same pair. Caught by testing a real typo against real data,
+  not by the first test, which accidentally used a query that was nearly the whole title.
+- **No trigram index, deliberately.** A `gin_trgm_ops` index answers the `<%` operator, whose
+  threshold comes from a session GUC (0.6) — too strict for the typos the fallback exists for. An
+  index the only query touching it cannot use is pure write cost, so it was removed rather than left
+  in to look thorough. The scan is documented in STATUS as an OpenSearch trigger.
+- **`websearch_to_tsquery`, not `to_tsquery`** — a public search box must not 500 because someone
+  typed a stray ampersand or an unclosed quote.
+- **`matchMode` in the response meta**, surfaced in the UI as "No exact matches — showing articles
+  with similar titles." Presenting approximations as exact is how a search box stops being trusted.
+- **The body projection is written in C#** (`ContentText`), because the body is typed JSONB that SQL
+  cannot meaningfully flatten. Writing it uncovered that **reading-time estimation had been reading
+  `data.text` directly since before ADR-0009** — every rich-text paragraph counted as zero words, so
+  long articles reported "1 min read". Both now share one extractor; a regression test pins it.
+- **Backfill on startup** for articles published before the column existed. Idempotent and
+  self-limiting; ids are collected first so an article whose body genuinely projects to nothing
+  cannot be selected forever.
+- Site UI at `/search`: a real `<form method="get">` that works before hydration and produces a
+  shareable URL. `noindex, follow` as both a meta tag and an `X-Robots-Tag` header, plus a robots.txt
+  disallow — belt and braces, because a crawler that obeys the disallow never sees the tag.
+- Fixed `PaginationNav`, which hardcoded `?page=` and would have produced `/search?q=rag?page=2`.
+- Tests: 10 search integration tests against a **real PostgreSQL container** (ranking, stemming,
+  locale scoping, drafts excluded, malformed input, both fallback cases), 9 extractor unit tests,
+  3 client tests. Full backend suite 129 green; api-client 11 green; clean typecheck.
+
+---
+
 ## [2026-08-16 07:41:21 UTC]
 
 CHG-0025 — Discovery layer: robots.txt, sitemap.xml, RSS

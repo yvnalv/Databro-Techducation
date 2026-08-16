@@ -78,8 +78,31 @@ GET    /api/v1/tags                          tag list
 GET    /api/v1/tags/{slug}/articles          articles by tag
 GET    /api/v1/authors/{id}                  author profile + articles
 GET    /api/v1/redirects?from={path}         resolve a moved path -> { toPath, statusCode } or 404
-GET    /api/v1/search?q=…                    keyword search over published content
+GET    /api/v1/search?q=…&locale=…           full-text search over published content (paginated)
 ```
+
+#### `GET /api/v1/search`
+
+Served by **Content**, not the Search module ([ADR-0010](adr/0010-fts-lives-in-content.md)). This
+route is the seam that survives the eventual move to OpenSearch.
+
+| Parameter | Default | Notes |
+|---|---|---|
+| `q` | — | Fewer than 2 characters returns an empty page rather than everything. |
+| `locale` | `en` | Search is locale-scoped because the index stems per locale. An unrecognised value falls back to the default; it is not a 400. |
+| `page`, `pageSize` | 1, 20 | Same offset paging as every other listing. |
+
+`data` is an array of article summaries, identical in shape to `/api/v1/articles`, so clients reuse
+one parser. `meta` carries the usual paging plus:
+
+* **`matchMode`** — `"exact"` when full-text matched the query as typed, `"fuzzy"` when full-text
+  found nothing and the API fell back to trigram similarity over titles. A client showing fuzzy
+  results **must say so**; presenting approximations as exact is how a search box loses trust.
+  `"exact"` is also reported when the fallback found nothing either — there is no approximation to
+  apologise for, just no results.
+
+The query goes through `websearch_to_tsquery`, so unbalanced quotes and stray boolean operators are
+tolerated rather than raising a syntax error. A public search box must never 500 on typed input.
 
 **`sitemap.xml`, `robots.txt` and `feed.xml` are not API endpoints.** An earlier revision of this
 document listed them here (and an RSS endpoint at `/api/v1/feed.rss`). They are served by the `site`

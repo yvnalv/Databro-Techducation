@@ -22,6 +22,12 @@ public sealed class ContentDbContext(DbContextOptions<ContentDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
+
+        // Backs the trigram similarity fallback for queries full-text search cannot match — a
+        // misspelt title (ADR-0006, ADR-0010). Declared here so `dotnet ef` emits the CREATE
+        // EXTENSION rather than it being a manual step someone has to remember on a new database.
+        modelBuilder.HasPostgresExtension("pg_trgm");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ContentDbContext).Assembly);
         modelBuilder.ApplyClientGeneratedKeys();
         modelBuilder.ApplySoftDeleteQueryFilter();

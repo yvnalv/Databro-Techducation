@@ -16,19 +16,27 @@ public static class ApiEnvelope
     /// A successful response carrying paging information in <c>meta</c> (docs/API_SPEC.md §3), so a
     /// client can render crawlable page links without a second request.
     /// </summary>
-    public static IResult OkPaged<T>(PagedResult<T> page) =>
-        HttpResults.Ok(new
+    /// <param name="extraMeta">
+    /// Additional <c>meta</c> keys for endpoints that need to say something about the page beyond
+    /// where it sits — search reports how it matched, for instance. Keys must already be camelCase;
+    /// they are emitted verbatim.
+    /// </param>
+    public static IResult OkPaged<T>(
+        PagedResult<T> page, IReadOnlyDictionary<string, object?>? extraMeta = null)
+    {
+        var meta = new Dictionary<string, object?>
         {
-            success = true,
-            data = page.Items,
-            meta = new
-            {
-                page = page.Page,
-                pageSize = page.PageSize,
-                total = page.Total,
-                totalPages = page.TotalPages,
-            },
-        });
+            ["page"] = page.Page,
+            ["pageSize"] = page.PageSize,
+            ["total"] = page.Total,
+            ["totalPages"] = page.TotalPages,
+        };
+
+        foreach (var (key, value) in extraMeta ?? new Dictionary<string, object?>())
+            meta[key] = value;
+
+        return HttpResults.Ok(new { success = true, data = page.Items, meta });
+    }
 
     public static IResult Fail(Error error) =>
         HttpResults.Json(

@@ -13,10 +13,11 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0003](adr/0003-in-house-cms.md) | Build the CMS in-house (scoped to articles for Phase 1) | Accepted |
 | [0004](adr/0004-content-blocks-jsonb.md) | Typed content blocks stored as versioned JSONB | Accepted |
 | [0005](adr/0005-two-app-frontend-monorepo.md) | Two-app frontend in a pnpm monorepo | Accepted |
-| [0006](adr/0006-postgres-fts-search.md) | PostgreSQL full-text search for Phase 1 | Accepted |
+| [0006](adr/0006-postgres-fts-search.md) | PostgreSQL full-text search for Phase 1 | Accepted; mechanism superseded by [0010](adr/0010-fts-lives-in-content.md) |
 | [0007](adr/0007-unify-article-lesson.md) | Unify Article and Lesson on one content engine | Accepted |
 | [0008](adr/0008-cross-module-contracts-in-platform.md) | Cross-module read contracts live in Platform | Accepted |
 | [0009](adr/0009-inline-rich-text-node-tree.md) | Inline rich text as a ProseMirror-compatible node tree | Accepted |
+| [0010](adr/0010-fts-lives-in-content.md) | Phase 1 full-text search lives in Content, not the Search module | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

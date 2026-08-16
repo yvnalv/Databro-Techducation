@@ -317,6 +317,19 @@ export interface Paged<T> {
 }
 
 /**
+ * How a set of search results was matched (ADR-0010).
+ *
+ * `fuzzy` means full-text found nothing and the API fell back to trigram similarity over titles.
+ * The UI must say so — presenting approximate results as if they were exact is how a search box
+ * loses a reader's trust.
+ */
+export type SearchMatchMode = "exact" | "fuzzy";
+
+export interface SearchResults extends Paged<ArticleSummary> {
+  matchMode: SearchMatchMode;
+}
+
+/**
  * A resolved URL redirect (docs/SEO.md §4). Returned by the redirect-lookup endpoint when a moved
  * slug should resolve to a `statusCode` (301) redirect rather than a 404.
  */

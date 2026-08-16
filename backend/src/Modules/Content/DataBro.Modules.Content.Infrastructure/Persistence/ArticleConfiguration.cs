@@ -2,6 +2,7 @@ using DataBro.Modules.Content.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NpgsqlTypes;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 
@@ -28,6 +29,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(a => a.DraftBlocks).HasJsonbConversion().IsRequired();
         builder.Property(a => a.PublishedBlocks).HasJsonbConversion();
         builder.Property(a => a.Seo).HasJsonbConversion().IsRequired();
+
+        ConfigureSearch(builder);
 
         builder.Property(a => a.CurrentVersion);
         builder.Property(a => a.ReadingTimeMinutes);
@@ -66,6 +69,58 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Ignore(a => a.DomainEvents);
         builder.Ignore(a => a.TagIds);
     }
+
+    /// <summary>
+    /// Full-text search over the articles table (ADR-0010).
+    ///
+    /// The vector is a <c>GENERATED ALWAYS … STORED</c> column rather than a value the application
+    /// writes. That is the whole point: a generated column is recomputed by PostgreSQL on every
+    /// write to the row, so it *cannot* fall out of step with the title, summary or body. There is
+    /// no reindex job to run and no drift to detect.
+    /// </summary>
+    private static void ConfigureSearch(EntityTypeBuilder<Article> builder)
+    {
+        builder.Property(a => a.SearchText).HasColumnName("search_text");
+
+        builder.Property<NpgsqlTsVector>(SearchVectorProperty)
+            .HasColumnName("search_vector")
+            .HasComputedColumnSql(SearchVectorSql, stored: true);
+
+        // GIN is the right index for tsvector matching: bigger and slower to update than GiST, but
+        // this table is written rarely and searched often.
+        builder.HasIndex(SearchVectorProperty)
+            .HasDatabaseName("ix_articles_search_vector")
+            .HasMethod("gin");
+
+        // No trigram index on `title`, deliberately. A `gin_trgm_ops` index answers the `<%`
+        // operator, which takes its threshold from the `pg_trgm.word_similarity_threshold` session
+        // setting (0.6) rather than an explicit one — and 0.6 is too strict to catch the typos the
+        // fallback exists for (see ArticleRepository.FuzzyThreshold). An index that the only query
+        // touching it cannot use is pure write-time cost, so it is left out until either the
+        // threshold moves to the operator form or scale forces the OpenSearch upgrade.
+    }
+
+    /// <summary>The shadow property name for the generated tsvector column.</summary>
+    internal const string SearchVectorProperty = "SearchVector";
+
+    /// <summary>
+    /// Weighted, locale-aware search vector.
+    ///
+    /// Weights: title <b>A</b>, summary <b>B</b>, body <b>C</b>. A title match should outrank a
+    /// passing mention in paragraph forty, and PostgreSQL's default weight multipliers
+    /// (1.0/0.4/0.2/0.1) express exactly that.
+    ///
+    /// The <c>CASE</c> picks the stemmer from the row's own locale, so "belajar" and "pembelajaran"
+    /// collapse to one Indonesian stem instead of being treated as unrelated English words. Both
+    /// branches are literal <c>regconfig</c> casts because only <c>to_tsvector(regconfig, text)</c>
+    /// is IMMUTABLE — the one-argument form reads a session setting and a generated column may not
+    /// depend on one.
+    /// </summary>
+    private const string SearchVectorSql = """
+        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(title, '')), 'A') ||
+        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(summary, '')), 'B') ||
+        setweight(to_tsvector(CASE WHEN locale = 'id' THEN 'indonesian'::regconfig ELSE 'english'::regconfig END, coalesce(search_text, '')), 'C')
+        """;
 }
 
 internal sealed class ArticleVersionConfiguration : IEntityTypeConfiguration<ArticleVersion>

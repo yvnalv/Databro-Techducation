@@ -27,6 +27,19 @@ public interface IArticleRepository
     Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default);
 
     /// <summary>
+    /// Full-text search over published articles in one locale, ranked by relevance (ADR-0010).
+    /// <paramref name="fuzzy"/> selects the trigram-similarity fallback instead of full-text
+    /// matching — the caller runs it only when full-text found nothing, so a misspelt query still
+    /// returns something.
+    /// </summary>
+    Task<PagedResult<Article>> SearchPublishedAsync(
+        string query,
+        string locale,
+        PageRequest page,
+        bool fuzzy = false,
+        CancellationToken ct = default);
+
+    /// <summary>
     /// Scheduled articles whose time has arrived (<c>ScheduledFor &lt;= now</c>), tracked and with
     /// version history loaded so the scheduled-publish job can publish them (rule CT-7).
     /// </summary>

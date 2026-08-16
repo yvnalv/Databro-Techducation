@@ -112,3 +112,33 @@ describe("requests", () => {
     await expect(client.resolveRedirect("/articles/gone")).resolves.toBeNull();
   });
 });
+
+describe("search", () => {
+  it("encodes the query and passes the locale scope through", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(ok([], { page: 1, pageSize: 20, total: 0, totalPages: 0 }));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await client.search({ q: "rag & agents", locale: "id", page: 2 });
+
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url).toContain("q=rag+%26+agents");
+    expect(url).toContain("locale=id");
+    expect(url).toContain("page=2");
+  });
+
+  it("surfaces the fuzzy match mode from meta", async () => {
+    const meta = { page: 1, pageSize: 20, total: 1, totalPages: 1, matchMode: "fuzzy" };
+    const fetchMock = vi.fn().mockResolvedValue(ok([{ slug: "a" }], meta));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await expect(client.search({ q: "kubernettes" })).resolves.toMatchObject({ matchMode: "fuzzy" });
+  });
+
+  it("defaults to an exact match mode when meta omits it", async () => {
+    // A stale API that predates matchMode must not make the UI apologise for results that are fine.
+    const fetchMock = vi.fn().mockResolvedValue(ok([], { page: 1, pageSize: 20, total: 0, totalPages: 0 }));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await expect(client.search({ q: "anything" })).resolves.toMatchObject({ matchMode: "exact" });
+  });
+});

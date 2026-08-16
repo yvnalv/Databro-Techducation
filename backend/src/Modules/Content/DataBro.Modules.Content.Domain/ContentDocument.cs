@@ -26,17 +26,16 @@ public sealed class ContentDocument
 
     public bool HasContent => Blocks.Count > 0;
 
-    /// <summary>Estimated reading time in minutes (~200 wpm) from text-bearing blocks.</summary>
+    /// <summary>
+    /// Estimated reading time in minutes (~200 wpm) from text-bearing blocks.
+    ///
+    /// Counts through <see cref="ContentText"/> rather than reading <c>data.text</c> directly. The
+    /// direct read predated ADR-0009 and saw only the legacy string shape, so every rich-text
+    /// paragraph counted as zero words and long articles reported "1 min read".
+    /// </summary>
     public int EstimateReadingTimeMinutes()
-    {
-        var words = 0;
-        foreach (var block in Blocks)
-        {
-            var text = block.Data?["text"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(text))
-                words += text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
-        }
+        => Math.Max(1, (int)Math.Ceiling(ContentText.CountWords(this) / 200.0));
 
-        return Math.Max(1, (int)Math.Ceiling(words / 200.0));
-    }
+    /// <summary>Plain-text projection of this document, for the search index (ADR-0010).</summary>
+    public string ToPlainText() => ContentText.Extract(this);
 }

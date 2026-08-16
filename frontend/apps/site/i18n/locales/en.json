@@ -9,7 +9,21 @@
     "articles": "Articles",
     "skipToContent": "Skip to content",
     "languageLabel": "Language",
-    "primaryLabel": "Primary"
+    "primaryLabel": "Primary",
+    "search": "Search"
+  },
+  "search": {
+    "placeholder": "Search articles",
+    "submit": "Search",
+    "eyebrow": "Search",
+    "pageTitle": "Search",
+    "resultsTitle": "Results for \"{query}\"",
+    "description": "Search every published article on DataBro.",
+    "prompt": "Type something above to search the articles.",
+    "resultCount": "No results | 1 result | {count} results",
+    "empty": "Nothing matched \"{query}\". Try a different word, or browse the topics below.",
+    "fuzzyNotice": "No exact matches for \"{query}\" — showing articles with similar titles.",
+    "failed": "Search is unavailable right now. Please try again shortly."
   },
   "articles": {
     "listTitle": "Articles",

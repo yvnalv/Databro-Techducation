@@ -1,8 +1,14 @@
 # ADR-0006 — PostgreSQL full-text search for Phase 1
 
-Status: Accepted
+Status: Accepted — mechanism superseded by [ADR-0010](0010-fts-lives-in-content.md) (2026-08-16)
 Date: 2026-07-29
 Deciders: Project owner
+
+> The core choice below — PostgreSQL FTS for Phase 1, OpenSearch as the upgrade path — stands.
+> The *implementation* described here (a `Search`-owned `search_documents` table fed by integration
+> events) was not built: it depends on a transactional outbox that does not exist yet, and shipping
+> it without one would have meant a search index that can silently disagree with the catalogue.
+> ADR-0010 records what was built instead and what would return this design to the table.
 
 ## Context
 

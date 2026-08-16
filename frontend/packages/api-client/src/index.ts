@@ -12,6 +12,8 @@ import type {
   Paged,
   PageMeta,
   Redirect,
+  SearchMatchMode,
+  SearchResults,
   TaxonomyTerm,
   UserProfile,
 } from "@databro/types";
@@ -96,8 +98,8 @@ export class ApiClient {
   }
 
   // ---- Public read surface ----
-  // Only endpoints the API actually serves. Search arrives with the Search module; adding it here
-  // early would ship a method that 404s at runtime.
+  // Only endpoints the API actually serves — a method that 404s at runtime is worse than a missing
+  // one.
 
   /**
    * Published articles, newest first, optionally narrowed by category or tag slug.
@@ -134,6 +136,38 @@ export class ApiClient {
 
   getArticle(slug: string): Promise<Article> {
     return this.request<Article>(`/api/v1/articles/${encodeURIComponent(slug)}`);
+  }
+
+  /**
+   * Full-text search over published articles (ADR-0010).
+   *
+   * Locale-scoped, because the index stems per locale — an English query cannot meaningfully rank
+   * Indonesian text. `matchMode` reports whether the API had to fall back to fuzzy title matching.
+   */
+  async search(params: {
+    q: string;
+    locale?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<SearchResults> {
+    const query = new URLSearchParams({ q: params.q });
+    if (params.locale) query.set("locale", params.locale);
+    if (params.page != null) query.set("page", String(params.page));
+    if (params.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const { data, meta } = await this.envelope<ArticleSummary[]>(`/api/v1/search?${query}`);
+    const page = meta as unknown as (PageMeta & { matchMode?: SearchMatchMode }) | undefined;
+
+    return {
+      items: data,
+      meta: {
+        page: page?.page ?? 1,
+        pageSize: page?.pageSize ?? data.length,
+        total: page?.total ?? data.length,
+        totalPages: page?.totalPages ?? 1,
+      },
+      matchMode: page?.matchMode ?? "exact",
+    };
   }
 
   // ---- Taxonomy ----

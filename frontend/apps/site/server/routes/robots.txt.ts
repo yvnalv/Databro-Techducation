@@ -21,6 +21,12 @@ export default defineEventHandler((event) => {
     "# contain are all reachable from the sitemap, so there is nothing lost by not crawling them.",
     "Disallow: /*?page=",
     "",
+    "# Internal search results: thin, near-duplicate, and infinitely generatable. The page also",
+    "# sends `noindex, follow`, which this disallow deliberately does not replace — a crawler that",
+    "# obeys the disallow never fetches the page and so never sees the meta tag.",
+    "Disallow: /search",
+    "Disallow: /*/search",
+    "",
     `Sitemap: ${origin}/sitemap.xml`,
     "",
   ].join("\n");

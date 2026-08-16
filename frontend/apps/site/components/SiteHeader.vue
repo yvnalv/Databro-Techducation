@@ -44,6 +44,16 @@ const navigation = computed(() => [
       </nav>
 
       <div class="flex items-center gap-3">
+        <!-- Hidden on small screens: the /search page carries its own full-width box, so a phone
+             reaches search through a link rather than a cramped field in a 16px-tall bar. -->
+        <SearchBox class="hidden w-56 lg:flex xl:w-72" />
+        <NuxtLink
+          :to="localePath('/search')"
+          class="text-sm font-medium text-ink-muted transition-colors hover:text-ink lg:hidden"
+        >
+          {{ t("nav.search") }}
+        </NuxtLink>
+
         <label class="flex items-center">
           <span class="sr-only">{{ t("nav.languageLabel") }}</span>
           <select

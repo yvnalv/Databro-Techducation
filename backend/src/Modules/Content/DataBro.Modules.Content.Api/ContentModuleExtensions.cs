@@ -25,6 +25,7 @@ public static class ContentModuleExtensions
     public static IEndpointRouteBuilder MapContentModule(this IEndpointRouteBuilder endpoints)
     {
         MapPublicEndpoints(endpoints);
+        MapSearchEndpoint(endpoints);
         MapPublicTaxonomyEndpoints(endpoints);
         MapRedirectEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
@@ -73,6 +74,29 @@ public static class ContentModuleExtensions
 
         group.MapGet("/{slug}", async (string slug, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
+    }
+
+    // ---- Search. Mapped by Content rather than the Search module for Phase 1 (ADR-0010): the
+    // index is a generated column on `articles`, so it lives with the data it is generated from.
+    // `/api/v1/search` is the seam that must survive the move to OpenSearch, not this file. ----
+    private static void MapSearchEndpoint(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/api/v1/search", async (
+            string? q,
+            string? locale,
+            int? page,
+            int? pageSize,
+            ArticleService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.SearchAsync(q, locale, new PageRequest(page, pageSize), ct);
+
+            // matchMode rides in `meta` rather than wrapping the array, so the response shape stays
+            // identical to every other paged listing and the client reuses one parser.
+            return ApiEnvelope.OkPaged(
+                result.Results,
+                new Dictionary<string, object?> { ["matchMode"] = result.MatchMode });
+        }).WithTags("Content.Search");
     }
 
     // ---- Public taxonomy reads. Cacheable and small; drives site navigation. ----

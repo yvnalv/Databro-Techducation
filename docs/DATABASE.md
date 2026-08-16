@@ -93,9 +93,46 @@ uploaded_by, + audit).
 
 ### search
 
+> **Not created.** Phase 1 search lives on `content.articles` instead
+> ([ADR-0010](adr/0010-fts-lives-in-content.md)) — see the two columns below. The schema described
+> here arrives with the event-fed index.
+
 **search_documents** (id, article_id, locale, title, summary, body_text, tags text[], tsv tsvector,
 visibility, published_at). Denormalized, owned by Search, populated from content events.
 Index: GIN(`tsv`), GIN(`tags`), trigram index on `title` for fuzzy fallback.
+
+### Full-text search columns on `content.articles`
+
+**`search_text`** (`text`, default `''`) — the plain-text projection of the *published* blocks,
+written by the domain on publish. Only published, because search returns published content; indexing
+a draft would make unreleased text findable. Derived in C# (`ContentText`) because the body is typed
+JSONB that SQL cannot flatten meaningfully.
+
+**`search_vector`** (`tsvector GENERATED ALWAYS AS (…) STORED`) —
+
+```
+setweight(to_tsvector(<config>, coalesce(title,   '')), 'A') ||
+setweight(to_tsvector(<config>, coalesce(summary, '')), 'B') ||
+setweight(to_tsvector(<config>, coalesce(search_text, '')), 'C')
+```
+
+where `<config>` is `CASE WHEN locale = 'id' THEN 'indonesian' ELSE 'english' END::regconfig`.
+
+* **Generated, not application-written.** PostgreSQL recomputes it on every write to the row, so it
+  cannot fall out of step with the title, summary or body. There is no reindex job and no drift.
+* Both branches are literal `regconfig` casts because only `to_tsvector(regconfig, text)` is
+  `IMMUTABLE` — the one-argument form reads a session setting, which a generated column may not
+  depend on.
+* Weights A/B/C use PostgreSQL's default multipliers (1.0/0.4/0.2), so a title match outranks a
+  passing mention deep in the body.
+
+Index: GIN(`search_vector`). The `pg_trgm` extension is installed for the `word_similarity()` typo
+fallback, but **no trigram index on `title`** — a `gin_trgm_ops` index answers the `<%` operator,
+whose threshold comes from a session GUC (0.6) rather than the explicit 0.3 the fallback needs, so
+the index could not serve the only query that would use it.
+
+Backfill: `ContentInitializer` fills `search_text` for articles published before the column existed.
+Idempotent and self-limiting — after the first run it selects nothing.
 
 ### platform
 

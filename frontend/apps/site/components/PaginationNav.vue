@@ -13,8 +13,14 @@ const props = defineProps<{ meta: PageMeta; basePath: string }>();
 const { t } = useI18n();
 const localePath = useLocalePath();
 
+// `basePath` may already carry a query string — `/search?q=rag` — so the separator cannot be a
+// hardcoded `?`.
 const pageLink = (page: number) =>
-  localePath(page <= 1 ? props.basePath : `${props.basePath}?page=${page}`);
+  localePath(
+    page <= 1
+      ? props.basePath
+      : `${props.basePath}${props.basePath.includes("?") ? "&" : "?"}page=${page}`,
+  );
 
 // A short window around the current page: enough for a crawler to walk the whole set one hop at a
 // time, without emitting hundreds of links on a large archive.

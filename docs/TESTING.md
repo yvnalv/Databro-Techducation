@@ -20,7 +20,11 @@ number. Prioritize the areas where bugs hurt most.
 * **Slug & redirects:** uniqueness, immutability-after-publish, 301 creation on change. (CT-2, CT-3.)
 * **Authorization:** authoring vs. publishing separation; drafts/premium not visible to the public.
   (SECURITY §2–3; CT-4, CT-6, CT-10.)
-* **Search:** only published/public content indexed; index rebuildable from source. (SR-1, SR-2.)
+* **Search:** only published content matched; ranking puts title hits above body hits; per-locale
+  stemming; the typo fallback fires only when full-text finds nothing and reports itself as fuzzy;
+  malformed query input never errors. (SR-1, SR-2.) These run against a **real PostgreSQL container**
+  — the index is a generated `tsvector` and the ranking is `ts_rank`, so an in-memory fake would
+  verify nothing that matters.
 * **Identity:** registration, email verification gating, refresh-token rotation/reuse detection.
 * **SEO metadata:** correct canonical/robots/structured-data outputs; hreflang for locale variants.
 

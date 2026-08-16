@@ -192,6 +192,47 @@ public sealed class ArticleService(
         return await ToSummaryPageAsync(result, ct);
     }
 
+    /// <summary>
+    /// Full-text search over published content (ADR-0010), falling back to trigram similarity when
+    /// the query matches nothing — which is almost always a typo, and returning an empty page for a
+    /// one-character slip is a bad answer when a good one is available.
+    /// </summary>
+    public async Task<SearchResultDto> SearchAsync(
+        string? query, string? locale, PageRequest page, CancellationToken ct = default)
+    {
+        var trimmed = query?.Trim() ?? string.Empty;
+        var scope = NormalizeLocale(locale);
+
+        // A single character matches most of the catalogue under trigram similarity and nothing
+        // useful under full-text. Answering "nothing" is more truthful than answering "everything".
+        if (trimmed.Length < MinQueryLength)
+            return new SearchResultDto(
+                PagedResult<ArticleSummaryDto>.Empty(page.Page, page.PageSize),
+                SearchMatchModes.Exact);
+
+        var exact = await repository.SearchPublishedAsync(trimmed, scope, page, fuzzy: false, ct);
+        if (exact.Total > 0)
+            return new SearchResultDto(await ToSummaryPageAsync(exact, ct), SearchMatchModes.Exact);
+
+        var fuzzy = await repository.SearchPublishedAsync(trimmed, scope, page, fuzzy: true, ct);
+
+        // Reported as `exact` when the fallback also found nothing: there is no approximation to
+        // apologise for, just no results.
+        return new SearchResultDto(
+            await ToSummaryPageAsync(fuzzy, ct),
+            fuzzy.Total > 0 ? SearchMatchModes.Fuzzy : SearchMatchModes.Exact);
+    }
+
+    private const int MinQueryLength = 2;
+
+    /// <summary>
+    /// Search is scoped to one locale because the index stems per locale (ADR-0010). Anything
+    /// unrecognised falls back to the default rather than erroring — a bad `?locale=` should not
+    /// turn a search into a 400.
+    /// </summary>
+    private static string NormalizeLocale(string? locale)
+        => string.Equals(locale, "id", StringComparison.OrdinalIgnoreCase) ? "id" : "en";
+
     // ---- Taxonomy assignment ----
 
     /// <summary>

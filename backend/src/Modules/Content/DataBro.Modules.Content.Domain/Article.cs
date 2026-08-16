@@ -25,6 +25,14 @@ public sealed class Article : AggregateRoot
 
     public ContentDocument DraftBlocks { get; private set; } = ContentDocument.Empty;
     public ContentDocument? PublishedBlocks { get; private set; }
+
+    /// <summary>
+    /// Plain-text projection of <see cref="PublishedBlocks"/>, feeding the generated search vector
+    /// (ADR-0010). Written only on publish: search returns published content, so indexing a draft
+    /// would make unpublished text findable.
+    /// </summary>
+    public string SearchText { get; private set; } = string.Empty;
+
     public int CurrentVersion { get; private set; }
     public int ReadingTimeMinutes { get; private set; }
     public SeoMetadata Seo { get; private set; } = SeoMetadata.Default;
@@ -151,6 +159,7 @@ public sealed class Article : AggregateRoot
 
         CurrentVersion += 1;
         PublishedBlocks = DraftBlocks;
+        SearchText = DraftBlocks.ToPlainText();
         Status = ArticleStatus.Published;
         PublishedAt = now;
         ScheduledFor = null;
@@ -161,6 +170,13 @@ public sealed class Article : AggregateRoot
         Raise(new ArticlePublishedDomainEvent(Id, Slug.Value, CurrentVersion));
         return Result.Success();
     }
+
+    /// <summary>
+    /// Recomputes <see cref="SearchText"/> from the current published blocks, without touching
+    /// version history or timestamps. For backfilling articles published before the projection
+    /// existed — publishing is what maintains it from here on.
+    /// </summary>
+    public void RebuildSearchText() => SearchText = PublishedBlocks?.ToPlainText() ?? string.Empty;
 
     public Result Unpublish()
     {

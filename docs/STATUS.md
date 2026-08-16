@@ -7,8 +7,8 @@ Last updated: 2026-08-16.
 
 ## Current phase
 
-**Phase 1 — Foundation & Content.** Sub-stage: **CMS and discovery artifacts shipped → search and
-media are the last two Phase 1 items**.
+**Phase 1 — Foundation & Content.** Sub-stage: **both exit criteria met — content is indexable and
+searchable. Media upload is the last substantive Phase 1 item.**
 
 ## Done
 
@@ -28,10 +28,18 @@ media are the last two Phase 1 items**.
 
 ## In progress
 
-* Content can now be written, published, organised and crawled end to end. **PostgreSQL FTS search**
-  is the one remaining Phase 1 exit criterion; media upload follows.
+* Both Phase 1 exit criteria are met: content is indexable and searchable. Next is media upload,
+  then the CI pipeline.
 
 ## Recently done
+
+* **PostgreSQL full-text search** ([ADR-0010](adr/0010-fts-lives-in-content.md)). Implemented inside
+  **Content**, not the Search module: a `tsvector GENERATED ALWAYS … STORED` column on `articles`,
+  weighted title/summary/body, stemmed per locale, with a `word_similarity` typo fallback. The
+  ADR-0006 design (a Search-owned table fed by integration events) depends on a transactional outbox
+  that does not exist, so it would have shipped with a known consistency hole. `GET /api/v1/search`
+  is the seam that survives the eventual engine swap. Site UI at `/search`, `noindex, follow` and
+  robots-disallowed. 10 integration tests against a real PostgreSQL container.
 
 * **Discovery artifacts:** `robots.txt`, `sitemap.xml` and `feed.xml` (RSS 2.0), served as Nitro
   routes from the `site` app. This **corrects [SEO.md](SEO.md) §1 and [API_SPEC.md](API_SPEC.md)**,
@@ -73,10 +81,10 @@ media are the last two Phase 1 items**.
 
 ## Next up (proposed order)
 
-1. PostgreSQL FTS search — the last Phase 1 exit criterion.
-2. Media upload to MinIO/Spaces.
-3. Wire the transactional outbox + `ArticlePublished` handling (Search reindex / cache invalidation).
-4. CI pipeline (build/test + architecture-fitness gate).
+1. Media upload to MinIO/Spaces — the last substantive Phase 1 module.
+2. CI pipeline (build/test + architecture-fitness gate).
+3. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
+   real Search module).
 
 ## Known gaps / deferred
 
@@ -100,6 +108,17 @@ media are the last two Phase 1 items**.
 * **CMS tokens are not `httpOnly`.** The app sets them from JS, so it cannot be; they are
   `sameSite=strict` and `secure` outside development. The hardening is a backend-for-frontend that
   proxies login and sets cookies the browser never reads — a deliberate follow-up, not an oversight.
+* **`Search/` is four empty marker projects.** Real search lives in Content (ADR-0010), so the module
+  list overstates what is built. It becomes real when the outbox lands or Learning adds a second
+  searchable aggregate.
+* **The fuzzy fallback does a sequential scan.** `word_similarity(query, title) > 0.3` cannot use a
+  `gin_trgm_ops` index, which answers the `<%` operator at a session-level 0.6 threshold — too strict
+  for the typos the fallback exists for. Acceptable while it only runs on queries that matched
+  nothing; it is one of the triggers for the OpenSearch upgrade.
+* **Article listings load full bodies.** `ListPublishedAsync` materializes whole `Article` entities —
+  `draft_blocks`, `published_blocks` and now `search_vector` — to build summaries that use none of
+  them. The search vector made an existing inefficiency ~30% worse rather than creating a new one;
+  the fix is a projection query on the summary paths, not table splitting for the vector alone.
 * **The sitemap pages the public listing** 100 articles at a time (cap 50 pages). Correct and cheap
   at the current size; at ten thousand articles it needs a bulk `lastmod`-only endpoint and a sitemap
   index. Noted rather than pre-built.

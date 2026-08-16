@@ -98,6 +98,7 @@ public class ScheduledPublishingJobTests
         public Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default) => throw new NotSupportedException();
         public Task<PagedResult<Article>> ListPublishedAsync(PageRequest page, Guid? categoryId = null, Guid? tagId = null, CancellationToken ct = default) => throw new NotSupportedException();
         public Task<PagedResult<Article>> ListAllAsync(PageRequest page, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<PagedResult<Article>> SearchPublishedAsync(string query, string locale, PageRequest page, bool fuzzy = false, CancellationToken ct = default) => throw new NotSupportedException();
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetTagIdsAsync(IReadOnlyCollection<Guid> articleIds, CancellationToken ct = default) => throw new NotSupportedException();
     }
 }

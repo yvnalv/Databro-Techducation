@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using DataBro.Platform.Results;
 
 namespace DataBro.Modules.Content.Application;
 
@@ -138,3 +139,20 @@ public sealed record ArticleDto(
 /// client can render crawlable page links without a second request.
 /// </summary>
 public sealed record PageMetaDto(int Page, int PageSize, int Total, int TotalPages);
+
+/// <summary>How a set of search results was matched. Goes over the wire so the UI can be honest.</summary>
+public static class SearchMatchModes
+{
+    /// <summary>Full-text match on the query as typed.</summary>
+    public const string Exact = "exact";
+
+    /// <summary>
+    /// Trigram-similarity match on titles, used only after full-text found nothing. The UI must say
+    /// so — silently showing approximate results for a query that matched nothing is how a search
+    /// box teaches people not to trust it.
+    /// </summary>
+    public const string Fuzzy = "fuzzy";
+}
+
+/// <summary>A page of search results plus how they were matched (<see cref="SearchMatchModes"/>).</summary>
+public sealed record SearchResultDto(PagedResult<ArticleSummaryDto> Results, string MatchMode);

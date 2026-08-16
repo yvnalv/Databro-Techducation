@@ -80,19 +80,28 @@ Emits: `MediaUploaded`.
 
 ---
 
-## Search (P1)
+## Search (reserved — not built)
 
-Indexing and query over published content.
+> **Status: four empty marker projects.** Phase 1 full-text search is implemented **inside Content**
+> ([ADR-0010](adr/0010-fts-lives-in-content.md)), over a generated `tsvector` column on `articles`.
+> The design below is the *target* for the event-fed OpenSearch index; it depends on a transactional
+> outbox that does not exist yet, and building it without one would ship a search index that can
+> silently disagree with the catalogue.
 
-* PostgreSQL full-text search (weighted tsvector over title/summary/body/tags; trigram fuzzy fallback).
+Planned: indexing and query over published content across modules.
+
 * Rebuilds its index reactively from content events; never reads Content's tables directly for writes
   beyond an initial backfill contract.
 
-Owns: `search_documents` (denormalized, module-owned).
+Will own: `search_documents` (denormalized, module-owned).
 
-Consumes: `ArticlePublished` / `ArticleUnpublished` / `ArticleUpdated` / `ArticleDeleted` events.
+Will consume: `ArticlePublished` / `ArticleUnpublished` / `ArticleUpdated` / `ArticleDeleted` events.
 
-Exposes (contract): `ISearchService`.
+Will expose (contract): `ISearchService`. Until then the stable seam is the HTTP endpoint
+`GET /api/v1/search`, which does not change when the engine does.
+
+**Trigger to build this:** the outbox landing, or Learning (Phase 2) introducing a second searchable
+aggregate — a union across modules cannot live inside one of them.
 
 ---
 
