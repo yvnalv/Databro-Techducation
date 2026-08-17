@@ -1,6 +1,7 @@
 using DataBro.Api;
 using DataBro.Modules.Content.Api;
 using DataBro.Modules.Identity.Api;
+using DataBro.Modules.Learning.Api;
 using DataBro.Modules.Media.Api;
 using DataBro.Modules.Search.Api;
 using Hangfire;
@@ -14,6 +15,7 @@ builder.Services
     .AddIdentityModule(builder.Configuration)
     .AddContentModule(builder.Configuration)
     .AddMediaModule(builder.Configuration)
+    .AddLearningModule(builder.Configuration)
     .AddSearchModule(builder.Configuration);
 
 // ---- CORS ----
@@ -86,6 +88,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
 app.MapIdentityModule()
    .MapContentModule()
    .MapMediaModule()
+   .MapLearningModule()
    .MapSearchModule();
 
 app.Run();

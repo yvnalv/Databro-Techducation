@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.18" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.13.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -19,8 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Domain only: the curriculum rules are pure logic and need no host or database. -->
-    <ProjectReference Include="..\..\src\Modules\Learning\DataBro.Modules.Learning.Domain\DataBro.Modules.Learning.Domain.csproj" />
+    <!-- The host, so the API tests exercise the real composition: Learning holding ids, Content
+         holding bodies, and the reader joining them. The domain tests need none of it, but they
+         cost nothing to run alongside. -->
+    <ProjectReference Include="..\..\src\Api\DataBro.Api\DataBro.Api.csproj" />
   </ItemGroup>
 
 </Project>

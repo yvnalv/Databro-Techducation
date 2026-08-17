@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NpgsqlTypes;
 using DataBro.Platform.SharedKernel;
+using DataBro.Platform.Persistence;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 

@@ -1,5 +1,48 @@
 # DataBro Changelog
 
+## [2026-08-17 08:34:22 UTC]
+
+CHG-0035 — Learning persistence and the curriculum API (ADR-0013, step 5)
+
+A course can now be built, published and read end to end, with its lessons joined to the bodies
+Content owns. Verified on the live stack: created a course, added a module and a lesson, published,
+and read the public page with the body text resolved through the contract.
+
+- Five tables in a new `learning` schema: `courses`, `course_modules`, `lessons`, `learning_paths`,
+  `path_courses`.
+- **`lessons.content_unit_id` has deliberately no foreign key.** It crosses a module boundary, and a
+  database constraint there would couple the two schemas exactly as tightly as the direct table
+  access rule 10 forbids. Same for `path_courses.course_id`, where a cascade would silently rewrite
+  curricula an author never touched.
+- The read composes in **one** batch call to `ILessonContentReader` however many lessons a course
+  has — the reason that contract is batch-shaped.
+- Reordering is a single `PUT .../order` against the aggregate root, not a move per row: a drag that
+  half-applies leaves the curriculum in an order nobody chose.
+- Curriculum structure sits behind `Content.Edit` and publishing behind `Content.Publish`, the same
+  split articles use (CT-4). Reusing those rather than minting Learning permissions keeps one
+  editorial role instead of two overlapping sets to grant.
+
+**A unique index that had to be removed, and why that is the right answer.** `(course_module_id,
+order)` was unique, since contiguity is an invariant. Reordering three lessons then failed outright:
+EF issues the position UPDATEs one at a time, so an intermediate state legitimately has two rows at
+the same position. PostgreSQL can defer a unique *constraint* to commit time, which would fix that —
+but a deferrable constraint cannot be partial, and this one must be filtered on `is_deleted` or a
+soft-deleted lesson's tombstone holds its position forever. The two requirements are mutually
+exclusive, so the index is now non-unique and the invariant stays where it was already enforced: the
+aggregate normalises after every structural change, the lists are private, and no caller can
+construct a gap. Found by a test, not by reasoning.
+
+Also moved **`JsonbConversion`** to `Platform.Persistence` — a generic EF helper that was internal to
+Content, needed by Learning's objective and prerequisite lists. Same reasoning as `Slug` last commit.
+
+**Known gap, and it is the loop's missing half:** there is no authoring API for a lesson *body*.
+Learning can attach a `contentUnitId`, but nothing can create one — the live verification above
+required inserting a row by hand. That blocks the CMS course builder and is the next slice.
+
+32 Learning tests (23 domain, 9 API against a real database); backend 231 green.
+
+---
+
 ## [2026-08-17 07:53:48 UTC]
 
 CHG-0034 — The Learning domain (ADR-0013, step 4)

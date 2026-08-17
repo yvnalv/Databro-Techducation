@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace DataBro.Modules.Content.Infrastructure.Persistence;
+namespace DataBro.Platform.Persistence;
 
 /// <summary>
 /// Maps a POCO property to a PostgreSQL <c>jsonb</c> column via System.Text.Json.
-/// Used for content blocks and SEO metadata (ADR-0004).
+/// Used for content blocks and SEO metadata (ADR-0004), and for the small string and id lists on
+/// Learning aggregates. Shared rather than per-module: nothing here is domain-specific.
 /// </summary>
-internal static class JsonbConversion
+public static class JsonbConversion
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 

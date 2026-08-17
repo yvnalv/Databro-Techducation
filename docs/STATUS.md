@@ -144,15 +144,18 @@ being tidied away.
 [ADR-0012](adr/0012-lesson-bodies-live-in-content.md)'s implementation order are done: the content
 engine is extracted, and lesson bodies exist as their own aggregate.
 
-1. **`IContentUnitReader` in Platform** (step 3, small) — lets Learning read a lesson body without
-   touching Content's tables. Third use of the ADR-0008 pattern.
-2. **Learning module + domain** (step 4, large) — four new projects, none scaffolded yet, then
-   `LearningPath → Course → CourseModule → Lesson`. Three invariants need deciding first: whether a
-   Course has its own publish lifecycle separate from its lessons', how ordering is stored, and what
-   happens when a lesson body is unpublished under a published course.
-3. **Learning API + CMS course builder** (step 5, large).
-4. **Enrollment and progress** (step 6, medium) — the first genuinely **write-heavy** surface on a
-   platform that has been read-heavy throughout, so it deserves its own storage thinking rather than
+Steps 1–5 of [ADR-0012](adr/0012-lesson-bodies-live-in-content.md)'s order are done, bar the CMS.
+A course can be built, published and read through the API, with its lessons joined to bodies Content
+owns.
+
+1. **A lesson-body authoring API** — the loop's missing half. Learning can attach a
+   `contentUnitId`, but nothing can *create* one: `LessonContent` has no endpoints, so a body has to
+   be inserted by hand. Small, and it blocks the CMS.
+2. **CMS course builder** (large) — the tree with drag-reorder. The API is shaped for it: a whole
+   rearrangement is one `PUT .../order` call against one aggregate.
+3. **Public course and path pages** on the site.
+4. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
+   that has been read-heavy throughout, so it deserves its own storage thinking rather than
    inheriting the article patterns.
 5. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
