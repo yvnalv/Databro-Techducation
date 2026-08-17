@@ -2,6 +2,7 @@ using DataBro.Modules.Content.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 

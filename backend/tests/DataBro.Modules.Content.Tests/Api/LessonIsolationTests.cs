@@ -6,6 +6,7 @@ using DataBro.Modules.Content.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Tests.Api;
 

@@ -5,6 +5,7 @@ using DataBro.Platform.Abstractions;
 using DataBro.Platform.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Tests.Application;
 

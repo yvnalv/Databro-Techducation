@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataBro.Modules.Learning.Application\DataBro.Modules.Learning.Application.csproj" />
+    <ProjectReference Include="..\DataBro.Modules.Learning.Infrastructure\DataBro.Modules.Learning.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\DataBro.Platform.Web\DataBro.Platform.Web.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

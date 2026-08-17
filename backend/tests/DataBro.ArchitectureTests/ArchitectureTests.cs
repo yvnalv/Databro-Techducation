@@ -12,7 +12,7 @@ public class ArchitectureTests
 {
     private const string Prefix = "DataBro.Modules";
 
-    private static readonly string[] Modules = ["Identity", "Content", "Media", "Search"];
+    private static readonly string[] Modules = ["Identity", "Content", "Media", "Search", "Learning"];
 
     private static readonly Assembly[] DomainAssemblies =
     [
@@ -20,6 +20,7 @@ public class ArchitectureTests
         typeof(Modules.Content.Domain.ContentDomainMarker).Assembly,
         typeof(Modules.Media.Domain.MediaDomainMarker).Assembly,
         typeof(Modules.Search.Domain.SearchDomainMarker).Assembly,
+        typeof(Modules.Learning.Domain.LearningDomainMarker).Assembly,
     ];
 
     private static readonly Assembly[] ApplicationAssemblies =
@@ -28,6 +29,7 @@ public class ArchitectureTests
         typeof(Modules.Content.Application.ContentApplicationMarker).Assembly,
         typeof(Modules.Media.Application.MediaApplicationMarker).Assembly,
         typeof(Modules.Search.Application.SearchApplicationMarker).Assembly,
+        typeof(Modules.Learning.Application.LearningApplicationMarker).Assembly,
     ];
 
     [Fact]

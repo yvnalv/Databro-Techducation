@@ -2,6 +2,7 @@ using DataBro.Modules.Content.Domain;
 using DataBro.Modules.Content.Infrastructure.Persistence;
 using DataBro.Platform.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Infrastructure.Directory;
 

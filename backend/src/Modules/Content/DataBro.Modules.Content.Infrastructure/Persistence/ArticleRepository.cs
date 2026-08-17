@@ -3,6 +3,7 @@ using DataBro.Modules.Content.Domain;
 using DataBro.Platform.Results;
 using Microsoft.EntityFrameworkCore;
 using NpgsqlTypes;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 

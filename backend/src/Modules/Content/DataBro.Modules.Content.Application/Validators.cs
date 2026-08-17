@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using FluentValidation;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Application;
 

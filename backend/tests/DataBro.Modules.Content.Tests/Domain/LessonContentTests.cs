@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using DataBro.Modules.Content.Domain;
 using Xunit;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Tests.Domain;
 

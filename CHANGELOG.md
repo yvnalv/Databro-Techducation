@@ -1,5 +1,53 @@
 # DataBro Changelog
 
+## [2026-08-17 07:53:48 UTC]
+
+CHG-0034 — The Learning domain (ADR-0013, step 4)
+
+Four new projects and the curriculum aggregates. Domain and tests only — persistence and the API are
+the next slice.
+
+- **[ADR-0013](docs/adr/0013-learning-curriculum-invariants.md)** records the three invariants that
+  had to be settled first. They were put to the project owner with a recommendation each and an
+  explicit offer to proceed on those recommendations if no preference came back; none did, so they
+  were taken — and written down as decisions rather than left as assumptions in code comments,
+  because each is reversible only at the cost of a migration and an authoring-flow change.
+- **A course publishes independently of its lessons.** A published course shows only its published
+  lessons. Requiring every lesson to be finished first would make a large curriculum unpublishable
+  until the last one was written, and courses grow after launch.
+- **Ordering is a contiguous integer, normalised on every change.** A linked list reorders in O(1)
+  and queries badly; sparse integers drift until a reorder silently does nothing. Renumbering a few
+  dozen siblings costs nothing and makes "the third lesson" mean `Order == 2` forever. The domain
+  owns the normalisation, so no caller can construct a gap.
+- **A lesson whose body is unpublished disappears from the course** — and this one was settled by the
+  architecture rather than by preference. Content cannot refuse the unpublish, because it has no way
+  to ask Learning whether the body is in use without depending on Learning (rule 10). What the
+  product owes in exchange is a warning in the CMS where an author can act on it.
+- `Course` is the aggregate root owning modules and lessons, because reordering is what an authoring
+  UI does constantly and one root makes a whole rearrangement one atomic save. `LearningPath` is a
+  separate root holding course *ids*: a course belongs to several paths, so owning them would put
+  the same course in two aggregates.
+
+Two things this slice dragged in:
+
+- **`Slug` moved to the shared kernel.** A course has a public URL exactly as an article does, and
+  Learning cannot reference Content's types. Nothing about it was ever content-specific — it is a
+  URL primitive. Twenty-four files gained a `using`; no behaviour changed.
+- **A latent cross-platform bug, found by accident.** Moving `Slug` rewrote `ArticleConfiguration.cs`
+  with LF endings, and the generated search-vector SQL is a raw string literal — so the model's
+  computed-column definition changed, and EF wanted a migration to rewrite a stored generated column
+  purely to alter whitespace. The real problem is bigger than this commit: **a Windows working copy
+  (CRLF) and a Linux CI runner (LF) would have built different models**, so CI would have reported
+  pending changes against a clean checkout. Line endings are now normalised before the SQL reaches
+  the model.
+- **Learning was not covered by the architecture-fitness gate** until it was added to it. The gate
+  enumerates modules explicitly, so a new module is unguarded until someone registers it — worth
+  knowing, because the failure is silent.
+
+23 domain tests; backend 222 green.
+
+---
+
 ## [2026-08-17 07:28:05 UTC]
 
 CHG-0033 — `ILessonContentReader`: the contract Learning reads bodies through (ADR-0012, step 3)

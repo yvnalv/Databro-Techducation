@@ -139,15 +139,30 @@ Owns: `notifications`, `email_log`.
 
 ---
 
-## Learning (P2)
+## Learning (P2) — domain built
 
-Structured learning over the Content engine.
+Structured learning over the Content engine ([ADR-0013](adr/0013-learning-curriculum-invariants.md)).
 
-* `LearningPath` → `Course` → `CourseModule` → `Lesson`. A `Lesson` references a Content unit and adds
-  learning metadata (objectives, prerequisites, estimated time, difficulty, ordering).
-* Enrollment; per-user progress, completion, resume, streaks; bookmarks.
+* `LearningPath` → `Course` → `CourseModule` → `Lesson`. A `Lesson` references a Content unit by id
+  and adds learning metadata (objectives, prerequisites, estimated time, difficulty, ordering).
+* **`Course` is the aggregate root**, owning its modules and their lessons — because reordering is
+  the operation an authoring UI performs constantly, and one root makes a whole rearrangement a
+  single atomic save.
+* **`LearningPath` is a separate root** holding an ordered list of course *ids*. A course belongs to
+  several paths, so a path owning its courses would put the same course in two aggregates.
+* **A course publishes independently of its lessons.** A published course shows only its published
+  lessons; requiring every lesson first would make a large curriculum unpublishable until the last
+  one was written. A lesson whose body is unpublished simply disappears — Content cannot refuse the
+  unpublish, because it must not depend on Learning.
+* Ordering is a contiguous integer normalised on every change, so `Order` is always `0..n-1`.
 
-Emits: `LessonCompleted`, `CourseCompleted`, `Enrolled`.
+Owns: `learning_paths`, `path_courses`, `courses`, `course_modules`, `lessons` *(persistence not yet
+written — the domain and its tests are).*
+
+Consumes (contract): **`ILessonContentReader`** from Content, for lesson bodies.
+
+Emits: `CoursePublished`, `CourseUnpublished`. `LessonCompleted`, `CourseCompleted` and `Enrolled`
+arrive with progress.
 
 ---
 

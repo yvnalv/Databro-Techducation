@@ -37,6 +37,10 @@
     <ProjectReference Include="..\..\src\Modules\Search\DataBro.Modules.Search.Application\DataBro.Modules.Search.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Search\DataBro.Modules.Search.Infrastructure\DataBro.Modules.Search.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Search\DataBro.Modules.Search.Api\DataBro.Modules.Search.Api.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Learning\DataBro.Modules.Learning.Domain\DataBro.Modules.Learning.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Learning\DataBro.Modules.Learning.Application\DataBro.Modules.Learning.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Learning\DataBro.Modules.Learning.Infrastructure\DataBro.Modules.Learning.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Learning\DataBro.Modules.Learning.Api\DataBro.Modules.Learning.Api.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 using DataBro.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Application;
 

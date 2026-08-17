@@ -1,3 +1,5 @@
+using DataBro.Platform.SharedKernel;
+
 namespace DataBro.Modules.Content.Domain;
 
 /// <summary>

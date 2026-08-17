@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using DataBro.Modules.Identity.Domain;
 using Xunit;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Tests.Api;
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NpgsqlTypes;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 
@@ -69,7 +70,11 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Property<NpgsqlTsVector>(SearchVectorProperty)
             .HasColumnName("search_vector")
-            .HasComputedColumnSql(SearchVectorSql, stored: true);
+            // Line endings normalised before the SQL reaches the model. Without this the definition
+            // carries whatever the file was checked out with, so a Windows working copy (CRLF) and a
+            // Linux CI runner (LF) build *different* models — CI reports pending changes, and the
+            // "fix" is a migration that rewrites a stored generated column to change whitespace.
+            .HasComputedColumnSql(SearchVectorSql.ReplaceLineEndings(" "), stored: true);
 
         // GIN is the right index for tsvector matching: bigger and slower to update than GiST, but
         // this table is written rarely and searched often.

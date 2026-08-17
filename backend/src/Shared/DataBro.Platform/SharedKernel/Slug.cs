@@ -1,10 +1,16 @@
 using System.Text.RegularExpressions;
 
-namespace DataBro.Modules.Content.Domain;
+namespace DataBro.Platform.SharedKernel;
 
 /// <summary>
-/// A URL-safe slug (lowercase, hyphen-separated). Immutable once its article is published
+/// A URL-safe slug (lowercase, hyphen-separated). Immutable once its content is published
 /// (rule CT-2). Value object with validation.
+///
+/// <para>
+/// In the shared kernel rather than in Content, because more than one module now needs it: a course
+/// has a public URL exactly as an article does, and Learning cannot reference Content's types
+/// (CLAUDE.md rule 10). Nothing here is content-specific — it is a URL primitive.
+/// </para>
 /// </summary>
 public sealed partial class Slug : IEquatable<Slug>
 {

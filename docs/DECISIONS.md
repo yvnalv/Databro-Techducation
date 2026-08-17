@@ -20,6 +20,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0010](adr/0010-fts-lives-in-content.md) | Phase 1 full-text search lives in Content, not the Search module | Accepted |
 | [0011](adr/0011-media-storage-and-image-processing.md) | S3-compatible media storage, with images re-encoded on upload | Accepted |
 | [0012](adr/0012-lesson-bodies-live-in-content.md) | Lesson bodies live in Content, in their own table beside articles | Accepted |
+| [0013](adr/0013-learning-curriculum-invariants.md) | Curriculum shape and its three invariants | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

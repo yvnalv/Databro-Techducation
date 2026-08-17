@@ -1,5 +1,6 @@
 using DataBro.Modules.Content.Domain;
 using DataBro.Platform.Abstractions;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Application;
 

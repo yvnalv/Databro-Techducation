@@ -1,6 +1,7 @@
 using DataBro.Modules.Content.Application;
 using DataBro.Modules.Content.Domain;
 using Microsoft.EntityFrameworkCore;
+using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Content.Infrastructure.Persistence;
 
