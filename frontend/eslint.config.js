@@ -84,6 +84,7 @@ export default tseslint.config(
       // Formatting is not this tool's job — these fight a formatter and produce noise.
       "vue/max-attributes-per-line": "off",
       "vue/singleline-html-element-content-newline": "off",
+      "vue/multiline-html-element-content-newline": "off",
       "vue/html-self-closing": "off",
       "vue/html-indent": "off",
       "vue/html-closing-bracket-newline": "off",

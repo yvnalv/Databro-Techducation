@@ -291,6 +291,95 @@ export interface MediaAsset extends MediaRef {
   createdAt: string;
 }
 
+// ---- Learning (ADR-0012, ADR-0013) ----
+
+export type CourseStatus = "draft" | "published" | "unpublished";
+export type Difficulty = "beginner" | "intermediate" | "advanced";
+
+/**
+ * A lesson body — the same content engine an article uses, with none of the standalone-page
+ * furniture: no author, taxonomy, SEO or locale. Reached through its course, never on its own.
+ */
+export interface LessonContent {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  status: ArticleStatus;
+  currentVersion: number;
+  readingTimeMinutes: number;
+  content: ContentDocument;
+  publishedAt?: string;
+}
+
+/** A row in the picker when attaching a body to a course. No blocks — a list is a list. */
+export interface LessonContentSummary {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  status: ArticleStatus;
+  readingTimeMinutes: number;
+  publishedAt?: string;
+}
+
+/**
+ * A lesson in a curriculum: its position and learning metadata, joined to the body Content owns.
+ *
+ * `isPublished` refers to the *body*. A course can go live before every lesson is written
+ * (ADR-0013), so the authoring view shows unpublished ones — with empty `blocks` — and the public
+ * course page omits them entirely.
+ */
+export interface CourseLesson {
+  id: string;
+  contentUnitId: string;
+  slug: string;
+  title: string;
+  summary: string;
+  order: number;
+  estimatedMinutes: number;
+  difficulty: Difficulty;
+  objectives: string[];
+  prerequisiteLessonIds: string[];
+  isPublished: boolean;
+  blocks: ContentBlock[];
+}
+
+export interface CourseModule {
+  id: string;
+  title: string;
+  summary: string;
+  order: number;
+  lessons: CourseLesson[];
+}
+
+export interface Course {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  status: CourseStatus;
+  difficulty: Difficulty;
+  lessonCount: number;
+  /** Summed from the lessons, so it cannot drift from the curriculum it describes. */
+  estimatedMinutes: number;
+  publishedAt?: string;
+  modules: CourseModule[];
+}
+
+/** A course card. No curriculum, because a card does not render one. */
+export interface CourseSummary {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  status: CourseStatus;
+  difficulty: Difficulty;
+  lessonCount: number;
+  estimatedMinutes: number;
+  publishedAt?: string;
+}
+
 // ---- Version history (CT-8) ----
 
 /**

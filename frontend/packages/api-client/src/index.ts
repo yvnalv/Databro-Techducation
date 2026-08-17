@@ -11,6 +11,12 @@ import type {
   AuthTokens,
   Category,
   CategoryWithAncestors,
+  ContentDocument,
+  Course,
+  CourseSummary,
+  Difficulty,
+  LessonContent,
+  LessonContentSummary,
   Paged,
   PageMeta,
   MediaAsset,
@@ -397,6 +403,218 @@ export class ApiClient {
   deleteTag(id: string): Promise<unknown> {
     return this.request<unknown>(`/api/v1/authoring/tags/${encodeURIComponent(id)}`, {
       method: "DELETE",
+    });
+  }
+
+  // ---- Learning: curriculum authoring (ADR-0013) ----
+  //
+  // Structure sits behind Content.Edit and publishing behind Content.Publish, the same split
+  // articles use — so an Author can build a curriculum but not put it live.
+
+  async listAuthoringCourses(params?: { page?: number; pageSize?: number }): Promise<Paged<CourseSummary>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<CourseSummary[]>(`/api/v1/authoring/courses${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getAuthoringCourse(id: string): Promise<Course> {
+    return this.request<Course>(`/api/v1/authoring/courses/${encodeURIComponent(id)}`);
+  }
+
+  createCourse(input: {
+    title: string;
+    summary: string;
+    slug?: string;
+    difficulty?: Difficulty;
+  }): Promise<Course> {
+    return this.json<Course>("/api/v1/authoring/courses", "POST", input);
+  }
+
+  updateCourse(
+    id: string,
+    input: { title: string; summary: string; difficulty?: Difficulty },
+  ): Promise<Course> {
+    return this.json<Course>(`/api/v1/authoring/courses/${encodeURIComponent(id)}`, "PATCH", input);
+  }
+
+  publishCourse(id: string): Promise<Course> {
+    return this.request<Course>(`/api/v1/authoring/courses/${encodeURIComponent(id)}/publish`, {
+      method: "POST",
+    });
+  }
+
+  unpublishCourse(id: string): Promise<Course> {
+    return this.request<Course>(`/api/v1/authoring/courses/${encodeURIComponent(id)}/unpublish`, {
+      method: "POST",
+    });
+  }
+
+  // ---- Curriculum structure. Every one of these returns the whole course, because they all
+  // mutate one aggregate and the client should never have to reassemble it. ----
+
+  addCourseModule(courseId: string, title: string): Promise<Course> {
+    return this.json<Course>(`/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules`, "POST", { title });
+  }
+
+  updateCourseModule(
+    courseId: string,
+    moduleId: string,
+    input: { title: string; summary?: string },
+  ): Promise<Course> {
+    return this.json<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}`,
+      "PATCH",
+      input,
+    );
+  }
+
+  removeCourseModule(courseId: string, moduleId: string): Promise<Course> {
+    return this.request<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}`,
+      { method: "DELETE" },
+    );
+  }
+
+  /**
+   * Sends the whole desired order in one call. Not a move-per-row: a drag that half-applies leaves
+   * the curriculum in an order nobody chose, and the API models this as one transaction against one
+   * aggregate.
+   */
+  reorderCourseModules(courseId: string, orderedIds: string[]): Promise<Course> {
+    return this.json<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/order`,
+      "PUT",
+      { orderedIds },
+    );
+  }
+
+  addCourseLesson(courseId: string, moduleId: string, contentUnitId: string): Promise<Course> {
+    return this.json<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}/lessons`,
+      "POST",
+      { contentUnitId },
+    );
+  }
+
+  updateCourseLesson(
+    courseId: string,
+    moduleId: string,
+    lessonId: string,
+    input: {
+      estimatedMinutes: number;
+      difficulty?: Difficulty;
+      objectives?: string[];
+      prerequisiteLessonIds?: string[];
+    },
+  ): Promise<Course> {
+    return this.json<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}/lessons/${encodeURIComponent(lessonId)}`,
+      "PATCH",
+      input,
+    );
+  }
+
+  removeCourseLesson(courseId: string, moduleId: string, lessonId: string): Promise<Course> {
+    return this.request<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}/lessons/${encodeURIComponent(lessonId)}`,
+      { method: "DELETE" },
+    );
+  }
+
+  reorderCourseLessons(courseId: string, moduleId: string, orderedIds: string[]): Promise<Course> {
+    return this.json<Course>(
+      `/api/v1/authoring/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}/lessons/order`,
+      "PUT",
+      { orderedIds },
+    );
+  }
+
+  // ---- Lesson bodies (ADR-0012). Authoring only: there is no public endpoint, because a lesson is
+  // reached through its course. ----
+
+  async listLessonContent(params?: { page?: number; pageSize?: number }): Promise<Paged<LessonContentSummary>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<LessonContentSummary[]>(`/api/v1/authoring/lessons${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getLessonContent(id: string): Promise<LessonContent> {
+    return this.request<LessonContent>(`/api/v1/authoring/lessons/${encodeURIComponent(id)}`);
+  }
+
+  createLessonContent(input: {
+    title: string;
+    summary: string;
+    content: ContentDocument;
+    slug?: string;
+  }): Promise<LessonContent> {
+    return this.json<LessonContent>("/api/v1/authoring/lessons", "POST", input);
+  }
+
+  updateLessonContent(
+    id: string,
+    input: { title: string; summary: string; content: ContentDocument },
+  ): Promise<LessonContent> {
+    return this.json<LessonContent>(`/api/v1/authoring/lessons/${encodeURIComponent(id)}`, "PATCH", input);
+  }
+
+  publishLessonContent(id: string): Promise<LessonContent> {
+    return this.request<LessonContent>(`/api/v1/authoring/lessons/${encodeURIComponent(id)}/publish`, {
+      method: "POST",
+    });
+  }
+
+  unpublishLessonContent(id: string): Promise<LessonContent> {
+    return this.request<LessonContent>(`/api/v1/authoring/lessons/${encodeURIComponent(id)}/unpublish`, {
+      method: "POST",
+    });
+  }
+
+  listLessonContentVersions(id: string): Promise<ArticleVersionSummary[]> {
+    return this.request<ArticleVersionSummary[]>(
+      `/api/v1/authoring/lessons/${encodeURIComponent(id)}/versions`,
+    );
+  }
+
+  restoreLessonContentVersion(id: string, version: number): Promise<LessonContent> {
+    return this.request<LessonContent>(
+      `/api/v1/authoring/lessons/${encodeURIComponent(id)}/versions/${version}/restore`,
+      { method: "POST" },
+    );
+  }
+
+  /** JSON body helper — these differ only in verb and payload, and repeating the ceremony hid that. */
+  private json<T>(path: string, method: string, body: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
   }
 

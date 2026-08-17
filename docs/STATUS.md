@@ -151,10 +151,11 @@ owns.
 The backend loop is closed: a lesson body can be written and published, attached to a course, and
 read on the public course page — all through the API, verified live.
 
-1. **CMS course builder** (large) — the tree with drag-reorder, plus a lesson editor reusing the
-   existing block editor. The API is already shaped for it: a whole rearrangement is one
-   `PUT .../order` call against one aggregate, and the lesson picker has its listing endpoint.
-2. **Public course and path pages** on the site.
+A curriculum can now be built end to end in the CMS: write a lesson body, publish it, create a
+course, attach the lesson, reorder, publish. Nothing left needs a script or a hand-inserted row.
+
+1. **Public course and path pages** on the site — the last thing standing between Phase 2 and a
+   learner being able to read a course.
 3. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
    that has been read-heavy throughout, so it deserves its own storage thinking rather than
    inheriting the article patterns.

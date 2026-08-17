@@ -11,8 +11,12 @@ const config = useRuntimeConfig();
 
 const publicSiteUrl = computed(() => config.public.siteUrl as string);
 
+// Lessons sits beside Courses rather than under it: a lesson body exists independently of any
+// curriculum and can belong to several, so nesting it would imply an ownership that is not there.
 const navigation = [
   { label: "Articles", to: "/", icon: "articles" },
+  { label: "Courses", to: "/courses", icon: "courses" },
+  { label: "Lessons", to: "/lessons", icon: "lessons" },
   { label: "Taxonomy", to: "/taxonomy", icon: "taxonomy" },
 ];
 

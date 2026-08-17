@@ -1,5 +1,50 @@
 # DataBro Changelog
 
+## [2026-08-17 13:08:19 UTC]
+
+CHG-0037 — CMS course builder and lesson editor
+
+Phase 2 becomes visible. Four new CMS surfaces, and the first frontend work since the polish pass.
+
+- **Course builder** (`/courses/[id]`) — the curriculum tree. Add and rename modules, attach lesson
+  bodies, reorder both, publish.
+- **Lesson editor** (`/lessons/[id]`) — deliberately the article editor *minus* everything a lesson
+  does not have: no taxonomy, no SEO, no scheduling. It reuses the same `BlockEditor` and the same
+  preview renderer, so ADR-0007 pays out at the UI layer too.
+- **Two flat lists** (`/courses`, `/lessons`) and sidebar entries for both. Lessons sits *beside*
+  Courses rather than under it: a body exists independently of any curriculum and can belong to
+  several, so nesting would imply an ownership that is not there.
+
+Three decisions worth naming:
+
+- **Every mutation replaces the whole course.** Each curriculum endpoint returns the full aggregate,
+  so the page never patches local state. That matters most for reordering, which renumbers every
+  sibling — reproducing that in the client would be a second implementation of an invariant the
+  domain already owns, and the two would drift.
+- **Reorder is arrow buttons, not drag-and-drop.** The same reasoning the block editor used: buttons
+  are keyboard-operable and screen-reader-announceable for free, where drag needs a parallel
+  keyboard affordance to be usable at all. Drag is an enhancement on top, never a replacement.
+- **The builder shows which lessons a learner will not see.** ADR-0013 lets a course publish before
+  every lesson is written, and said in as many words that this is an affordance only if the gaps are
+  visible where an author can act on them. A panel lists every lesson whose body is still a draft,
+  each linking to its editor. The lesson editor carries the mirror-image warning: unpublishing a
+  body removes it from every course using it, without warning those courses, because Content cannot
+  ask which curricula depend on a body — the module boundary, not an oversight.
+
+Also disabled `vue/multiline-html-element-content-newline`, the sibling of a formatting rule already
+off. Twelve warnings, all from compact arrow buttons; formatting is not the linter's job here.
+
+Verified against the running stack rather than just compiled: signed in, loaded all four routes,
+confirmed the builder renders the real seeded curriculum with both lessons and its controls, and
+reordered two lessons through the API — positions renumbered correctly. Backend 238 green; frontend
+85 green; lint and typecheck clean across five workspaces.
+
+One shell slip worth recording, because it demonstrated something: an early reorder attempt sent ids
+scraped with the wrong `sed` expression and the API answered **400** rather than corrupting the
+order. The validation refusing ids that are not in the module is doing its job.
+
+---
+
 ## [2026-08-17 11:51:16 UTC]
 
 CHG-0036 — Lesson-body authoring endpoints, and the verification that was owed
