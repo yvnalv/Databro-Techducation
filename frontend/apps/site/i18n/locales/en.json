@@ -51,6 +51,25 @@
     "defaultDescription": "Every article tagged {name}.",
     "articleCount": "No articles yet | 1 article | {count} articles"
   },
+  "courses": {
+    "eyebrow": "Course",
+    "navLabel": "Courses",
+    "listTitle": "Courses",
+    "listDescription": "Structured, practical courses in AI, data and software engineering.",
+    "listEmpty": "No courses have been published yet.",
+    "unavailable": "We could not load the courses right now. Please try again shortly.",
+    "curriculum": "What you'll learn",
+    "curriculumEmpty": "This course has no published lessons yet.",
+    "lessonCount": "No lessons yet | 1 lesson | {count} lessons",
+    "minutes": "{count} min",
+    "hours": "{count} hr | {count} hr | {count} hrs",
+    "readingComingSoon": "Lesson pages are on the way. For now this outline shows what the course covers and how long it takes.",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
   "pagination": {
     "label": "Pagination",
     "previous": "Previous",

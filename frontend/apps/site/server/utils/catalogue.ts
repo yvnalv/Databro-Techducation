@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from "@databro/api-client";
-import type { ArticleSummary, Category, TaxonomyTerm } from "@databro/types";
+import type { ArticleSummary, Category, CourseSummary, TaxonomyTerm } from "@databro/types";
 import type { H3Event } from "h3";
 
 /**
@@ -48,6 +48,27 @@ export async function taxonomy(
   const client = apiClient(event);
   const [categories, tags] = await Promise.all([client.listCategories(), client.listTags()]);
   return { categories, tags };
+}
+
+/**
+ * Every published course, paged through the public listing.
+ *
+ * Same shape and same ceiling as the article walk. A course page is discovered through the sitemap
+ * and the catalogue link before search knows anything about it — so omitting these would leave the
+ * whole curriculum invisible to a crawler.
+ */
+export async function allPublishedCourses(event: H3Event): Promise<CourseSummary[]> {
+  const client = apiClient(event);
+  const collected: CourseSummary[] = [];
+
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const result = await client.listCourses({ page, pageSize: PAGE_SIZE });
+    collected.push(...result.items);
+
+    if (page >= result.meta.totalPages || result.items.length === 0) break;
+  }
+
+  return collected;
 }
 
 /**

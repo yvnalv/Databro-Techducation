@@ -1,5 +1,40 @@
 # DataBro Changelog
 
+## [2026-08-17 13:27:18 UTC]
+
+CHG-0038 — Public course pages
+
+A learner can now see a curriculum. `/courses` and `/courses/[slug]`, in the header, in the sitemap,
+in both locales.
+
+- **The curriculum is an ordered list**, because the order *is* the curriculum — a learner is meant
+  to read these in sequence, and a bulleted list would say otherwise.
+- The page never reasons about draft content: the API already omits lessons whose bodies are
+  unpublished (ADR-0013), so what arrives is exactly what may be shown.
+- **ISR at 15 minutes rather than an article's hour.** A curriculum keeps changing while a course is
+  live — lessons get added, reordered, published — and a stale outline misrepresents what someone is
+  signing up to.
+- **`Course` structured data, without `hasCourseInstance`.** That property describes a scheduled
+  offering with dates and a delivery mode; this is self-paced with none of that, and claiming one
+  would be structured data that misrepresents the product. `timeRequired` is in minutes so a
+  90-minute course is not rounded into a lie.
+- Sitemap gains the catalogue and every published course, at a priority above an article's — a
+  course is a larger commitment and the better landing page. `changefreq` is weekly for the same
+  reason the ISR window is short.
+
+Both locales as required, including the plural forms.
+
+Verified on the running stack: catalogue and course page render the real seeded curriculum with both
+lessons, `Course` JSON-LD emitted, a missing slug returns a genuine **404**, the Indonesian route
+renders translated chrome, and the sitemap carries all four course URLs (84 total). Lint, typecheck
+and 85 frontend tests clean.
+
+**Not searchable.** A course does not appear in `/search` — the index covers articles only. That is
+the open ADR-0010 question and the outbox behind it, and it is now the most visible gap in the
+product: a learner searching for a course finds nothing.
+
+---
+
 ## [2026-08-17 13:08:19 UTC]
 
 CHG-0037 — CMS course builder and lesson editor

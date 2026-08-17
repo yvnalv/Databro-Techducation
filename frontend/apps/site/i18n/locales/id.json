@@ -51,6 +51,25 @@
     "defaultDescription": "Semua artikel yang bertagar {name}.",
     "articleCount": "Belum ada artikel | 1 artikel | {count} artikel"
   },
+  "courses": {
+    "eyebrow": "Kursus",
+    "navLabel": "Kursus",
+    "listTitle": "Kursus",
+    "listDescription": "Kursus terstruktur dan praktis di bidang AI, data, dan software engineering.",
+    "listEmpty": "Belum ada kursus yang diterbitkan.",
+    "unavailable": "Kami tidak dapat memuat kursus saat ini. Silakan coba lagi sebentar lagi.",
+    "curriculum": "Yang akan Anda pelajari",
+    "curriculumEmpty": "Kursus ini belum memiliki pelajaran yang diterbitkan.",
+    "lessonCount": "Belum ada pelajaran | 1 pelajaran | {count} pelajaran",
+    "minutes": "{count} menit",
+    "hours": "{count} jam",
+    "readingComingSoon": "Halaman pelajaran sedang disiapkan. Untuk saat ini, kerangka di atas menunjukkan cakupan kursus dan perkiraan durasinya.",
+    "difficulty": {
+      "beginner": "Pemula",
+      "intermediate": "Menengah",
+      "advanced": "Lanjutan"
+    }
+  },
   "pagination": {
     "label": "Navigasi halaman",
     "previous": "Sebelumnya",

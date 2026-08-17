@@ -1,4 +1,11 @@
-import { LOCALES, allPublishedArticles, siteUrl, taxonomy, xml } from "../utils/catalogue";
+import {
+  LOCALES,
+  allPublishedArticles,
+  allPublishedCourses,
+  siteUrl,
+  taxonomy,
+  xml,
+} from "../utils/catalogue";
 
 /**
  * sitemap.xml (docs/SEO.md §6).
@@ -23,13 +30,27 @@ export default defineEventHandler(async (event) => {
   const origin = siteUrl(event);
 
   // A sitemap that 500s tells a crawler nothing; one missing section still gets the rest indexed.
-  const [articles, terms] = await Promise.all([
+  const [articles, terms, courses] = await Promise.all([
     allPublishedArticles(event).catch(() => []),
     taxonomy(event).catch(() => ({ categories: [], tags: [] })),
+    allPublishedCourses(event).catch(() => []),
   ]);
 
   const entries: SitemapEntry[] = [
     { path: "/", changefreq: "daily", priority: "1.0" },
+
+    // The catalogue and the courses themselves. Priority above an article's, because a course is a
+    // larger commitment and the page a search result should more often land on.
+    { path: "/courses", changefreq: "weekly", priority: "0.9" },
+
+    ...courses.map((course) => ({
+      path: `/courses/${course.slug}`,
+      lastmod: course.publishedAt,
+      // Weekly rather than monthly: a curriculum keeps changing after a course goes live, as
+      // lessons are added and reordered.
+      changefreq: "weekly" as const,
+      priority: "0.8",
+    })),
 
     ...articles.map((article) => ({
       path: `/articles/${article.slug}`,

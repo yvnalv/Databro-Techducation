@@ -74,6 +74,9 @@ export default defineNuxtConfig({
     "/articles/**": { isr: 3600 },
     "/categories/**": { isr: 3600 },
     "/tags/**": { isr: 3600 },
+    // Shorter than an article's hour: a curriculum changes while a course is live — lessons get
+    // added, reordered, published — and a stale outline misrepresents what someone is signing up to.
+    "/courses/**": { isr: 900 },
 
     // Search is per-query, so no caching — and noindex as a real response header, not only the meta
     // tag the page renders. A header cannot be missed by a crawler that gives up on the HTML.

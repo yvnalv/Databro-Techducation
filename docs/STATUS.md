@@ -154,8 +154,15 @@ read on the public course page — all through the API, verified live.
 A curriculum can now be built end to end in the CMS: write a lesson body, publish it, create a
 course, attach the lesson, reorder, publish. Nothing left needs a script or a hand-inserted row.
 
-1. **Public course and path pages** on the site — the last thing standing between Phase 2 and a
-   learner being able to read a course.
+Public course pages ship too: a learner can browse the catalogue and read a curriculum.
+
+1. **Search over curriculum** — now the most visible gap in the product: a course does not appear in
+   `/search` at all, so a learner looking for one finds nothing. This is the open
+   [ADR-0010](adr/0010-fts-lives-in-content.md) question and the **transactional outbox** behind it,
+   and it has stopped being architectural housekeeping.
+2. **Lesson pages** — reading a lesson needs enrollment and progress, so the course page says so
+   rather than linking somewhere that does not exist.
+3. **Learning paths** on the site. The domain and API exist; only the pages are missing.
 3. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
    that has been read-heavy throughout, so it deserves its own storage thinking rather than
    inheriting the article patterns.

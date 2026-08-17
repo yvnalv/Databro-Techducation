@@ -406,6 +406,39 @@ export class ApiClient {
     });
   }
 
+  // ---- Learning: public read ----
+
+  /**
+   * Published courses, newest first. Offset-paged like the article listings, for the same reason:
+   * these are indexable and a crawler needs stable page URLs it can enumerate.
+   */
+  async listCourses(params?: { page?: number; pageSize?: number }): Promise<Paged<CourseSummary>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<CourseSummary[]>(`/api/v1/courses${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  /**
+   * A published course with its curriculum. Lessons whose bodies are unpublished are omitted by the
+   * API, so what arrives here is exactly what a learner may see (ADR-0013).
+   */
+  getCourse(slug: string): Promise<Course> {
+    return this.request<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`);
+  }
+
   // ---- Learning: curriculum authoring (ADR-0013) ----
   //
   // Structure sits behind Content.Edit and publishing behind Content.Publish, the same split
