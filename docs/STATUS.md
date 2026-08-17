@@ -140,14 +140,37 @@ being tidied away.
 
 ## Next up (proposed order)
 
-1. **Phase 2 — Learning.** The polish pass is done (syntax highlighting, table editor, seeded dev
-   login, ESLint), so this is the next substantial step. See the roadmap.
-2. Wire the transactional outbox + `ArticlePublished` handling (cache invalidation; unblocks the
-   real Search module). **Note:** ADR-0010 expires the moment Learning introduces a second
-   searchable aggregate, so this is a genuine Phase 2 prerequisite rather than housekeeping.
-3. **Staging deploy on DigitalOcean** — deferred until there is infrastructure. Auto-migration is
-   `IsDevelopment()`-gated, so the deploy needs an explicit migration step or the schema will never
-   move.
+**Phase 2 — Learning** is under way. Steps 1 and 2 of
+[ADR-0012](adr/0012-lesson-bodies-live-in-content.md)'s implementation order are done: the content
+engine is extracted, and lesson bodies exist as their own aggregate.
+
+1. **`IContentUnitReader` in Platform** (step 3, small) — lets Learning read a lesson body without
+   touching Content's tables. Third use of the ADR-0008 pattern.
+2. **Learning module + domain** (step 4, large) — four new projects, none scaffolded yet, then
+   `LearningPath → Course → CourseModule → Lesson`. Three invariants need deciding first: whether a
+   Course has its own publish lifecycle separate from its lessons', how ordering is stored, and what
+   happens when a lesson body is unpublished under a published course.
+3. **Learning API + CMS course builder** (step 5, large).
+4. **Enrollment and progress** (step 6, medium) — the first genuinely **write-heavy** surface on a
+   platform that has been read-heavy throughout, so it deserves its own storage thinking rather than
+   inheriting the article patterns.
+5. Then **Assessment** (quizzes, attempts, scoring) as its own module.
+
+Owed before step 5, not before step 4:
+
+* **The search decision.** ADR-0010's trigger only half-fires — lesson bodies stay in Content, but
+  course titles, path descriptions and objectives are Learning-owned and learners will expect to find
+  them. Either Learning exposes its own search, or the real Search module gets built.
+* **The transactional outbox.** `Platform/Messaging` is currently one marker interface. It is the
+  dependency under a real Search module and under `LessonCompleted` / `CourseCompleted` doing
+  anything cross-module, so it lands with step 6 at the latest.
+
+Independent of Phase 2:
+
+* **Staging deploy on DigitalOcean** — deferred until there is infrastructure to deploy to.
+  Auto-migration is `IsDevelopment()`-gated, so the deploy needs an explicit migration step or the
+  schema will never move.
+* **ESLint has no backend counterpart.** No analyzer ruleset is configured for the C# side.
 
 ## Known gaps / deferred
 
