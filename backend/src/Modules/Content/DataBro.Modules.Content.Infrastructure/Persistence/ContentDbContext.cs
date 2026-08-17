@@ -13,7 +13,8 @@ public sealed class ContentDbContext(DbContextOptions<ContentDbContext> options)
     public const string Schema = "content";
 
     public DbSet<Article> Articles => Set<Article>();
-    public DbSet<ContentVersion> ArticleVersions => Set<ContentVersion>();
+    public DbSet<ArticleVersion> ArticleVersions => Set<ArticleVersion>();
+    public DbSet<LessonContent> LessonContents => Set<LessonContent>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<ArticleTag> ArticleTags => Set<ArticleTag>();

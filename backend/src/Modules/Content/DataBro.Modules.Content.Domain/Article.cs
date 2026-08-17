@@ -12,6 +12,7 @@ namespace DataBro.Modules.Content.Domain;
 /// </summary>
 public sealed class Article : ContentUnit
 {
+    private readonly List<ArticleVersion> _versions = [];
     private readonly List<ArticleTag> _tags = [];
 
     public Visibility Visibility { get; private set; }
@@ -79,8 +80,13 @@ public sealed class Article : ContentUnit
             _tags.Add(new ArticleTag(Guid.NewGuid(), Id, tagId));
     }
 
+    protected override IReadOnlyList<ContentVersion> VersionsCore => _versions;
+
+    protected override void AppendVersion(int version, string title, string summary, ContentDocument blocks)
+        => _versions.Add(new ArticleVersion(Guid.NewGuid(), Id, version, title, summary, blocks));
+
     // The engine raises no events of its own: it does not know what it is. An article announces
-    // itself, and a lesson body will announce something different (ADR-0012).
+    // itself, and a lesson body announces something different (ADR-0012).
     protected override void OnPublished()
         => Raise(new ArticlePublishedDomainEvent(Id, Slug.Value, CurrentVersion));
 

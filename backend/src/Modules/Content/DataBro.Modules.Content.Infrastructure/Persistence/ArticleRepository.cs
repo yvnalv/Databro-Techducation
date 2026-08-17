@@ -13,7 +13,7 @@ internal sealed class ArticleRepository(ContentDbContext db) : IArticleRepositor
 
     public Task<Article?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => db.Articles
-            .Include(a => a.Versions)
+            .Include("_versions")
             .Include("_tags")
             .FirstOrDefaultAsync(a => a.Id == id, ct);
 
@@ -123,7 +123,7 @@ internal sealed class ArticleRepository(ContentDbContext db) : IArticleRepositor
         // Versions loaded so Publish can append the new one against a tracked collection, matching
         // the interactive publish path (GetByIdAsync).
         => await db.Articles
-            .Include(a => a.Versions)
+            .Include("_versions")
             .Where(a => a.Status == ArticleStatus.Scheduled && a.ScheduledFor != null && a.ScheduledFor <= now)
             .ToListAsync(ct);
 

@@ -18,6 +18,13 @@ public static class ModelBuilderConventions
             if (!typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
                 continue;
 
+            // EF allows a query filter only on the root of an inheritance hierarchy, and applying it
+            // there covers every derived type anyway. Content's `ContentUnit` hierarchy (ADR-0012)
+            // is the first to have one; before that every entity was its own root, so this loop was
+            // free to filter each in turn.
+            if (entityType.BaseType is not null)
+                continue;
+
             var parameter = Expression.Parameter(entityType.ClrType, "e");
             var isDeleted = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
             var notDeleted = Expression.Equal(isDeleted, Expression.Constant(false));

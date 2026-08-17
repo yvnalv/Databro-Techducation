@@ -22,8 +22,6 @@ namespace DataBro.Modules.Content.Domain;
 /// </summary>
 public abstract class ContentUnit : AggregateRoot
 {
-    private readonly List<ContentVersion> _versions = [];
-
     public Slug Slug { get; protected set; } = null!;
     public string Title { get; protected set; } = string.Empty;
     public string Summary { get; protected set; } = string.Empty;
@@ -58,7 +56,19 @@ public abstract class ContentUnit : AggregateRoot
     public DateTimeOffset? PublishedAt { get; protected set; }
     public DateTimeOffset? ScheduledFor { get; protected set; }
 
-    public IReadOnlyList<ContentVersion> Versions => _versions.AsReadOnly();
+    /// <summary>
+    /// Published history, newest version last (CT-8).
+    ///
+    /// Delegated to the derived type rather than held here: each unit type stores its versions in
+    /// its own table, so each owns a differently-typed list and EF maps each relationship to the
+    /// right table. The engine only ever needs to read them and append one.
+    /// </summary>
+    public IReadOnlyList<ContentVersion> Versions => VersionsCore;
+
+    protected abstract IReadOnlyList<ContentVersion> VersionsCore { get; }
+
+    /// <summary>Appends a snapshot of the concrete type's own version class.</summary>
+    protected abstract void AppendVersion(int version, string title, string summary, ContentDocument blocks);
 
     protected ContentUnit() { } // EF
 
@@ -152,7 +162,7 @@ public abstract class ContentUnit : AggregateRoot
     /// </summary>
     public Result RestoreVersion(int version)
     {
-        var snapshot = _versions.FirstOrDefault(v => v.Version == version);
+        var snapshot = VersionsCore.FirstOrDefault(v => v.Version == version);
         if (snapshot is null)
             return Result.Failure(Error.NotFound($"Version {version} does not exist for this content."));
 
@@ -184,8 +194,7 @@ public abstract class ContentUnit : AggregateRoot
         PublishedAt = now;
         ScheduledFor = null;
 
-        _versions.Add(new ContentVersion(
-            Guid.NewGuid(), Id, CurrentVersion, Title, Summary, DraftBlocks));
+        AppendVersion(CurrentVersion, Title, Summary, DraftBlocks);
 
         OnPublished();
         return Result.Success();

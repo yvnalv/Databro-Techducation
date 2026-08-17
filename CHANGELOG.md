@@ -1,5 +1,53 @@
 # DataBro Changelog
 
+## [2026-08-17 07:16:46 UTC]
+
+CHG-0032 — `LessonContent`: a lesson body beside articles (ADR-0012, step 2)
+
+The first slice where the `ContentUnit` seam carries weight. A lesson body is now a real aggregate
+sharing the engine with `Article` — same blocks, same versioning, same publish path — in its own
+table, so no query over articles can return one.
+
+- **`LessonContent` is deliberately almost empty.** It *is* the engine. No author byline, no category
+  or tags, no SEO metadata, no locale: a lesson is discovered through its course, not as a standalone
+  indexed page, and giving it those fields would invite exactly the confusion this design prevents.
+  Learning's `Lesson` will hold the objectives, difficulty and ordering.
+- **No search vector on the table either.** Indexing lesson bodies into the vector that feeds
+  `/api/v1/search` would put them in public article results. Making lessons findable is its own
+  decision, tied to the outbox (ADR-0010).
+- **`ContentVersion` became abstract** with `ArticleVersion` and `LessonContentVersion` beneath it.
+  A single shared version table is not possible: two owner tables cannot share one foreign-key
+  column, so the relationship EF needs to load history through an aggregate could not be expressed.
+- **`IContentSlugRegistry`** enforces slug uniqueness across both tables on the write path. A unique
+  index cannot span tables — this is the one cost of separate tables, and it is paid in one guard
+  rather than as a predicate repeated on every read path.
+- **Four isolation tests assert a structural property, not a predicate.** A published lesson 404s at
+  `/api/v1/articles/{slug}`, is absent from the listing that feeds the homepage, sitemap and RSS, and
+  returns nothing from search — because it is not in that table. Under the rejected discriminator
+  these would have been tests of something a developer must remember to write.
+
+Three things the mapping fought back on, each now commented where it bites:
+
+- **Keys and query filters belong on the hierarchy root.** EF rejects both on a derived type, so the
+  engine's columns moved to a `ContentUnitConfiguration` — which is the better place anyway, since
+  every content unit table carries exactly those columns and defining them twice would let the two
+  drift. `ApplySoftDeleteQueryFilter` now skips derived types; before this hierarchy existed, every
+  entity was its own root and the loop was free to filter each in turn.
+- **`Include(a => a.Versions)` stopped working.** `Versions` is a computed projection over each
+  type's own list, not a navigation, so the repository includes the backing field instead.
+- **The migration needed hand-editing.** EF emitted `DropPrimaryKey` + `AddPrimaryKey` for what is
+  only a change of constraint *name*, and PostgreSQL refuses to drop a primary key that foreign keys
+  depend on — so it failed outright, taking 77 tests with it. Replaced with `RENAME CONSTRAINT`,
+  same end state, dependents untouched. The names go PascalCase because the naming convention cannot
+  derive a table name for a key on an abstract type; recorded in DATABASE.md as the cosmetic wart it
+  is rather than fought.
+
+Verified on the live database after migrating: both tables present, all 35 articles and 36 version
+rows intact through the `article_id` → `content_unit_id` rename, and every public surface unchanged.
+Backend 192 green including the architecture-fitness gate.
+
+---
+
 ## [2026-08-17 06:57:55 UTC]
 
 CHG-0031 — Extract the content engine into `ContentUnit` (ADR-0012, step 1)

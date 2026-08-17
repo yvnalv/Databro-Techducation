@@ -76,7 +76,27 @@ keys across module boundaries (references across modules are by id + contract, n
 Indexes: unique(`slug`), GIN on `draft_blocks`/`published_blocks` where queried, btree(`status`,
 `published_at`), (`category_id`), (`translation_group_id`).
 
-**article_versions** (id, article_id, version, blocks jsonb, title, summary, + audit) — immutable
+**lesson_contents** — a lesson's renderable body ([ADR-0012](adr/0012-lesson-bodies-live-in-content.md)).
+Exactly the engine's columns and nothing else: no author, category, tags, SEO or locale, and **no
+search vector**. Its own table beside `articles` so no query over articles can return one. Learning's
+`Lesson` references it by id.
+
+**lesson_content_versions** — the same shape as `article_versions`. Separate because two owner tables
+cannot share one foreign-key column, which is also why `ContentVersion` is an abstract type with one
+concrete class per unit type.
+
+> **Slug uniqueness spans both tables** and is enforced by `IContentSlugRegistry` on the write path,
+> because a unique index cannot. That is the single cost of separate tables, deliberately paid in one
+> guard rather than as a `kind = Article` predicate repeated on every public read path — where
+> forgetting one is silent and public.
+
+> **Constraint naming wart.** `articles` and `article_versions` carry PascalCase primary keys
+> (`PK_articles`) while everything else is snake_case. EFCore.NamingConventions cannot derive a table
+> name for a key declared on the abstract `ContentUnit`, which has no table of its own. Cosmetic;
+> renaming them in place was the only safe migration, since PostgreSQL refuses to drop a primary key
+> that foreign keys depend on.
+
+**article_versions** (id, content_unit_id, version, blocks jsonb, title, summary, + audit) — immutable
 history, one row **per publish** (not per save). Append-only: restoring copies a row into the draft
 and never rewrites one, so publishing a restored version appends a *new* version rather than
 reverting the sequence (CT-8).

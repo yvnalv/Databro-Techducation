@@ -13,7 +13,8 @@ public sealed class ArticleService(
     IClock clock,
     ICurrentUser currentUser,
     IUserDirectory userDirectory,
-    IMediaDirectory mediaDirectory)
+    IMediaDirectory mediaDirectory,
+    IContentSlugRegistry slugs)
 {
     // Fallback author if a request is somehow unauthenticated (authoring endpoints require auth).
     private static readonly Guid SystemAuthorId = new("00000000-0000-0000-0000-0000000000a1");
@@ -35,7 +36,9 @@ public sealed class ArticleService(
             return Result.Failure<ArticleDto>(Error.Validation(ex.Message));
         }
 
-        if (await repository.SlugExistsAsync(slug.Value, ct))
+        // Checked against every content unit, not just articles: a lesson body holding this slug
+        // would shadow the article's URL (ADR-0012).
+        if (await slugs.IsTakenAsync(slug.Value, ct: ct))
             return Result.Failure<ArticleDto>(new Error("slug_taken", $"The slug '{slug.Value}' is already in use."));
 
         var visibility = Enum.TryParse<Visibility>(request.Visibility, ignoreCase: true, out var v)
@@ -203,7 +206,7 @@ public sealed class ArticleService(
         if (slug.Equals(article.Slug))
             return Result.Success(article.ToDraftDto(await ResolveAsync([article], ct)));
 
-        if (await repository.SlugExistsAsync(slug.Value, ct))
+        if (await slugs.IsTakenAsync(slug.Value, excluding: article.Id, ct))
             return Result.Failure<ArticleDto>(new Error("slug_taken", $"The slug '{slug.Value}' is already in use."));
 
         var previous = article.ChangeSlug(slug);

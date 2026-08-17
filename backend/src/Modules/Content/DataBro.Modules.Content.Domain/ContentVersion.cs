@@ -7,23 +7,27 @@ namespace DataBro.Modules.Content.Domain;
 /// what was published and when.
 ///
 /// <para>
-/// Named for the engine rather than for articles (ADR-0012): version history belongs to
-/// <see cref="ContentUnit"/>, so a lesson body gets the same history as an article without a second
-/// implementation. Each concrete unit type keeps its rows in its own table, so
-/// <see cref="ContentUnitId"/> is unique only within that table.
+/// Abstract, with one concrete type per content unit type, because each unit type keeps its history
+/// in its own table — the same table-per-concrete-type rule as the units themselves (ADR-0012). A
+/// single shared version table is not an option: two owner tables cannot share one foreign-key
+/// column, so the relationship EF needs to load history through an aggregate could not be expressed.
+/// </para>
+/// <para>
+/// The shared shape is what matters to everything above the domain: the version DTOs map from this
+/// base, so the API contract does not know there is more than one table.
 /// </para>
 /// </summary>
-public sealed class ContentVersion : Entity
+public abstract class ContentVersion : Entity
 {
-    public Guid ContentUnitId { get; private set; }
-    public int Version { get; private set; }
-    public string Title { get; private set; } = string.Empty;
-    public string Summary { get; private set; } = string.Empty;
-    public ContentDocument Blocks { get; private set; } = ContentDocument.Empty;
+    public Guid ContentUnitId { get; protected set; }
+    public int Version { get; protected set; }
+    public string Title { get; protected set; } = string.Empty;
+    public string Summary { get; protected set; } = string.Empty;
+    public ContentDocument Blocks { get; protected set; } = ContentDocument.Empty;
 
-    private ContentVersion() { } // EF
+    protected ContentVersion() { } // EF
 
-    internal ContentVersion(
+    protected ContentVersion(
         Guid id, Guid contentUnitId, int version, string title, string summary, ContentDocument blocks)
         : base(id)
     {
@@ -33,4 +37,26 @@ public sealed class ContentVersion : Entity
         Summary = summary;
         Blocks = blocks;
     }
+}
+
+/// <summary>A published snapshot of an <see cref="Article"/>. Stored in <c>article_versions</c>.</summary>
+public sealed class ArticleVersion : ContentVersion
+{
+    private ArticleVersion() { } // EF
+
+    internal ArticleVersion(
+        Guid id, Guid articleId, int version, string title, string summary, ContentDocument blocks)
+        : base(id, articleId, version, title, summary, blocks) { }
+}
+
+/// <summary>
+/// A published snapshot of a <see cref="LessonContent"/>. Stored in <c>lesson_content_versions</c>.
+/// </summary>
+public sealed class LessonContentVersion : ContentVersion
+{
+    private LessonContentVersion() { } // EF
+
+    internal LessonContentVersion(
+        Guid id, Guid lessonContentId, int version, string title, string summary, ContentDocument blocks)
+        : base(id, lessonContentId, version, title, summary, blocks) { }
 }
