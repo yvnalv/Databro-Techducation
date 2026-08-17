@@ -1,6 +1,6 @@
 # ADR-0012 — Where a Lesson's body lives
 
-Status: **Proposed**
+Status: **Accepted**
 Date: 2026-08-16
 Deciders: Project owner
 
@@ -65,9 +65,7 @@ The most honest naming, and the shape CONTENT_MODEL.md describes.
 
 ## Decision
 
-*(Pending — this ADR is Proposed. Recommendation below.)*
-
-**Recommended: option B.** ADR-0007's purpose is that the hard parts are written once, and a shared
+**Option B.** ADR-0007's purpose is that the hard parts are written once, and a shared
 base class delivers exactly that — the block model, version history, draft/publish transition and
 reading-time derivation are one implementation either way. What option B additionally buys is that
 the most likely Phase 2 defect, a lesson surfacing where only articles belong, becomes impossible by
@@ -79,7 +77,7 @@ buying that out is worth a second table.
 The cross-table slug check is the one thing option B adds that A gets for free, and it is a single
 guard in one service rather than a predicate repeated across every read path.
 
-## Consequences (if B is accepted)
+## Consequences
 
 * Positive: no article surface can serve a lesson.
 * Positive: no rename, no change to `/api/v1/articles`.
@@ -88,6 +86,57 @@ guard in one service rather than a predicate repeated across every read path.
 * Obligates: slug uniqueness checked across both tables before publish; a `IContentUnitReader`
   contract in Platform (ADR-0008 pattern) so Learning can read a body without touching Content's
   tables.
+
+## The seam, in detail
+
+The base class is the whole decision, so it is specified here rather than discovered during the
+refactor.
+
+**`ContentUnit : AggregateRoot` (abstract) — the engine.** Everything that is true of any renderable,
+versioned body:
+
+| | |
+|---|---|
+| State | `Slug`, `Title`, `Summary`, `Status`, `PublishedAt`, `ScheduledFor` |
+| Bodies | `DraftBlocks`, `PublishedBlocks` |
+| Published snapshot (CT-6) | `PublishedTitle`, `PublishedSummary`, `SearchText` |
+| Derived | `CurrentVersion`, `ReadingTimeMinutes` |
+| History | `Versions` |
+| Behaviour | `UpdateDraft`, `ChangeSlug`, `Schedule`, `CancelSchedule`, `Publish`, `Unpublish`, `RestoreVersion`, `RebuildSearchText` |
+
+**`Article : ContentUnit`** keeps what is article-only: `Visibility`, `Locale`,
+`TranslationGroupId`, `AuthorId`, `CategoryId`, `Seo`, its tag links, `SetCategory`, `SetTags`.
+
+**`LessonContent : ContentUnit`** adds nothing at first — it *is* a body. Learning metadata
+(objectives, prerequisites, difficulty, ordering) belongs to Learning's own `Lesson`, per MODULES.md.
+
+Three details that are easy to get wrong and are decided here:
+
+1. **Domain events.** `Publish()` currently raises `ArticlePublishedDomainEvent`. The base performs
+   the state transition and calls a `protected abstract void OnPublished()` / `OnUnpublished()` hook;
+   each derived type raises its own event. A base that raised an article event for a lesson would be
+   a lie the outbox would later deliver.
+2. **Version rows.** `ArticleVersion` becomes `ContentVersion` with a `ContentUnitId`, so the base
+   can own the history list. This is a rename inside Content with no public-contract impact — the
+   version endpoints return DTOs, not the entity.
+3. **EF mapping.** Each concrete type maps to its own table via `UseTpcMappingStrategy()`. Not TPH
+   (which would put both in one table and reintroduce exactly the leak option B exists to prevent)
+   and not TPT (which would add a join to the hottest read path for no benefit).
+
+**Slug uniqueness** moves to a small service in Content that checks both tables before publish — the
+one thing option A got for free, deliberately paid for in a single place rather than as a predicate
+repeated on every read path.
+
+## Implementation order
+
+1. **Pure refactor, no new behaviour**: extract `ContentUnit`, `ArticleVersion` → `ContentVersion`,
+   with `Article` as the only derived type. 180 existing tests are the safety net; nothing else moves
+   until they are green.
+2. `LessonContent` + its table and the cross-table slug guard.
+3. `IContentUnitReader` in Platform, so Learning can read a body without touching Content's tables.
+4. Learning domain: `LearningPath → Course → CourseModule → Lesson`.
+5. Learning API and the CMS course builder; then the public course/path pages.
+6. Enrollment and progress. Assessment is its own slice after that.
 
 ## Open question this does not settle
 
