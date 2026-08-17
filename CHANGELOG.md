@@ -1,5 +1,35 @@
 # DataBro Changelog
 
+## [2026-08-17 11:51:16 UTC]
+
+CHG-0036 — Lesson-body authoring endpoints, and the verification that was owed
+
+Closes the half of the loop that was missing: Learning could attach a `contentUnitId`, but nothing
+could create one, so building a course required inserting a row by hand.
+
+- Create, update, publish, unpublish, list-for-picker, plus version history and restore — all of
+  which come from the shared engine rather than being written a second time. `LessonContentService`
+  is a fraction of the size of `ArticleService`, and that difference *is* ADR-0007 paying out: no
+  taxonomy, no SEO, no author resolution, no redirects.
+- **No public endpoint, deliberately.** A lesson is reached through its course; a public route here
+  would create a second URL for the same content outside any curriculum. A test asserts both that
+  `/api/v1/lessons/{id}` does not exist and that the authoring route requires a token.
+- Slug uniqueness runs through `IContentSlugRegistry`, so a lesson body cannot take a slug an
+  article already holds — both are URLs on one origin.
+
+**Verification note.** The commit that introduced this code (`fc20374`) carried an explicit
+"VERIFICATION INCOMPLETE" marker: Docker Desktop stopped responding partway through the slice, so
+its seven integration tests had never been run, and only the 108 container-free tests were green.
+Docker has since recovered and the full suite now passes — **238 green**, with Content going from
+166 to 173, which is exactly those seven. Verified live as well: a lesson created, published and
+attached to the existing course entirely through the API, with the public course page rendering two
+lessons and no hand-inserted rows anywhere.
+
+The marker stays in the history rather than being amended away. A commit that honestly said what it
+had not proven is worth more on the record than a tidy one.
+
+---
+
 ## [2026-08-17 08:34:22 UTC]
 
 CHG-0035 — Learning persistence and the curriculum API (ADR-0013, step 5)

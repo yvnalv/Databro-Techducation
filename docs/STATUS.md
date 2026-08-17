@@ -148,16 +148,20 @@ Steps 1–5 of [ADR-0012](adr/0012-lesson-bodies-live-in-content.md)'s order are
 A course can be built, published and read through the API, with its lessons joined to bodies Content
 owns.
 
-1. **A lesson-body authoring API** — the loop's missing half. Learning can attach a
-   `contentUnitId`, but nothing can *create* one: `LessonContent` has no endpoints, so a body has to
-   be inserted by hand. Small, and it blocks the CMS.
-2. **CMS course builder** (large) — the tree with drag-reorder. The API is shaped for it: a whole
-   rearrangement is one `PUT .../order` call against one aggregate.
-3. **Public course and path pages** on the site.
-4. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
+The backend loop is closed: a lesson body can be written and published, attached to a course, and
+read on the public course page — all through the API, verified live.
+
+1. **CMS course builder** (large) — the tree with drag-reorder, plus a lesson editor reusing the
+   existing block editor. The API is already shaped for it: a whole rearrangement is one
+   `PUT .../order` call against one aggregate, and the lesson picker has its listing endpoint.
+2. **Public course and path pages** on the site.
+3. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
    that has been read-heavy throughout, so it deserves its own storage thinking rather than
    inheriting the article patterns.
-5. Then **Assessment** (quizzes, attempts, scoring) as its own module.
+4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
+
+Still owed before the public course pages ship: **the search decision** and **the outbox** above —
+a course is the first thing a learner would expect to find by searching.
 
 Owed before step 5, not before step 4:
 
