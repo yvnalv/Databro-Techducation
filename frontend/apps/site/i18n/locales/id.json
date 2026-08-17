@@ -22,7 +22,12 @@
     "prompt": "Ketik sesuatu di atas untuk mencari artikel.",
     "resultCount": "Tidak ada hasil | 1 hasil | {count} hasil",
     "empty": "Tidak ada yang cocok dengan \"{query}\". Coba kata lain, atau jelajahi topik di bawah.",
-    "fuzzyNotice": "Tidak ada kecocokan persis untuk \"{query}\" — menampilkan artikel dengan judul serupa.",
+    "fuzzyNotice": "Tidak ada kecocokan persis untuk \"{query}\" — menampilkan hasil dengan judul serupa.",
+    "fuzzySegment": "perkiraan",
+    "kind": {
+      "courses": "Kursus",
+      "articles": "Artikel"
+    },
     "failed": "Pencarian sedang tidak tersedia. Silakan coba lagi sebentar lagi."
   },
   "articles": {

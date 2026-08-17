@@ -21,6 +21,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0011](adr/0011-media-storage-and-image-processing.md) | S3-compatible media storage, with images re-encoded on upload | Accepted |
 | [0012](adr/0012-lesson-bodies-live-in-content.md) | Lesson bodies live in Content, in their own table beside articles | Accepted |
 | [0013](adr/0013-learning-curriculum-invariants.md) | Curriculum shape and its three invariants | Accepted |
+| [0014](adr/0014-search-across-modules.md) | Searching across modules: segmented per module, never blended | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

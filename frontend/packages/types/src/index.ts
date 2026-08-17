@@ -484,8 +484,35 @@ export interface Paged<T> {
  */
 export type SearchMatchMode = "exact" | "fuzzy";
 
-export interface SearchResults extends Paged<ArticleSummary> {
+/** One result. `path` is site-relative and locale-agnostic; the owning module decides its shape. */
+export interface SearchHit {
+  id: string;
+  slug: string;
+  path: string;
+  title: string;
+  summary: string;
+}
+
+/**
+ * Results from one module (ADR-0014).
+ *
+ * Segments are never merged into a single ranked list: relevance scores from two corpora are not
+ * comparable, so any blend would be a fabricated ordering. `matchMode` is per segment because two
+ * modules can legitimately disagree — an exact course hit beside a typo-corrected article one.
+ */
+export interface SearchSegment {
+  /** `courses`, `articles`. Stable — the UI keys its section headings off it. */
+  kind: string;
+  hits: SearchHit[];
+  /** The true total, which may exceed `hits.length`: segments are capped for display. */
+  total: number;
   matchMode: SearchMatchMode;
+}
+
+export interface SearchResults {
+  query: string;
+  /** Ordered by the API: courses before articles. */
+  segments: SearchSegment[];
 }
 
 /**

@@ -275,7 +275,11 @@ public class VersionApiTests(ContentApiFactory factory) : IClassFixture<ContentA
         var results = await ReadAsync(
             await factory.CreateClient().GetAsync($"/api/v1/search?q={draftOnlyWord}"));
 
-        Assert.Equal(0, results.Root.GetProperty("meta").GetProperty("total").GetInt32());
+        // Segmented since ADR-0014, so this reads Content's own segment.
+        var articles = results.Root.GetProperty("data").GetProperty("segments").EnumerateArray()
+            .Single(s => s.GetProperty("kind").GetString() == "articles");
+
+        Assert.Equal(0, articles.GetProperty("total").GetInt32());
     }
 
     // ---- Cancelling a schedule (CT-7) ----

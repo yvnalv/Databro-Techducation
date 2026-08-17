@@ -21,7 +21,6 @@ import type {
   PageMeta,
   MediaAsset,
   Redirect,
-  SearchMatchMode,
   SearchResults,
   TaxonomyTerm,
   UserProfile,
@@ -148,35 +147,20 @@ export class ApiClient {
   }
 
   /**
-   * Full-text search over published articles (ADR-0010).
+   * Search across every module, returned as one segment each (ADR-0014).
    *
-   * Locale-scoped, because the index stems per locale — an English query cannot meaningfully rank
-   * Indonesian text. `matchMode` reports whether the API had to fall back to fuzzy title matching.
+   * Locale-scoped, because an index stems per locale and an English query cannot meaningfully rank
+   * Indonesian text. Each segment carries its own `matchMode`, since two modules can legitimately
+   * disagree about whether they had to fall back to fuzzy matching.
    */
-  async search(params: {
-    q: string;
-    locale?: string;
-    page?: number;
-    pageSize?: number;
-  }): Promise<SearchResults> {
+  async search(params: { q: string; locale?: string; limit?: number }): Promise<SearchResults> {
     const query = new URLSearchParams({ q: params.q });
     if (params.locale) query.set("locale", params.locale);
-    if (params.page != null) query.set("page", String(params.page));
-    if (params.pageSize != null) query.set("pageSize", String(params.pageSize));
+    if (params.limit != null) query.set("limit", String(params.limit));
 
-    const { data, meta } = await this.envelope<ArticleSummary[]>(`/api/v1/search?${query}`);
-    const page = meta as unknown as (PageMeta & { matchMode?: SearchMatchMode }) | undefined;
-
-    return {
-      items: data,
-      meta: {
-        page: page?.page ?? 1,
-        pageSize: page?.pageSize ?? data.length,
-        total: page?.total ?? data.length,
-        totalPages: page?.totalPages ?? 1,
-      },
-      matchMode: page?.matchMode ?? "exact",
-    };
+    // Segments rather than a page (ADR-0014): each module searches what it owns and the results
+    // stay separate, because relevance scores from two corpora cannot be meaningfully merged.
+    return this.request<SearchResults>(`/api/v1/search?${query}`);
   }
 
   // ---- Taxonomy ----

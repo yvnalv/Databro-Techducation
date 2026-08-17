@@ -114,31 +114,49 @@ describe("requests", () => {
 });
 
 describe("search", () => {
+  // Segmented since ADR-0014: the API returns one segment per module rather than one ranked page.
+  const segmented = (segments: unknown[]) => ok({ query: "q", segments });
+
   it("encodes the query and passes the locale scope through", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(ok([], { page: 1, pageSize: 20, total: 0, totalPages: 0 }));
+    const fetchMock = vi.fn().mockResolvedValue(segmented([]));
     const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
 
-    await client.search({ q: "rag & agents", locale: "id", page: 2 });
+    await client.search({ q: "rag & agents", locale: "id", limit: 5 });
 
     const url = String(fetchMock.mock.calls[0][0]);
     expect(url).toContain("q=rag+%26+agents");
     expect(url).toContain("locale=id");
-    expect(url).toContain("page=2");
+    expect(url).toContain("limit=5");
   });
 
-  it("surfaces the fuzzy match mode from meta", async () => {
-    const meta = { page: 1, pageSize: 20, total: 1, totalPages: 1, matchMode: "fuzzy" };
-    const fetchMock = vi.fn().mockResolvedValue(ok([{ slug: "a" }], meta));
+  it("returns each module's segment separately", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      segmented([
+        { kind: "courses", total: 1, matchMode: "exact", hits: [{ id: "c", path: "/courses/rag" }] },
+        { kind: "articles", total: 9, matchMode: "exact", hits: [{ id: "a", path: "/articles/rag" }] },
+      ]),
+    );
     const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
 
-    await expect(client.search({ q: "kubernettes" })).resolves.toMatchObject({ matchMode: "fuzzy" });
+    const results = await client.search({ q: "rag" });
+
+    expect(results.segments.map((s) => s.kind)).toEqual(["courses", "articles"]);
+    // The true total, not the number of hits shown — segments are capped for display.
+    expect(results.segments[1]?.total).toBe(9);
   });
 
-  it("defaults to an exact match mode when meta omits it", async () => {
-    // A stale API that predates matchMode must not make the UI apologise for results that are fine.
-    const fetchMock = vi.fn().mockResolvedValue(ok([], { page: 1, pageSize: 20, total: 0, totalPages: 0 }));
+  it("keeps match modes per segment rather than collapsing them", async () => {
+    // Two modules can legitimately disagree, and one flag for both would misreport whichever lost.
+    const fetchMock = vi.fn().mockResolvedValue(
+      segmented([
+        { kind: "courses", total: 1, matchMode: "exact", hits: [{ id: "c" }] },
+        { kind: "articles", total: 2, matchMode: "fuzzy", hits: [{ id: "a" }] },
+      ]),
+    );
     const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
 
-    await expect(client.search({ q: "anything" })).resolves.toMatchObject({ matchMode: "exact" });
+    const results = await client.search({ q: "kubernettes" });
+
+    expect(results.segments.map((s) => s.matchMode)).toEqual(["exact", "fuzzy"]);
   });
 });

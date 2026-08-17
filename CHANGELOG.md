@@ -1,5 +1,49 @@
 # DataBro Changelog
 
+## [2026-08-17 14:00:12 UTC]
+
+CHG-0039 — Cross-module search, segmented (ADR-0014)
+
+Courses are findable. Searching "retrieval" now returns the course *and* the articles, in separate
+groups — the defect that appeared the moment public course pages shipped.
+
+- **[ADR-0014](docs/adr/0014-search-across-modules.md)** resolves the question ADR-0010 left open and
+  named its own expiry for. Four options were weighed; extending Content's search across schemas was
+  rejected outright as exactly what rule 10 forbids.
+- **Results are segmented, never blended, and that is the design rather than a shortcut.** Relevance
+  scores from two corpora are not comparable — they come from different term statistics — so any
+  single ordering across them is a fabricated number wearing the costume of relevance. Segmenting
+  means the question never has to be answered. It also happens to be the better interface: a course
+  and an article are different commitments, and a learner deciding between them is served by seeing
+  which is which.
+- **`IModuleSearch` in Platform**, one implementation per module, aggregated by the **host** — the
+  only layer permitted to know both modules exist. A third searchable module registers itself and
+  the endpoint file does not change.
+- Learning gets its own generated `tsvector` on courses, the same pattern Content proved. No locale
+  `CASE`: a course has no locale column, and choosing a stemmer from nothing would be worse than
+  being explicit that the curriculum is English until translated.
+- **The typo fallback is consistent across segments.** Courses use the same `word_similarity`
+  threshold as articles, because corrected articles beside an empty course list reads as a bug
+  rather than a nuance.
+- `matchMode` is **per segment**. Two modules can legitimately disagree, and one flag for both would
+  misreport whichever lost. The UI only apologises for approximate results when *every* populated
+  segment fell back.
+
+**Breaking change, taken deliberately.** `/api/v1/search` now returns `{ query, segments[] }` instead
+of a paged array. ADR-0014 called this out in advance: worth doing while the only consumer is our own
+site. Twelve existing tests asserted the old shape and were updated — what they assert (ranking,
+stemming, the fallback, draft exclusion) is unchanged; only where they read it from moved.
+
+The lesson-isolation test got stricter in passing: it now asserts *every* segment is empty rather
+than just the articles one. A lesson body has no public URL, so a hit in any segment would point at
+a page that does not exist.
+
+Verified on the live stack: `retrieval` returns 1 course and 31 articles, `Retreival` falls back to
+fuzzy in both, `zzzznothing` returns two empty segments, and the site renders both sections with the
+course linked. Backend 247 green; frontend 85; lint and typecheck clean.
+
+---
+
 ## [2026-08-17 13:27:18 UTC]
 
 CHG-0038 — Public course pages

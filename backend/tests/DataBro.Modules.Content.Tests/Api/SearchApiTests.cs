@@ -18,8 +18,19 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
     private static async Task<JsonElement> ReadAsync(HttpResponseMessage response)
         => JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
 
+    /// <summary>
+    /// The articles segment of the response.
+    ///
+    /// Search is segmented per module since ADR-0014, so these tests read Content's own segment
+    /// rather than the whole payload. What they assert — ranking, stemming, the typo fallback, draft
+    /// exclusion — is unchanged; only where it is read from moved.
+    /// </summary>
+    private static JsonElement Articles(JsonElement root) =>
+        root.GetProperty("data").GetProperty("segments").EnumerateArray()
+            .Single(s => s.GetProperty("kind").GetString() == "articles");
+
     private static string[] Slugs(JsonElement root) =>
-        root.GetProperty("data").EnumerateArray()
+        Articles(root).GetProperty("hits").EnumerateArray()
             .Select(item => item.GetProperty("slug").GetString()!)
             .ToArray();
 
@@ -67,7 +78,7 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
         var root = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/search?q={token}"));
 
         Assert.Contains(slug, Slugs(root));
-        Assert.Equal("exact", root.GetProperty("meta").GetProperty("matchMode").GetString());
+        Assert.Equal("exact", Articles(root).GetProperty("matchMode").GetString());
     }
 
     [Fact]
@@ -87,7 +98,7 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
 
         var root = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/search?q={token}"));
 
-        Assert.Equal(0, root.GetProperty("meta").GetProperty("total").GetInt32());
+        Assert.Equal(0, Articles(root).GetProperty("total").GetInt32());
     }
 
     [Fact]
@@ -133,7 +144,7 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
         // fallback. "Kubernettes" stems to "kubernett" and genuinely misses.
         var root = await ReadAsync(await factory.CreateClient().GetAsync("/api/v1/search?q=Kubernettes%20Autoscaling"));
 
-        Assert.Equal("fuzzy", root.GetProperty("meta").GetProperty("matchMode").GetString());
+        Assert.Equal("fuzzy", Articles(root).GetProperty("matchMode").GetString());
         Assert.Contains(slug, Slugs(root));
     }
 
@@ -149,7 +160,7 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
         // nothing at all. `word_similarity()` scores the best matching run of words instead (0.43).
         var root = await ReadAsync(await factory.CreateClient().GetAsync("/api/v1/search?q=Retreival"));
 
-        Assert.Equal("fuzzy", root.GetProperty("meta").GetProperty("matchMode").GetString());
+        Assert.Equal("fuzzy", Articles(root).GetProperty("matchMode").GetString());
         Assert.Contains(slug, Slugs(root));
     }
 
@@ -174,7 +185,7 @@ public class SearchApiTests(ContentApiFactory factory) : IClassFixture<ContentAp
     {
         var root = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/search?q={query}"));
 
-        Assert.Equal(0, root.GetProperty("meta").GetProperty("total").GetInt32());
+        Assert.Equal(0, Articles(root).GetProperty("total").GetInt32());
     }
 
     [Fact]

@@ -22,7 +22,12 @@
     "prompt": "Type something above to search the articles.",
     "resultCount": "No results | 1 result | {count} results",
     "empty": "Nothing matched \"{query}\". Try a different word, or browse the topics below.",
-    "fuzzyNotice": "No exact matches for \"{query}\" — showing articles with similar titles.",
+    "fuzzyNotice": "No exact matches for \"{query}\" — showing results with similar titles.",
+    "fuzzySegment": "approximate",
+    "kind": {
+      "courses": "Courses",
+      "articles": "Articles"
+    },
     "failed": "Search is unavailable right now. Please try again shortly."
   },
   "articles": {

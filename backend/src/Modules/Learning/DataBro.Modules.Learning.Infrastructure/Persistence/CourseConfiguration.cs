@@ -4,6 +4,7 @@ using DataBro.Platform.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NpgsqlTypes;
 
 namespace DataBro.Modules.Learning.Infrastructure.Persistence;
 
@@ -29,6 +30,8 @@ internal sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
 
         builder.HasIndex(c => new { c.Status, c.PublishedAt });
 
+        ConfigureSearch(builder);
+
         // Owned modules, mapped through the backing field. `Modules` is a sorted projection, not a
         // navigation, so EF must be pointed at the list itself.
         builder.HasMany<CourseModule>("_modules")
@@ -44,6 +47,41 @@ internal sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Ignore(c => c.LessonCount);
         builder.Ignore(c => c.EstimatedMinutes);
     }
+
+    /// <summary>The shadow property name for the generated tsvector column.</summary>
+    internal const string SearchVectorProperty = "SearchVector";
+
+    /// <summary>
+    /// Full-text search over courses (ADR-0014).
+    ///
+    /// <para>
+    /// The same generated-column pattern Content proved: PostgreSQL recomputes the vector on every
+    /// write, so it cannot fall out of step with the row, and there is no reindex job. Title carries
+    /// weight <b>A</b> and summary <b>B</b>; a course has no body of its own, so there is no C.
+    /// </para>
+    /// <para>
+    /// No locale <c>CASE</c> here, unlike articles: a course has no locale column. Courses are
+    /// English-only until the curriculum is translated, and pretending otherwise with a stemmer
+    /// chosen from nothing would be worse than being explicit about it.
+    /// </para>
+    /// </summary>
+    private static void ConfigureSearch(EntityTypeBuilder<Course> builder)
+    {
+        builder.Property<NpgsqlTsVector>(SearchVectorProperty)
+            .HasColumnName("search_vector")
+            // Line endings normalised, or a CRLF working copy and an LF CI runner build different
+            // models and CI reports pending changes against a clean checkout.
+            .HasComputedColumnSql(SearchVectorSql.ReplaceLineEndings(" "), stored: true);
+
+        builder.HasIndex(SearchVectorProperty)
+            .HasDatabaseName("ix_courses_search_vector")
+            .HasMethod("gin");
+    }
+
+    private const string SearchVectorSql = """
+        setweight(to_tsvector('english'::regconfig, coalesce(title, '')), 'A') ||
+        setweight(to_tsvector('english'::regconfig, coalesce(summary, '')), 'B')
+        """;
 }
 
 internal sealed class CourseModuleConfiguration : IEntityTypeConfiguration<CourseModule>

@@ -89,6 +89,8 @@ app.MapIdentityModule()
    .MapContentModule()
    .MapMediaModule()
    .MapLearningModule()
+   // Cross-module search: composed here because only the host may know about both (ADR-0014).
+   .MapSearch()
    .MapSearchModule();
 
 app.Run();

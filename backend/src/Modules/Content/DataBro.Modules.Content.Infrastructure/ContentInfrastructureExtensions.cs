@@ -48,6 +48,9 @@ public static class ContentInfrastructureExtensions
         // (ADR-0008, ADR-0012). Consumers resolve ILessonContentReader and never learn this module
         // exists.
         services.AddScoped<ILessonContentReader, Directory.LessonContentReader>();
+
+        // Content's segment of the cross-module search results (ADR-0014).
+        services.AddScoped<IModuleSearch, Persistence.ArticleSearch>();
         services.AddScoped<ArticleService>();
         services.AddScoped<TaxonomyService>();
         services.AddScoped<RedirectService>();

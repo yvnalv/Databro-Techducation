@@ -93,7 +93,10 @@ public class LessonIsolationTests(ContentApiFactory factory) : IClassFixture<Con
 
         var results = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/search?q={token}"));
 
-        Assert.Equal(0, results.GetProperty("meta").GetProperty("total").GetInt32());
+        // Segmented since ADR-0014. Every segment must be empty, not just the articles one: a lesson
+        // body has no public URL, so a hit anywhere would point at a page that does not exist.
+        foreach (var segment in results.GetProperty("data").GetProperty("segments").EnumerateArray())
+            Assert.Equal(0, segment.GetProperty("total").GetInt32());
     }
 
     [Fact]
