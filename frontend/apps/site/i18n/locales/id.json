@@ -68,7 +68,6 @@
     "lessonCount": "Belum ada pelajaran | 1 pelajaran | {count} pelajaran",
     "minutes": "{count} menit",
     "hours": "{count} jam",
-    "readingComingSoon": "Halaman pelajaran sedang disiapkan. Untuk saat ini, kerangka di atas menunjukkan cakupan kursus dan perkiraan durasinya.",
     "difficulty": {
       "beginner": "Pemula",
       "intermediate": "Menengah",
@@ -115,5 +114,22 @@
     "ctaTitle": "Pelajari sesuatu dengan serius minggu ini.",
     "ctaSubtitle": "Mendalam, praktis, dan gratis dibaca.",
     "ctaButton": "Lihat semua artikel"
+  },
+  "lesson": {
+    "breadcrumbLabel": "Remah roti",
+    "pagerLabel": "Navigasi pelajaran",
+    "position": "Pelajaran {position} dari {total}",
+    "objectives": "Yang akan Anda pelajari",
+    "previous": "Sebelumnya",
+    "next": "Berikutnya",
+    "signInToTrack": "Masuk untuk melacak kemajuan Anda.",
+    "signIn": "Masuk",
+    "joinToTrack": "Ikuti kursus ini untuk melacak kemajuan Anda.",
+    "join": "Ikuti kursus",
+    "courseProgress": "{completed} dari {total} pelajaran selesai",
+    "courseProgressLabel": "Kemajuan kursus",
+    "markComplete": "Tandai selesai",
+    "markIncomplete": "Tandai belum selesai",
+    "saveFailed": "Gagal menyimpan. Silakan coba lagi."
   }
 }

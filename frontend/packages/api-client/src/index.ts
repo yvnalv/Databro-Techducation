@@ -18,6 +18,7 @@ import type {
   Enrollment,
   LessonContent,
   LessonContentSummary,
+  LessonPage,
   Paged,
   PageMeta,
   MediaAsset,
@@ -422,6 +423,17 @@ export class ApiClient {
    */
   getCourse(slug: string): Promise<Course> {
     return this.request<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`);
+  }
+
+  /**
+   * One lesson of a published course, with its neighbours. 404s when either the course or the
+   * lesson body is unpublished — the same rule the course page applies, so the two reads cannot
+   * disagree about what a learner may see.
+   */
+  getLessonPage(courseSlug: string, lessonSlug: string): Promise<LessonPage> {
+    return this.request<LessonPage>(
+      `/api/v1/courses/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(lessonSlug)}`,
+    );
   }
 
   // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----

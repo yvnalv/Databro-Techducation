@@ -38,6 +38,51 @@ public sealed class CourseService(
         return course is null ? null : await ComposeAsync(course, publishedOnly: false, ct);
     }
 
+    /// <summary>
+    /// One published lesson of a published course, with its neighbours.
+    ///
+    /// <para>
+    /// Composed from the same published-only view the course page uses, so a lesson that is hidden
+    /// there cannot be reachable here — the two reads cannot disagree about what a learner may see,
+    /// because there is only one rule and both go through it.
+    /// </para>
+    /// </summary>
+    public async Task<LessonPageDto?> GetLessonPageAsync(
+        string courseSlug, string lessonSlug, CancellationToken ct = default)
+    {
+        var course = await courses.GetPublishedBySlugAsync(courseSlug, ct);
+        if (course is null) return null;
+
+        var composed = await ComposeAsync(course, publishedOnly: true, ct);
+
+        // Flattened across modules: a learner moves through one sequence, and a prev/next that
+        // stopped at a section break would be the data model showing through the page.
+        var ordered = composed.Modules
+            .SelectMany(m => m.Lessons.Select(l => (Module: m, Lesson: l)))
+            .ToList();
+
+        var index = ordered.FindIndex(x => x.Lesson.Slug == lessonSlug);
+        if (index < 0) return null;
+
+        var (module, lesson) = ordered[index];
+
+        static LessonLinkDto? Link(List<(CourseModuleDto Module, LessonDto Lesson)> all, int at) =>
+            at >= 0 && at < all.Count
+                ? new LessonLinkDto(all[at].Lesson.Id, all[at].Lesson.Slug, all[at].Lesson.Title)
+                : null;
+
+        return new LessonPageDto(
+            course.Id,
+            course.Slug.Value,
+            course.Title,
+            module.Title,
+            index + 1,
+            ordered.Count,
+            lesson,
+            Link(ordered, index - 1),
+            Link(ordered, index + 1));
+    }
+
     public async Task<PagedResult<CourseSummaryDto>> ListPublishedAsync(
         PageRequest page, CancellationToken ct = default)
     {

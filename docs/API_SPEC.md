@@ -201,12 +201,24 @@ figure on the cached read path.
 ```
 GET /api/v1/courses                          published courses, newest first (paginated)
 GET /api/v1/courses/{slug}                   one course with its full curriculum
+GET /api/v1/courses/{slug}/lessons/{lessonSlug}   one lesson, with its neighbours
 ```
 
 The course page returns modules, each with its lessons, each lesson carrying its **published** body
 resolved from Content. A lesson whose body is unpublished is omitted entirely, and a module left with
 nothing in it is omitted with it (LN-2). The join is one batch call however many lessons there are —
 a per-lesson lookup would be an N+1 on a learner's hottest page.
+
+The lesson read is **nested under its course** because the course is what gives a lesson prev/next,
+a breadcrumb and a progress context: the same body reached through two courses is two positions in
+two sequences, and the URL should say which. It is a separate read rather than a client-side pick out
+of the course response, which carries every body it has — right for rendering a whole curriculum,
+wrong as the cost of reading lesson three of fifty.
+
+Neighbours cross module boundaries: the last lesson of a module links to the first of the next. A
+learner moves through one sequence, and stopping them at a section break would be the data model
+showing through the page. Both reads compose from the same published-only view, so they cannot
+disagree about what a learner may see.
 
 ### Courses — authoring (app; Author/Editor/Admin)
 ```

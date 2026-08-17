@@ -367,6 +367,34 @@ export interface Course {
   modules: CourseModule[];
 }
 
+/** A neighbouring lesson, as a prev/next link needs it. No body — it is a link. */
+export interface LessonLink {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+/**
+ * One lesson as its own page: the body, plus enough curriculum around it to navigate.
+ *
+ * Fetched separately from {@link Course} rather than picked out of it — the course response carries
+ * every body it has, which is right for rendering a whole curriculum and wrong as the cost of
+ * reading lesson three of fifty.
+ */
+export interface LessonPage {
+  courseId: string;
+  courseSlug: string;
+  courseTitle: string;
+  moduleTitle: string;
+  /** Position in the whole course, 1-based. Not the position within its module. */
+  position: number;
+  totalLessons: number;
+  lesson: CourseLesson;
+  /** Neighbours cross module boundaries: a learner moves through one sequence. */
+  previous?: LessonLink | null;
+  next?: LessonLink | null;
+}
+
 /** A course card. No curriculum, because a card does not render one. */
 export interface CourseSummary {
   id: string;

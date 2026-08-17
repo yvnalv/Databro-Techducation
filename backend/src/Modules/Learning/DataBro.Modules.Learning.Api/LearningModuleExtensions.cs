@@ -100,6 +100,13 @@ public static class LearningModuleExtensions
 
         group.MapGet("/{slug}", async (string slug, CourseService service, CancellationToken ct) =>
             ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
+
+        // A lesson page. Nested under its course because that is what gives it prev/next, a
+        // breadcrumb and a progress context — the same body reached through two courses is two
+        // different positions in two different sequences, and the URL should say which.
+        group.MapGet("/{slug}/lessons/{lessonSlug}", async (
+            string slug, string lessonSlug, CourseService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetLessonPageAsync(slug, lessonSlug, ct)));
     }
 
     // ---- Authoring. Curriculum structure is a content-editing act, so it sits behind Content.Edit;

@@ -90,6 +90,36 @@ public sealed record ReorderRequest(IReadOnlyList<Guid> OrderedIds);
 
 public sealed record CreateLearningPathRequest(string Title, string Summary, string? Slug = null, string? Difficulty = null);
 
+/// <summary>A neighbouring lesson, as a prev/next link needs it. No body — it is a link.</summary>
+public sealed record LessonLinkDto(Guid Id, string Slug, string Title);
+
+/// <summary>
+/// One lesson as its own page: the body, plus enough of the curriculum around it to navigate.
+///
+/// <para>
+/// A distinct read from <see cref="CourseDto"/> rather than a client-side pick out of it. The course
+/// page carries every lesson body it has, which is right for one request that renders a whole
+/// curriculum and wrong as the cost of reading lesson three of fifty. This ships one body and two
+/// links.
+/// </para>
+/// <para>
+/// Neighbours are resolved across module boundaries, not within one: the last lesson of a module
+/// links to the first of the next. A learner moving through a course experiences one sequence, and
+/// stopping them at a section break would be the data model showing through.
+/// </para>
+/// </summary>
+public sealed record LessonPageDto(
+    Guid CourseId,
+    string CourseSlug,
+    string CourseTitle,
+    string ModuleTitle,
+    /// <summary>Position in the whole course, 1-based — "Lesson 4 of 12", not "lesson 0 of module 2".</summary>
+    int Position,
+    int TotalLessons,
+    LessonDto Lesson,
+    LessonLinkDto? Previous,
+    LessonLinkDto? Next);
+
 /// <summary>
 /// A learner's progress in one course — the shape behind both a dashboard card and a course page's
 /// "you are here" banner.

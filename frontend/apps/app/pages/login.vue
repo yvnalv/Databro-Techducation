@@ -13,18 +13,39 @@ const { t } = useI18n();
 const route = useRoute();
 const { login, isAuthenticated, ensureUser } = useAuth();
 const { homePath } = useRoles();
+const config = useRuntimeConfig();
 
 const email = ref("");
 const password = ref("");
 const formError = ref<string | null>(null);
 const submitting = ref(false);
 
-/** An explicit `?redirect=` the guard carried over, if it is safe to honour. */
+/**
+ * An explicit `?redirect=` the guard carried over, if it is safe to honour.
+ *
+ * Two shapes are allowed and nothing else:
+ *
+ *  * a same-origin **path** — what this app's own route guard sends;
+ *  * an **absolute URL on the public site**, so a learner who clicked "sign in to track progress"
+ *    on a lesson page is returned to that lesson rather than dumped on their dashboard.
+ *
+ * The second is an allowlist of exactly one origin, read from config — not "any absolute URL", which
+ * would be an open redirect letting a crafted link bounce a signed-in editor to an attacker's page
+ * carrying their trust in this domain. `new URL` does the parsing, because origin comparison by
+ * string prefix is how `https://databro.id.evil.com` gets accepted.
+ */
 const requested = computed(() => {
-  // Only same-origin paths: an open redirect would let a crafted link bounce a signed-in editor to
-  // an attacker's page carrying their trust in this domain.
   const target = String(route.query.redirect ?? "");
-  return target.startsWith("/") && !target.startsWith("//") ? target : null;
+  if (!target) return null;
+
+  if (target.startsWith("/") && !target.startsWith("//")) return target;
+
+  try {
+    const siteOrigin = new URL(String(config.public.siteUrl)).origin;
+    return new URL(target).origin === siteOrigin ? target : null;
+  } catch {
+    return null;
+  }
 });
 
 /**
@@ -41,8 +62,20 @@ async function destination() {
   return homePath.value;
 }
 
+/**
+ * Navigates to wherever {@link destination} resolved.
+ *
+ * `external` is required for the cross-origin case — Nuxt's router would otherwise try to resolve
+ * `https://databro.id/courses/...` as one of *this* app's routes and land on a 404. The flag is set
+ * from the shape of the target rather than passed in, so no caller can forget it.
+ */
+async function go() {
+  const to = await destination();
+  await navigateTo(to, { replace: true, external: !to.startsWith("/") });
+}
+
 // Already signed in and hitting /login directly: go where they were headed.
-if (isAuthenticated.value) await navigateTo(await destination(), { replace: true });
+if (isAuthenticated.value) await go();
 
 async function submit() {
   formError.value = null;
@@ -50,7 +83,7 @@ async function submit() {
 
   try {
     await login(email.value, password.value);
-    await navigateTo(await destination(), { replace: true });
+    await go();
   } catch {
     // Deliberately identical for every failure — a wrong password, an unknown address, a server
     // error alike. Distinguishing the first two turns the form into an account-enumeration oracle,

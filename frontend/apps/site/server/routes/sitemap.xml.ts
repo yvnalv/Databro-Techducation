@@ -2,6 +2,7 @@ import {
   LOCALES,
   allPublishedArticles,
   allPublishedCourses,
+  allPublishedLessons,
   siteUrl,
   taxonomy,
   xml,
@@ -36,6 +37,9 @@ export default defineEventHandler(async (event) => {
     allPublishedCourses(event).catch(() => []),
   ]);
 
+  // Depends on the course list, so it cannot join the batch above.
+  const lessons = await allPublishedLessons(event, courses).catch(() => []);
+
   const entries: SitemapEntry[] = [
     { path: "/", changefreq: "daily", priority: "1.0" },
 
@@ -50,6 +54,16 @@ export default defineEventHandler(async (event) => {
       // lessons are added and reordered.
       changefreq: "weekly" as const,
       priority: "0.8",
+    })),
+
+    // Lesson pages, which are the bulk of a mature catalogue's indexable surface. Priority below
+    // the course itself: a search result should more often land on the course, which can route a
+    // reader to the right lesson, than on lesson seven of it out of context.
+    ...lessons.map((lesson) => ({
+      path: `/courses/${lesson.courseSlug}/${lesson.lessonSlug}`,
+      lastmod: lesson.publishedAt,
+      changefreq: "monthly" as const,
+      priority: "0.7",
     })),
 
     ...articles.map((article) => ({

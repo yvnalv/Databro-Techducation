@@ -1,5 +1,54 @@
 # DataBro Changelog
 
+## [2026-08-17 14:56:41 UTC]
+
+CHG-0042 — Lesson pages, and progress attached to them
+
+A learner can read a lesson. The loop closes: browse a course, open a lesson, read it, mark it done,
+watch the dashboard move.
+
+- **Lesson pages live on `site`** (ADR-0015), nested at `/courses/{course}/{lesson}`. Nested because
+  the course is what gives a lesson prev/next, a breadcrumb and a progress context — the same body
+  reached through two courses is two positions in two sequences, and the URL should say which.
+- **A dedicated read**, `GET /api/v1/courses/{slug}/lessons/{lessonSlug}`, rather than picking a
+  lesson out of the course response on the client. The course response carries every body it has,
+  which is right for rendering a whole curriculum and wrong as the cost of reading lesson three of
+  fifty. Both compose from the same published-only view, so the two reads cannot disagree about what
+  a learner may see.
+- **Prev/next cross module boundaries.** A learner moves through one sequence; stopping them at a
+  section break would be the data model showing through the page. Tested explicitly.
+- **`site` has a session for the first time** — the "auth-aware, not auth-only" half of ADR-0005 that
+  had never been built. It is deliberately **read-only**: it reads the cookies `app` sets and cannot
+  sign anyone in. Duplicating login would mean two implementations of the most security-sensitive
+  flow we have, and the second is the one nobody remembers to patch. It also refuses to refresh an
+  expired token — rotation invalidates the chain on reuse, so two apps racing to rotate the same
+  refresh token would revoke a good session. Only `app` rotates.
+- **Progress is layered on, never gating.** The lesson renders server-side for everyone including
+  crawlers; the controls hydrate in afterwards. Every failure path degrades to a sign-in prompt or a
+  quiet no-op, because a dead session must not take down the page the reader came for. Opening a
+  lesson records the visit and loads progress in **one** call — `visit` returns the whole enrollment,
+  and it is the right moment anyway (LN-10).
+- **Signing in returns you to the lesson.** That needed the app's login to accept an absolute URL on
+  the public site. It is an allowlist of exactly one origin read from config, compared with `new URL`
+  rather than a string prefix — `https://databro.id.evil.com` passes a prefix check. Everything else
+  absolute is still rejected.
+- **Indexable, and actually indexed.** Canonical, OpenGraph, `hreflang`, and JSON-LD
+  `LearningResource` with `isPartOf` the course — not `Article`, because a lesson inside a course
+  should surface as part of that course rather than as a stray blog post on the same topic. The
+  sitemap now emits every lesson per locale (74 → 88 URLs on the dev catalogue); without that, putting
+  these pages on `site` would have bought nothing.
+- Highlighting goes through a Nitro route like articles do, so code stays highlighted when following
+  **Next** and not only on reload. On a course this matters more than on an article: lesson-to-lesson
+  is the normal way to read one.
+- The course page's "reading is coming soon" notice is gone; lesson rows are links, the whole row
+  being the target rather than the title alone.
+- 4 new backend tests (Learning 56 → **60**; backend 262 → **266**). 15 new strings in both locales,
+  parity checked (103 keys each).
+- Verified live: the page renders at 200 with its breadcrumb, position, objectives, body, prev link
+  and signed-out prompt; a bogus lesson **and** a bogus course both 404; the Indonesian route renders
+  translated; the course page links both lessons; and the API preflight for the authenticated
+  progress call from `:3000` returns 204 with the origin allowed.
+
 ## [2026-08-17 14:40:39 UTC]
 
 CHG-0041 — The learner app exists (ADR-0015)

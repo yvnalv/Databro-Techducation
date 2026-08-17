@@ -72,6 +72,42 @@ export async function allPublishedCourses(event: H3Event): Promise<CourseSummary
 }
 
 /**
+ * Every published lesson, as `{ courseSlug, lessonSlug }` pairs.
+ *
+ * One request per course, run in parallel. That is proportional to the **course** count, not the
+ * lesson count — courses are large things and there will be tens of them, not thousands — so the
+ * fan-out stays small while the URLs it produces are the majority of the site's indexable pages.
+ *
+ * A course whose curriculum fails to load contributes nothing rather than taking the sitemap down
+ * with it, matching how the caller already treats each section.
+ */
+export async function allPublishedLessons(
+  event: H3Event,
+  courses: CourseSummary[],
+): Promise<{ courseSlug: string; lessonSlug: string; publishedAt?: string }[]> {
+  const client = apiClient(event);
+
+  const curricula = await Promise.all(
+    courses.map((course) =>
+      client
+        .getCourse(course.slug)
+        .then((full) =>
+          full.modules.flatMap((module) =>
+            module.lessons.map((lesson) => ({
+              courseSlug: course.slug,
+              lessonSlug: lesson.slug,
+              publishedAt: course.publishedAt,
+            })),
+          ),
+        )
+        .catch(() => []),
+    ),
+  );
+
+  return curricula.flat();
+}
+
+/**
  * Escapes text for XML.
  *
  * Not optional: an article title containing `&` or `<` produces a malformed document that a crawler

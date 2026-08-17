@@ -143,28 +143,28 @@ useHead({
             </div>
 
             <ul class="mt-4 divide-y divide-line rounded-card border border-line">
-              <li
-                v-for="lesson in module.lessons"
-                :key="lesson.id"
-                class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3"
-              >
-                <span class="min-w-0 flex-1 text-ink">{{ lesson.title }}</span>
-                <DbChip v-if="lesson.difficulty !== published.difficulty" tone="neutral">
-                  {{ t(`courses.difficulty.${lesson.difficulty}`) }}
-                </DbChip>
-                <span v-if="lesson.estimatedMinutes > 0" class="text-sm tabular-nums text-ink-subtle">
-                  {{ t("courses.minutes", { count: lesson.estimatedMinutes }) }}
-                </span>
+              <li v-for="lesson in module.lessons" :key="lesson.id">
+                <!-- The whole row is the link, not just the title: a 3px-tall target beside a lot
+                     of dead space is a worse hit area than the row the eye is already tracking. -->
+                <NuxtLink
+                  :to="localePath(`/courses/${published.slug}/${lesson.slug}`)"
+                  class="group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                >
+                  <span class="min-w-0 flex-1 text-ink group-hover:text-accent">
+                    {{ lesson.title }}
+                  </span>
+                  <DbChip v-if="lesson.difficulty !== published.difficulty" tone="neutral">
+                    {{ t(`courses.difficulty.${lesson.difficulty}`) }}
+                  </DbChip>
+                  <span v-if="lesson.estimatedMinutes > 0" class="text-sm tabular-nums text-ink-subtle">
+                    {{ t("courses.minutes", { count: lesson.estimatedMinutes }) }}
+                  </span>
+                </NuxtLink>
               </li>
             </ul>
           </li>
         </ol>
 
-        <!-- Lesson bodies are not readable yet: reading one needs enrollment and progress, which is
-             the next slice. Saying so is better than a link that goes nowhere. -->
-        <p class="mt-10 rounded-card border border-line bg-surface-sunken px-5 py-4 text-sm text-ink-muted">
-          {{ t("courses.readingComingSoon") }}
-        </p>
       </div>
     </div>
   </div>

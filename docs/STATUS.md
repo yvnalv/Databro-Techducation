@@ -169,10 +169,13 @@ can sign in, see their courses, and read their progress — in English or Indone
 1. **Lesson pages** — reading a lesson is the one thing a learner still cannot do. The course page
    currently lists lessons without linking to them, which is honest but not a product.
 2. **Learning paths** on the site. The domain and API exist; only the pages are missing.
-3. **The transactional outbox** — no longer forced by search, but still unbuilt and still needed for
+2. **The transactional outbox** — no longer forced by search, but still unbuilt and still needed for
    cross-module effects generally. It now has a real second consumer waiting in
    `CourseCompletedDomainEvent` (certificates, completion email), which is the better time to design
    it.
+3. **Deep-link Resume.** The dashboard's Resume button lands on the course page rather than the
+   lesson: `lastLessonId` is a lesson id and the URL needs a slug, so the enrollment DTO owes a
+   `lastLessonSlug`. Small, and worth doing before it becomes habit.
 4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
 Still owed before the public course pages ship: **the search decision** and **the outbox** above —
@@ -201,6 +204,10 @@ Independent of Phase 2:
   covered the shared chrome, login and every learner string in both locales. The CMS's own body
   strings (editor labels, table headers, buttons inside `/studio`) are still hardcoded English
   against rule 19. Now mechanical to finish, since the module is in place and the locale files exist.
+* **The session cookie is shared between apps by host, not by configuration.** Cookies ignore port,
+  so `localhost:3000` and `localhost:3001` genuinely share one in development. In production the two
+  apps are separate subdomains and the cookie needs an explicit parent `domain` — owed with the first
+  real deploy, and not verifiable from here.
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
@@ -257,7 +264,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **262 passing**: Content & Identity (173), Learning (56), Media (29),
+* `dotnet test` — **266 passing**: Content & Identity (173), Learning (60), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

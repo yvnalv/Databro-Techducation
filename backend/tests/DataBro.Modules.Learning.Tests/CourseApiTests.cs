@@ -248,4 +248,102 @@ public class CourseApiTests(LearningApiFactory factory) : IClassFixture<Learning
         var publish = await author.PostAsync($"/api/v1/authoring/courses/{courseId}/publish", null);
         Assert.Equal(HttpStatusCode.Forbidden, publish.StatusCode);
     }
+
+    // ---- Lesson pages ----
+
+    [Fact]
+    public async Task A_lesson_page_carries_its_body_and_its_place_in_the_course()
+    {
+        var (editor, courseId, slug) = await SeedCourseAsync(
+            await SeedBodyAsync("First"), await SeedBodyAsync("Second"));
+        await editor.PostAsync($"/api/v1/authoring/courses/{courseId}/publish", null);
+
+        var course = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/courses/{slug}"));
+        var second = course.GetProperty("data").GetProperty("modules")[0].GetProperty("lessons")[1];
+        var lessonSlug = second.GetProperty("slug").GetString();
+
+        var page = (await ReadAsync(await factory.CreateClient()
+            .GetAsync($"/api/v1/courses/{slug}/lessons/{lessonSlug}"))).GetProperty("data");
+
+        Assert.Equal("Second", page.GetProperty("lesson").GetProperty("title").GetString());
+        Assert.Equal("Body of Second.",
+            page.GetProperty("lesson").GetProperty("blocks")[0].GetProperty("data").GetProperty("text").GetString());
+        Assert.Equal(2, page.GetProperty("position").GetInt32());
+        Assert.Equal(2, page.GetProperty("totalLessons").GetInt32());
+        Assert.Equal("First", page.GetProperty("previous").GetProperty("title").GetString());
+        Assert.Equal(JsonValueKind.Null, page.GetProperty("next").ValueKind);
+    }
+
+    [Fact]
+    public async Task Prev_and_next_cross_module_boundaries()
+    {
+        // A learner moves through one sequence. Stopping prev/next at a section break would be the
+        // data model showing through the page.
+        var editor = await EditorAsync();
+        var slug = $"course-{Guid.NewGuid():N}";
+        var created = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/courses",
+            new { title = "Two Modules", summary = "…", slug }));
+        var courseId = created.GetProperty("data").GetProperty("id").GetGuid();
+
+        foreach (var (moduleTitle, lessonTitle) in new[] { ("One", "Last of One"), ("Two", "First of Two") })
+        {
+            var withModule = await ReadAsync(await editor.PostAsJsonAsync(
+                $"/api/v1/authoring/courses/{courseId}/modules", new { title = moduleTitle }));
+            var moduleId = withModule.GetProperty("data").GetProperty("modules")
+                .EnumerateArray().First(m => m.GetProperty("title").GetString() == moduleTitle)
+                .GetProperty("id").GetGuid();
+
+            (await editor.PostAsJsonAsync(
+                $"/api/v1/authoring/courses/{courseId}/modules/{moduleId}/lessons",
+                new { contentUnitId = await SeedBodyAsync(lessonTitle) })).EnsureSuccessStatusCode();
+        }
+
+        await editor.PostAsync($"/api/v1/authoring/courses/{courseId}/publish", null);
+
+        var course = await ReadAsync(await factory.CreateClient().GetAsync($"/api/v1/courses/{slug}"));
+        var lastOfOne = course.GetProperty("data").GetProperty("modules")[0]
+            .GetProperty("lessons")[0].GetProperty("slug").GetString();
+
+        var page = (await ReadAsync(await factory.CreateClient()
+            .GetAsync($"/api/v1/courses/{slug}/lessons/{lastOfOne}"))).GetProperty("data");
+
+        Assert.Equal("One", page.GetProperty("moduleTitle").GetString());
+        Assert.Equal("First of Two", page.GetProperty("next").GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task A_lesson_whose_body_is_unpublished_has_no_page()
+    {
+        // The lesson page and the course page must not disagree about what a learner may see, so
+        // both compose from the same published-only view.
+        var draft = await SeedBodyAsync("Not Ready", publish: false);
+        var (editor, courseId, slug) = await SeedCourseAsync(await SeedBodyAsync("Ready"), draft);
+        await editor.PostAsync($"/api/v1/authoring/courses/{courseId}/publish", null);
+
+        var authoring = await ReadAsync(await editor.GetAsync($"/api/v1/authoring/courses/{courseId}"));
+        var draftSlug = authoring.GetProperty("data").GetProperty("modules")[0]
+            .GetProperty("lessons").EnumerateArray()
+            .First(l => !l.GetProperty("isPublished").GetBoolean())
+            .GetProperty("slug").GetString();
+
+        var response = await factory.CreateClient().GetAsync($"/api/v1/courses/{slug}/lessons/{draftSlug}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_lesson_page_on_an_unpublished_course_is_a_404()
+    {
+        var (_, courseId, slug) = await SeedCourseAsync(await SeedBodyAsync("Hidden"));
+        // Deliberately not published.
+
+        var editor = await EditorAsync();
+        var authoring = await ReadAsync(await editor.GetAsync($"/api/v1/authoring/courses/{courseId}"));
+        var lessonSlug = authoring.GetProperty("data").GetProperty("modules")[0]
+            .GetProperty("lessons")[0].GetProperty("slug").GetString();
+
+        var response = await factory.CreateClient().GetAsync($"/api/v1/courses/{slug}/lessons/{lessonSlug}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

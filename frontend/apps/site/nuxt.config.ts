@@ -41,6 +41,9 @@ export default defineNuxtConfig({
       // Absolute origin of the public site. Canonical URLs, OpenGraph and JSON-LD must be
       // absolute (docs/SEO.md) - a relative canonical is worse than none at all.
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+      // The authenticated app. The site never signs anyone in itself (ADR-0015); it links here,
+      // and reads the session cookie the app sets.
+      appUrl: process.env.NUXT_PUBLIC_APP_URL ?? "http://localhost:3001",
     },
   },
 
@@ -76,7 +79,10 @@ export default defineNuxtConfig({
     "/tags/**": { isr: 3600 },
     // Shorter than an article's hour: a curriculum changes while a course is live — lessons get
     // added, reordered, published — and a stale outline misrepresents what someone is signing up to.
-    "/courses/**": { isr: 900 },
+    "/courses": { isr: 900 },
+    // Course and lesson pages. Longer than the catalogue: a curriculum changes when it is edited,
+    // not when a new course is published elsewhere.
+    "/courses/**": { isr: 3600 },
 
     // Search is per-query, so no caching — and noindex as a real response header, not only the meta
     // tag the page renders. A header cannot be missed by a crawler that gives up on the HTML.
