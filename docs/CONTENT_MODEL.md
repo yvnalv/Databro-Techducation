@@ -15,6 +15,17 @@ only in context:
 
 We never build a second content system. Lessons wrap the same blocks + versioning engine.
 
+**In code, that engine is the abstract `ContentUnit` aggregate** (`Content.Domain`). It owns the
+block pair (`DraftBlocks` / `PublishedBlocks`), the published snapshot that keeps drafts off public
+surfaces (`PublishedTitle` / `PublishedSummary` / `SearchText`, CT-6), version history, and the
+draft → scheduled → published state machine. `Article` is that engine plus what only a standalone
+discoverable page has — byline, taxonomy, SEO metadata, locale. A lesson body will be the same
+engine with none of those.
+
+Each concrete type maps to **its own table** ([ADR-0012](adr/0012-lesson-bodies-live-in-content.md)),
+so a lesson cannot be returned by a query over articles. Publishing is one implementation; only the
+domain event raised at the end differs, via a hook each type overrides.
+
 ## 2. Blocks are typed JSON
 
 Content is stored as a JSON array of blocks (persisted in `jsonb`). Each block has a stable `id`, a

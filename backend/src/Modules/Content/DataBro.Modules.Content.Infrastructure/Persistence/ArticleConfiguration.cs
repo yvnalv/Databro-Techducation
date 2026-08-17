@@ -10,6 +10,12 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 {
     public void Configure(EntityTypeBuilder<Article> builder)
     {
+        // Table-per-concrete-type (ADR-0012). Each content unit type gets its own table, so a lesson
+        // body can never be returned by a query over articles. TPH would put both in one table and
+        // reintroduce exactly the leak this design exists to prevent; TPT would add a join to the
+        // hottest read path for no benefit.
+        builder.UseTpcMappingStrategy();
+
         builder.ToTable("articles");
         builder.HasKey(a => a.Id);
 
@@ -54,13 +60,17 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(a => a.CategoryId);
 
-        // Aggregate-owned version history (append-only), mapped via the backing field.
+        // Aggregate-owned version history (append-only), mapped via the backing field. The
+        // navigation is declared on ContentUnit but configured here, because the foreign key points
+        // at *this* type's table under table-per-concrete-type.
         builder.HasMany(a => a.Versions)
             .WithOne()
-            .HasForeignKey(v => v.ArticleId)
+            .HasForeignKey(v => v.ContentUnitId)
             .OnDelete(DeleteBehavior.Cascade);
+        // No explicit `HasField`: the backing field is declared on ContentUnit, and naming it here
+        // makes EF look for it on Article, where it does not exist. Convention resolves `_versions`
+        // against the property's declaring type, which is the base.
         builder.Navigation(a => a.Versions)
-            .HasField("_versions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // Aggregate-owned tag links, mapped via the backing field. TagIds is a projection over it.
@@ -131,10 +141,16 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         """;
 }
 
-internal sealed class ArticleVersionConfiguration : IEntityTypeConfiguration<ArticleVersion>
+/// <summary>
+/// Version history for articles. The entity is shared with every other content unit type
+/// (<see cref="ContentVersion"/>, ADR-0012), but the rows are not: each unit type keeps its history
+/// in its own table, matching the table-per-concrete-type mapping of the units themselves.
+/// </summary>
+internal sealed class ContentVersionConfiguration : IEntityTypeConfiguration<ContentVersion>
 {
-    public void Configure(EntityTypeBuilder<ArticleVersion> builder)
+    public void Configure(EntityTypeBuilder<ContentVersion> builder)
     {
+        // Unchanged table name: this is a pure refactor, so the schema does not move.
         builder.ToTable("article_versions");
         builder.HasKey(v => v.Id);
 
@@ -143,6 +159,9 @@ internal sealed class ArticleVersionConfiguration : IEntityTypeConfiguration<Art
         builder.Property(v => v.Summary).HasMaxLength(1000);
         builder.Property(v => v.Blocks).HasJsonbConversion().IsRequired();
 
-        builder.HasIndex(v => new { v.ArticleId, v.Version }).IsUnique();
+        // Kept as `article_id` so no column moves in this refactor.
+        builder.Property(v => v.ContentUnitId).HasColumnName("article_id");
+
+        builder.HasIndex(v => new { v.ContentUnitId, v.Version }).IsUnique();
     }
 }

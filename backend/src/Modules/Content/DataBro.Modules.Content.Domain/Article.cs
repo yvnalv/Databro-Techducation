@@ -1,59 +1,25 @@
-using DataBro.Platform.Results;
-using DataBro.Platform.SharedKernel;
-
 namespace DataBro.Modules.Content.Domain;
 
 /// <summary>
-/// The Article aggregate — a content unit composed of typed blocks, versioned as draft and published
-/// snapshots (docs/CONTENT_MODEL.md, ADR-0004, ADR-0007). Public consumers only ever see
-/// <see cref="PublishedBlocks"/>.
+/// A standalone, SEO-oriented content unit (docs/CONTENT_MODEL.md §1).
+///
+/// <para>
+/// The block model, version history and the draft → scheduled → published state machine all live on
+/// <see cref="ContentUnit"/> — an article is that engine plus the things only a standalone,
+/// discoverable page has: an author byline, taxonomy, SEO metadata, and a locale it can be
+/// translated from. A lesson body reuses the same engine and has none of these (ADR-0012).
+/// </para>
 /// </summary>
-public sealed class Article : AggregateRoot
+public sealed class Article : ContentUnit
 {
-    private readonly List<ArticleVersion> _versions = [];
     private readonly List<ArticleTag> _tags = [];
 
-    public Slug Slug { get; private set; } = null!;
-    public string Title { get; private set; } = string.Empty;
-    public string Summary { get; private set; } = string.Empty;
-    public ArticleStatus Status { get; private set; }
     public Visibility Visibility { get; private set; }
     public string Locale { get; private set; } = "en";
     public Guid? TranslationGroupId { get; private set; }
     public Guid AuthorId { get; private set; }
     public Guid? CategoryId { get; private set; }
-
-    public ContentDocument DraftBlocks { get; private set; } = ContentDocument.Empty;
-    public ContentDocument? PublishedBlocks { get; private set; }
-
-    /// <summary>
-    /// The title as last published. Null until first publish.
-    ///
-    /// Separate from <see cref="Title"/> for exactly the reason <see cref="PublishedBlocks"/> is
-    /// separate from <see cref="DraftBlocks"/> (CT-6). Without it, editing a published article's
-    /// draft title changed the live page, the listings, the sitemap and the search index
-    /// immediately — a half-written headline going public the moment it was typed.
-    /// </summary>
-    public string? PublishedTitle { get; private set; }
-
-    /// <summary>The summary as last published. See <see cref="PublishedTitle"/>.</summary>
-    public string? PublishedSummary { get; private set; }
-
-    /// <summary>
-    /// Plain-text projection of <see cref="PublishedBlocks"/>, feeding the generated search vector
-    /// (ADR-0010). Written only on publish: search returns published content, so indexing a draft
-    /// would make unpublished text findable.
-    /// </summary>
-    public string SearchText { get; private set; } = string.Empty;
-
-    public int CurrentVersion { get; private set; }
-    public int ReadingTimeMinutes { get; private set; }
     public SeoMetadata Seo { get; private set; } = SeoMetadata.Default;
-
-    public DateTimeOffset? PublishedAt { get; private set; }
-    public DateTimeOffset? ScheduledFor { get; private set; }
-
-    public IReadOnlyList<ArticleVersion> Versions => _versions.AsReadOnly();
 
     /// <summary>Tag ids assigned to this article (CT-11: any number).</summary>
     public IReadOnlyList<Guid> TagIds => _tags.Select(t => t.TagId).ToList();
@@ -71,46 +37,26 @@ public sealed class Article : AggregateRoot
         Visibility visibility = Visibility.Public,
         SeoMetadata? seo = null)
     {
-        return new Article
+        var article = new Article
         {
-            Id = id,
-            Slug = slug,
-            Title = title.Trim(),
-            Summary = summary.Trim(),
             AuthorId = authorId,
-            DraftBlocks = blocks,
             Locale = locale,
             Visibility = visibility,
-            Status = ArticleStatus.Draft,
-            CurrentVersion = 0,
-            ReadingTimeMinutes = blocks.EstimateReadingTimeMinutes(),
             Seo = seo ?? SeoMetadata.Default,
         };
-    }
 
-    /// <summary>Updates the mutable draft. Slug is intentionally not editable here once published (CT-2).</summary>
-    public void UpdateDraft(string title, string summary, ContentDocument blocks, SeoMetadata? seo = null)
-    {
-        Title = title.Trim();
-        Summary = summary.Trim();
-        DraftBlocks = blocks;
-        ReadingTimeMinutes = blocks.EstimateReadingTimeMinutes();
-        if (seo is not null) Seo = seo;
+        article.InitialiseDraft(id, slug, title, summary, blocks);
+        return article;
     }
 
     /// <summary>
-    /// Changes the slug and returns the previous one, or null when the slug is unchanged. The public
-    /// URL is a promise: once the article has been published the caller must record a 301 from the old
-    /// path (CT-2/CT-3) — a decision the service makes from <see cref="PublishedAt"/>, since a
-    /// never-published draft has no indexed URL to protect.
+    /// Updates the draft, including the SEO metadata only an article carries. The body, title and
+    /// summary are the engine's business; this adds the part that is article-specific.
     /// </summary>
-    public Slug? ChangeSlug(Slug newSlug)
+    public void UpdateDraft(string title, string summary, ContentDocument blocks, SeoMetadata? seo = null)
     {
-        if (Slug.Equals(newSlug)) return null;
-
-        var previous = Slug;
-        Slug = newSlug;
-        return previous;
+        base.UpdateDraft(title, summary, blocks);
+        if (seo is not null) Seo = seo;
     }
 
     /// <summary>
@@ -133,115 +79,11 @@ public sealed class Article : AggregateRoot
             _tags.Add(new ArticleTag(Guid.NewGuid(), Id, tagId));
     }
 
-    /// <summary>
-    /// Schedules the article to publish automatically at <paramref name="scheduledFor"/> (rule CT-7).
-    /// Enforces the publish preconditions now so a schedule cannot be set on something that can never
-    /// publish, and requires a future time. Rescheduling a still-scheduled article is allowed; a
-    /// currently-published one must be unpublished first.
-    /// </summary>
-    public Result Schedule(DateTimeOffset scheduledFor, DateTimeOffset now)
-    {
-        if (Status == ArticleStatus.Published)
-            return Result.Failure(Error.Conflict("A published article cannot be scheduled; unpublish it first."));
+    // The engine raises no events of its own: it does not know what it is. An article announces
+    // itself, and a lesson body will announce something different (ADR-0012).
+    protected override void OnPublished()
+        => Raise(new ArticlePublishedDomainEvent(Id, Slug.Value, CurrentVersion));
 
-        if (string.IsNullOrWhiteSpace(Title))
-            return Result.Failure(Error.Rule("An article requires a title before it can be scheduled."));
-
-        if (!DraftBlocks.HasContent)
-            return Result.Failure(Error.Rule("An article requires at least one content block before it can be scheduled."));
-
-        if (scheduledFor <= now)
-            return Result.Failure(Error.Rule("The scheduled time must be in the future."));
-
-        Status = ArticleStatus.Scheduled;
-        ScheduledFor = scheduledFor;
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Cancels a pending schedule and returns the article to draft (CT-7).
-    ///
-    /// Without this, scheduling is a one-way door: <see cref="Unpublish"/> only accepts a
-    /// <c>Published</c> article, so an editor who scheduled something for next week and changed
-    /// their mind had no way back. Deliberately leaves the draft untouched — cancelling a schedule
-    /// is a decision about *when*, not about *what*.
-    /// </summary>
-    public Result CancelSchedule()
-    {
-        if (Status != ArticleStatus.Scheduled)
-            return Result.Failure(Error.Conflict("Only a scheduled article can have its schedule cancelled."));
-
-        Status = ArticleStatus.Draft;
-        ScheduledFor = null;
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Copies a past version into the draft (CT-8).
-    ///
-    /// It <b>never mutates history</b>: the version rows are append-only, and the published copy is
-    /// untouched. Restoring loads old content into the draft, and publishing it afterwards writes a
-    /// *new* version — so a restore is itself recorded, rather than rewriting the past. That is why
-    /// this is a draft operation behind <c>Content.Edit</c> and not a publishing act.
-    /// </summary>
-    public Result RestoreVersion(int version)
-    {
-        var snapshot = _versions.FirstOrDefault(v => v.Version == version);
-        if (snapshot is null)
-            return Result.Failure(Error.NotFound($"Version {version} does not exist for this article."));
-
-        Title = snapshot.Title;
-        Summary = snapshot.Summary;
-        DraftBlocks = snapshot.Blocks;
-        ReadingTimeMinutes = snapshot.Blocks.EstimateReadingTimeMinutes();
-
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Publishes the article: snapshots the draft into the published copy, writes an immutable
-    /// version row, and increments the version — atomically (rules CT-1, CT-5, CT-6, CT-8).
-    /// </summary>
-    public Result Publish(DateTimeOffset now)
-    {
-        if (string.IsNullOrWhiteSpace(Title))
-            return Result.Failure(Error.Rule("An article requires a title before it can be published."));
-
-        if (!DraftBlocks.HasContent)
-            return Result.Failure(Error.Rule("An article requires at least one content block before it can be published."));
-
-        CurrentVersion += 1;
-        PublishedBlocks = DraftBlocks;
-        // Snapshotted alongside the blocks, not left pointing at the mutable draft fields — that is
-        // what keeps an in-progress headline off the live page (CT-6).
-        PublishedTitle = Title;
-        PublishedSummary = Summary;
-        SearchText = DraftBlocks.ToPlainText();
-        Status = ArticleStatus.Published;
-        PublishedAt = now;
-        ScheduledFor = null;
-
-        _versions.Add(new ArticleVersion(
-            Guid.NewGuid(), Id, CurrentVersion, Title, Summary, DraftBlocks));
-
-        Raise(new ArticlePublishedDomainEvent(Id, Slug.Value, CurrentVersion));
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Recomputes <see cref="SearchText"/> from the current published blocks, without touching
-    /// version history or timestamps. For backfilling articles published before the projection
-    /// existed — publishing is what maintains it from here on.
-    /// </summary>
-    public void RebuildSearchText() => SearchText = PublishedBlocks?.ToPlainText() ?? string.Empty;
-
-    public Result Unpublish()
-    {
-        if (Status != ArticleStatus.Published)
-            return Result.Failure(Error.Conflict("Only a published article can be unpublished."));
-
-        Status = ArticleStatus.Unpublished;
-        Raise(new ArticleUnpublishedDomainEvent(Id, Slug.Value));
-        return Result.Success();
-    }
+    protected override void OnUnpublished()
+        => Raise(new ArticleUnpublishedDomainEvent(Id, Slug.Value));
 }

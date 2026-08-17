@@ -1,5 +1,44 @@
 # DataBro Changelog
 
+## [2026-08-17 06:57:55 UTC]
+
+CHG-0031 — Extract the content engine into `ContentUnit` (ADR-0012, step 1)
+
+First Phase 2 slice, and deliberately a **pure refactor**: no new behaviour, no data movement, the
+existing 180 tests as the safety net. Nothing depends on it yet, which is the point — the seam is
+proven before a lesson is built on it.
+
+- **[ADR-0012](docs/adr/0012-lesson-bodies-live-in-content.md) accepted.** Lesson bodies get their
+  own table in Content beside articles, sharing the engine through an abstract base class. The
+  alternative — one table with a `kind` discriminator — was rejected because every public article
+  read path would then need a `kind = Article` predicate, and a missing one puts a lesson in the RSS
+  feed. That is the **same shape as the CT-6 leak fixed two days ago**; buying it out by construction
+  is worth a second table. Renaming `articles` → `content_units` was also rejected: 359 references
+  across 38 backend files plus a published `/api/v1/articles` contract, spent on naming purity
+  before a single Lesson exists.
+- **`ContentUnit`** now owns everything true of any versioned, publishable body: the block pair, the
+  CT-6 published snapshot, version history, and the draft → scheduled → published state machine.
+  **`Article`** keeps only what a standalone discoverable page has — byline, taxonomy, SEO, locale.
+- **Domain events are a hook, not a base-class concern.** `Publish()` performs the transition and
+  calls `OnPublished()`, which each type overrides to raise its own event. A base raising
+  `ArticlePublished` for a lesson would be a lie, and once the outbox exists it would be a lie
+  delivered to every subscriber.
+- **`ArticleVersion` → `ContentVersion`** so history belongs to the engine. Internal to Content: the
+  version endpoints return DTOs, so `ArticleVersionDto` and the public shape are untouched.
+- **Table-per-concrete-type mapping.** Not TPH, which would put both types in one table and
+  reintroduce exactly the leak this design prevents; not TPT, which would add a join to the hottest
+  read path for nothing.
+- Two things the refactor taught, both now commented at the point they bite: EF resolves an explicit
+  `HasField` against the *derived* type, so naming `_versions` on the `Article` builder fails once
+  the field moves to the base — convention finds it correctly. And the schema diff is a single
+  **foreign-key rename**, no column or table movement, which is the evidence that this was a
+  refactor rather than a redesign.
+- Verified on the running stack after migrating: public read, version history, search, and a full
+  unpublish → publish round trip appending version 2. Backend 180 green including the
+  architecture-fitness gate.
+
+---
+
 ## [2026-08-16 17:33:43 UTC]
 
 CHG-0030 — Polish pass: syntax highlighting, table editor, dev login, ESLint
