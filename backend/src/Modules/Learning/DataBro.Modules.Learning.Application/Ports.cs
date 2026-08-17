@@ -25,6 +25,30 @@ public interface ICourseRepository
     Task SaveChangesAsync(CancellationToken ct = default);
 }
 
+/// <summary>Persistence port for the <see cref="Enrollment"/> aggregate.</summary>
+public interface IEnrollmentRepository
+{
+    Task AddAsync(Enrollment enrollment, CancellationToken ct = default);
+
+    /// <summary>The learner's enrollment in one course, with its progress rows.</summary>
+    Task<Enrollment?> GetAsync(Guid userId, Guid courseId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Everything the learner is enrolled in, most recently touched first — the dashboard query.
+    /// Progress rows are included because the cards show a completion count.
+    /// </summary>
+    Task<PagedResult<Enrollment>> ListForUserAsync(
+        Guid userId, PageRequest page, CancellationToken ct = default);
+
+    /// <summary>
+    /// True when the unique (user, course) index rejected the last save — two concurrent enrol
+    /// clicks. Distinguishing that from any other failure is what lets the service recover.
+    /// </summary>
+    Task<bool> SaveHandlingDuplicateAsync(CancellationToken ct = default);
+
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
+
 /// <summary>Persistence port for the <see cref="LearningPath"/> aggregate.</summary>
 public interface ILearningPathRepository
 {

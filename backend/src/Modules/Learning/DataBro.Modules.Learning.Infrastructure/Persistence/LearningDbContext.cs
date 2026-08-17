@@ -15,6 +15,7 @@ public sealed class LearningDbContext(DbContextOptions<LearningDbContext> option
 
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

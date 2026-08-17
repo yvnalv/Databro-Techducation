@@ -139,7 +139,7 @@ Owns: `notifications`, `email_log`.
 
 ---
 
-## Learning (P2) — domain built
+## Learning (P2) — built
 
 Structured learning over the Content engine ([ADR-0013](adr/0013-learning-curriculum-invariants.md)).
 
@@ -156,13 +156,29 @@ Structured learning over the Content engine ([ADR-0013](adr/0013-learning-curric
   unpublish, because it must not depend on Learning.
 * Ordering is a contiguous integer normalised on every change, so `Order` is always `0..n-1`.
 
-Owns: `learning_paths`, `path_courses`, `courses`, `course_modules`, `lessons` *(persistence not yet
-written — the domain and its tests are).*
+### Progress
+
+* **`Enrollment` is a second aggregate root, not part of `Course`.** The two have opposite write
+  shapes: a course is edited rarely by one author, in whole-curriculum saves; an enrollment is
+  written constantly by one learner, a row at a time. Folding progress into the course would make
+  ticking one lesson load an entire curriculum and put every learner in contention over one
+  aggregate. They are joined by id.
+* **Completion is stored, not derived** (LN-6). Deriving it would let a growing curriculum
+  retroactively un-finish learners who had already completed the course.
+* Progress can only be recorded against a lesson the learner can reach — published body, in that
+  course (LN-7). The check needs Content's publication state, so it goes through the same
+  `ILessonContentReader` batch call the curriculum read already makes, rather than a cached copy here
+  that would be the thing that goes stale.
+
+Owns: `learning_paths`, `path_courses`, `courses`, `course_modules`, `lessons`, `enrollments`,
+`lesson_progress`.
 
 Consumes (contract): **`ILessonContentReader`** from Content, for lesson bodies.
 
-Emits: `CoursePublished`, `CourseUnpublished`. `LessonCompleted`, `CourseCompleted` and `Enrolled`
-arrive with progress.
+Provides (contract): **`IModuleSearch`** — the courses segment of cross-module search (ADR-0014).
+
+Emits: `CoursePublished`, `CourseUnpublished`, `Enrolled`, `CourseCompleted`. Nothing consumes the
+last two yet; they are what the outbox will carry to certificates and completion email.
 
 ---
 

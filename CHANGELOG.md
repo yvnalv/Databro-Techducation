@@ -1,5 +1,61 @@
 # DataBro Changelog
 
+## [2026-08-17 14:22:24 UTC]
+
+CHG-0040 — Enrollment and progress (LN-6 … LN-11)
+
+A learner can join a course, move through it, and finish it. The platform's first genuinely
+write-heavy surface — everything before this was read-heavy and cacheable, and this is neither.
+
+- **`Enrollment` is its own aggregate root, deliberately not part of `Course`.** The course is the
+  authoring boundary, sized so one save covers a whole rearrangement of the curriculum. Progress is
+  the opposite shape: many learners writing constantly to their own slice and never to each other's.
+  Folding progress into the course would make ticking one lesson load an entire curriculum, and would
+  put every learner on the platform in contention over a single aggregate.
+- **Course completion is a moment, not a computed state (LN-6)** — the decision this slice turns on.
+  The obvious implementation derives it: "completed" means every lesson is ticked. But derived
+  completion is retroactive. Publish one new lesson and everyone who ever finished the course
+  silently becomes unfinished, their certificates invalid, their dashboards wrong, for a lesson that
+  did not exist while they were studying. Courses grow after launch by design (LN-1), so that is not
+  an edge case but the ordinary consequence of authoring.
+
+  So the check runs against the lessons published *now*, and the answer is written down. Once stored
+  it stands. A learner can show as complete at 8 of 9 lessons; both facts are true and the platform
+  reports both. Two tests hold the line from either direction — a course that grows, and a lesson
+  un-ticked afterwards.
+- **The recordable set is the readable set (LN-7).** Progress can only be recorded against a lesson
+  in that course with a published body. Without the check a client could tick a lesson the learner
+  cannot open — or one from an entirely different course — and complete a course it had never
+  opened. Both are tested; both are 404s.
+- **`/me`, never `/users/{id}` (LN-8).** The learner comes from the token, so there is no request
+  shape that reads or writes someone else's progress. Authenticated but with **no permission
+  requirement**, deliberately: every other write on the platform is an editorial act gated by RBAC,
+  and a `Learning.Enrol` permission would mean every new signup needs a grant before the platform
+  does the thing it exists to do. Being signed in is the entitlement.
+- **Enrolling and completing are idempotent (LN-9, LN-10).** A double-tapped button is not an error,
+  and answering it with a 409 would make every client handle a failure that means "it worked". The
+  unique `(user, course)` index still exists for the concurrent case, and losing that race is handled
+  the same way: re-read and return the winner.
+- `visit` and `complete` are **separate endpoints**, because opening a lesson and finishing it are
+  different claims. One endpoint for both would complete a course for someone who merely scrolled to
+  the end of it. `visit` is one UPDATE per lesson view — the highest-frequency write on the platform,
+  accepted knowingly, because deriving the resume point from the furthest completed lesson answers a
+  different question and answers it wrongly for anyone midway through something.
+- Progress rows are **sparse**: written when a learner first touches a lesson, never pre-seeded.
+  Seeding would multiply every enrollment by its lesson count on day one to record, almost entirely,
+  that nothing has happened yet. Absence already says that.
+- `percentComplete` is derived per request and **capped at 100** — a learner who completed a course
+  before it grew is honestly at 1 of 2, but "104% complete" on a dashboard reads as a bug.
+- 14 new tests (Learning 41 → 56; backend 247 → **262**). Verified live against the seeded course:
+  re-enrol returns the same id, visit does not complete, completion is idempotent, the course
+  completes at 2/2, un-ticking a lesson leaves `completedAt` intact, a bogus lesson id 404s, an
+  anonymous caller 401s.
+- **Doc drift fixed while here.** `DATABASE.md` and `API_SPEC.md` still listed Learning under
+  "Future" — courses shipped without either being updated. Both now document the whole module, not
+  just this slice. `BUSINESS_RULES.md` gains LN-1 … LN-11; its Phase 2 placeholder said a course is
+  complete "only when all required lessons are complete", which is precisely the retroactive wording
+  LN-6 rejects, so it is struck through rather than quietly dropped.
+
 ## [2026-08-17 14:00:12 UTC]
 
 CHG-0039 — Cross-module search, segmented (ADR-0014)

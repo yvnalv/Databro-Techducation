@@ -159,18 +159,19 @@ Public course pages ship too: a learner can browse the catalogue and read a curr
 Courses are searchable ([ADR-0014](adr/0014-search-across-modules.md)): results come back segmented
 per module rather than merged into a ranking that would be fabricated.
 
-1. **Enrollment and progress** — the first genuinely **write-heavy** surface on a platform that has
-   been read-heavy throughout, and what lesson pages depend on.
-2. **Lesson pages** — reading a lesson needs the above, so the course page says so rather than
-   linking somewhere that does not exist.
+Enrollment and progress are built (LN-6 … LN-11): a learner can join a course, move through it, and
+finish it, with completion recorded as a moment that a growing curriculum cannot revoke. **The whole
+learner loop now exists in the API and nowhere in a UI** — see the gap below.
+
+1. **Decide where the learner UI lives** — blocking, and cheap to settle. See "Known gaps".
+2. **Lesson pages** — reading a lesson is the one thing a learner still cannot do. The course page
+   currently lists lessons without linking to them, which is honest but not a product.
 3. **Learning paths** on the site. The domain and API exist; only the pages are missing.
 4. **The transactional outbox** — no longer forced by search, but still unbuilt and still needed for
-   cross-module effects generally. It now gets to be designed when it has a real second consumer,
-   which is the better time.
-3. **Enrollment and progress** (medium) — the first genuinely **write-heavy** surface on a platform
-   that has been read-heavy throughout, so it deserves its own storage thinking rather than
-   inheriting the article patterns.
-4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
+   cross-module effects generally. It now has a real second consumer waiting in
+   `CourseCompletedDomainEvent` (certificates, completion email), which is the better time to design
+   it.
+5. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
 Still owed before the public course pages ship: **the search decision** and **the outbox** above —
 a course is the first thing a learner would expect to find by searching.
@@ -193,6 +194,18 @@ Independent of Phase 2:
 
 ## Known gaps / deferred
 
+* **There is no learner UI, and `apps/app` is not the app the docs describe.**
+  [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md) and [ADR-0005](adr/0005-two-app-frontend-monorepo.md)
+  both call `app/` the *authenticated learner app* — dashboard, progress, playground. What was
+  actually built there is the CMS. The drift went unnoticed while everything was read-only, and
+  enrollment is where it starts to bite: the whole progress API exists with nowhere to render it.
+
+  It needs deciding before lesson pages, because lesson pages are the first thing that has to live
+  somewhere. Roughly: give the CMS its own app and return `app/` to learners; split `app/` by role
+  internally; or put learner reading on `site` (already auth-aware by design — a premium body renders
+  its preview publicly and gates the rest) and keep `app/` for the dashboard. The boundary the docs
+  draw is *rendering need, not feature*, which argues for the third, but it is a real decision and
+  gets an ADR rather than a default.
 * Email transport not wired — email verification not yet enforced on login
   (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
 * Social login (Google/GitHub) not yet implemented.
@@ -249,11 +262,13 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — 106 passing: architecture-fitness (4) + Content & Identity unit/integration (102),
-  including the slug-change/redirect and scheduled-publishing domain + API suites.
-* `pnpm --filter @databro/ui test` — 59 passing: block renderer, embed allowlist, inline rich text
-  (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, and the primitives'
-  accessibility contracts (Vitest).
+* `dotnet test` — **262 passing**: Content & Identity (173), Learning (56), Media (29),
+  architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
+  regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
+  directions.
+* `pnpm test` — **85 passing** across the frontend workspaces: block renderer, embed allowlist,
+  inline rich text (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, the
+  primitives' accessibility contracts, and the API client (Vitest).
 * `pnpm typecheck` — clean across all five workspaces.
 * Integration tests require Docker (Testcontainers spins up PostgreSQL).
 * `scripts/dev-smoke.ps1` — 10-step end-to-end check against a running stack; passes in both run

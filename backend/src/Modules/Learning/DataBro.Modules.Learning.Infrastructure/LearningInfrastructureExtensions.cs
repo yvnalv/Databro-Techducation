@@ -34,7 +34,9 @@ public static class LearningInfrastructureExtensions
 
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ILearningPathRepository, LearningPathRepository>();
+        services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<CourseService>();
+        services.AddScoped<EnrollmentService>();
 
         // Learning's segment of the cross-module search results (ADR-0014).
         services.AddScoped<IModuleSearch, Persistence.CourseSearch>();

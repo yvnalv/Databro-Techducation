@@ -183,6 +183,54 @@ the index could not serve the only query that would use it.
 Backfill: `ContentInitializer` fills `search_text` for articles published before the column existed.
 Idempotent and self-limiting — after the first run it selects nothing.
 
+### learning
+
+Curriculum structure. Lesson **bodies** are not here — they live in `content.lesson_contents` and are
+reached through `ILessonContentReader` (ADR-0012).
+
+**learning_paths** (id, slug unique, title, summary, status, difficulty, published_at).
+**path_courses** (id, learning_path_id → learning_paths, course_id, "order").
+
+**courses** (id, slug unique, title, summary, status, difficulty, published_at, search_vector).
+**course_modules** (id, course_id → courses cascade, title, summary, "order").
+**lessons** (id, course_module_id → course_modules cascade, content_unit_id, "order",
+estimated_minutes, difficulty, objectives jsonb, prerequisite_lesson_ids jsonb).
+
+`content_unit_id` has **no foreign key**: it crosses a module boundary, and a database constraint
+there would couple the two schemas exactly as tightly as rule 10 forbids.
+
+The `(parent, "order")` indexes are deliberately **not unique**, though contiguity is an invariant
+(LN-3). EF rewrites sibling positions one UPDATE at a time, so an intermediate state legitimately
+holds a duplicate; a deferrable constraint would fix that but cannot be partial, and this one must be
+filtered on `is_deleted`. The invariant is enforced in the aggregate, which normalises after every
+structural change.
+
+`search_vector` on `courses` is a stored generated column (title A, summary B), the same pattern as
+articles but with no locale `CASE` — a course has no locale column (ADR-0014).
+
+#### Progress
+
+**enrollments** (id, user_id, course_id, enrolled_at, completed_at null, last_lesson_id null,
+last_accessed_at null).
+**lesson_progress** (id, enrollment_id → enrollments cascade, lesson_id, completed_at null).
+
+The platform's first write-heavy tables, and shaped for it:
+
+* `user_id` and `course_id` carry no foreign keys — the first crosses a module boundary, and the
+  second is left unconstrained because a course is authoring-owned while an enrollment is
+  learner-owned, and a cascade between them is not a behaviour to discover at delete time.
+* `ix_enrollments_user_course` is unique, filtered on `is_deleted = false`. Unlike the ordering
+  indexes this one *can* be unique: nothing legitimately writes a second row, so it only ever fires
+  on the race it exists to stop — two concurrent enrol clicks. The service catches the violation and
+  returns the winner (LN-9). The filter lets an un-enrolled learner enrol again.
+* `ix_lesson_progress_enrollment_lesson` is unique on the same reasoning (two devices, one lesson).
+* `(user_id, last_accessed_at)` serves the dashboard.
+* Progress rows are **sparse** — written when a learner first touches a lesson, never pre-seeded from
+  the curriculum. Seeding would multiply every enrollment by its lesson count to record, almost
+  entirely, that nothing has happened yet.
+* `completed_at` on `enrollments` is **stored, not derived** (LN-6). Percent complete is the
+  opposite: derived at read time, never stored.
+
 ### platform
 
 **outbox_messages** (id, occurred_at, type, payload jsonb, processed_at null, attempts, error null).
@@ -209,8 +257,8 @@ See [CONTENT_MODEL.md](CONTENT_MODEL.md) for block structure.
 
 ## Future (reference)
 
-* **Learning (P2):** `learning_paths`, `courses`, `course_modules`, `lessons` (lesson → content unit
-  ref), `enrollments`, `lesson_progress`, `bookmarks`.
+* ~~**Learning (P2):** `learning_paths`, `courses`, `course_modules`, `lessons`, `enrollments`,
+  `lesson_progress`~~ — **built**; see the `learning` schema above. `bookmarks` is still to come.
 * **Assessment (P2):** `quizzes`, `questions`, `quiz_attempts`.
 * **Billing (P3):** `plans`, `subscriptions`, `invoices`, `entitlements`.
 * **AI (P3):** `embeddings` (pgvector), `ai_conversations`.

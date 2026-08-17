@@ -1,5 +1,6 @@
 using DataBro.Modules.Learning.Application;
 using DataBro.Modules.Learning.Infrastructure;
+using DataBro.Platform.Abstractions;
 using DataBro.Platform.Authorization;
 using DataBro.Platform.Results;
 using DataBro.Platform.Web;
@@ -25,9 +26,69 @@ public static class LearningModuleExtensions
     public static IEndpointRouteBuilder MapLearningModule(this IEndpointRouteBuilder endpoints)
     {
         MapPublicEndpoints(endpoints);
+        MapLearnerEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
         return endpoints;
     }
+
+    // ---- The learner's own progress.
+    //
+    // Authenticated, but with **no permission requirement** — deliberately. Every other write on the
+    // platform is an editorial act gated by RBAC; this is a learner acting on their own data, and
+    // minting a `Learning.Enrol` permission would mean every new signup needs it granted before the
+    // platform does the thing it exists to do. Being signed in is the entitlement.
+    //
+    // The authorization that matters here is not the role but the id: the learner is taken from the
+    // token and never from the route or body, so there is no request shape that reads or writes
+    // someone else's progress. That is why these live under /me rather than /users/{id}. ----
+    private static void MapLearnerEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints
+            .MapGroup("/api/v1/me/enrollments")
+            .WithTags("Learning.Progress")
+            .RequireAuthorization();
+
+        group.MapGet("", (
+            ICurrentUser user, EnrollmentService service, int? page, int? pageSize, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.OkPaged(await service.ListForUserAsync(id, new PageRequest(page, pageSize), ct))));
+
+        group.MapGet("/{courseSlug}", (
+            string courseSlug, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.OkOrNotFound(await service.GetAsync(id, courseSlug, ct))));
+
+        group.MapPost("/{courseSlug}", (
+            string courseSlug, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.From(await service.EnrolAsync(id, courseSlug, ct))));
+
+        // Moving the resume point. Separate from completion because opening a lesson and finishing
+        // it are different claims, and conflating them would mark a course complete for someone who
+        // merely scrolled to the end of it.
+        group.MapPost("/{courseSlug}/lessons/{lessonId:guid}/visit", (
+            string courseSlug, Guid lessonId, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.From(await service.VisitLessonAsync(id, courseSlug, lessonId, ct))));
+
+        group.MapPost("/{courseSlug}/lessons/{lessonId:guid}/complete", (
+            string courseSlug, Guid lessonId, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.From(await service.CompleteLessonAsync(id, courseSlug, lessonId, ct))));
+
+        group.MapDelete("/{courseSlug}/lessons/{lessonId:guid}/complete", (
+            string courseSlug, Guid lessonId, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.From(await service.ReopenLessonAsync(id, courseSlug, lessonId, ct))));
+    }
+
+    /// <summary>
+    /// Unwraps the authenticated learner's id. <c>RequireAuthorization</c> has already rejected
+    /// anonymous callers, so a missing id means a token that authenticated without a usable subject
+    /// — a 401, not a crash and not a silent read of nobody's progress.
+    /// </summary>
+    private static Task<IResult> RequireUser(ICurrentUser user, Func<Guid, Task<IResult>> handler) =>
+        user.UserId is { } id ? handler(id) : Task.FromResult(Results.Unauthorized());
 
     // ---- Public read. Only published courses, and within them only published lessons (ADR-0013). ----
     private static void MapPublicEndpoints(IEndpointRouteBuilder endpoints)

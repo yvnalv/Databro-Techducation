@@ -90,6 +90,33 @@ public sealed record ReorderRequest(IReadOnlyList<Guid> OrderedIds);
 
 public sealed record CreateLearningPathRequest(string Title, string Summary, string? Slug = null, string? Difficulty = null);
 
+/// <summary>
+/// A learner's progress in one course — the shape behind both a dashboard card and a course page's
+/// "you are here" banner.
+/// </summary>
+/// <param name="TotalLessons">
+/// Published lessons <i>now</i>. Moves when the curriculum grows, which is why
+/// <paramref name="PercentComplete"/> is derived rather than stored.
+/// </param>
+/// <param name="CompletedAt">
+/// Set once and never cleared. A learner can legitimately be complete with
+/// <paramref name="CompletedLessons"/> below <paramref name="TotalLessons"/> — the course grew after
+/// they finished it (LN-6).
+/// </param>
+public sealed record EnrollmentDto(
+    Guid Id,
+    Guid CourseId,
+    string CourseSlug,
+    string CourseTitle,
+    DateTimeOffset EnrolledAt,
+    DateTimeOffset? CompletedAt,
+    Guid? LastLessonId,
+    DateTimeOffset? LastAccessedAt,
+    int TotalLessons,
+    int CompletedLessons,
+    int PercentComplete,
+    IReadOnlyList<Guid> CompletedLessonIds);
+
 internal static class LearningMapping
 {
     public static string ToWire<TEnum>(this TEnum value) where TEnum : struct, Enum =>

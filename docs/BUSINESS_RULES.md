@@ -65,6 +65,43 @@ Domain layer. Rules are grouped by area and will grow per phase.
 * TX-2: A category referenced by any article cannot be hard-deleted; deactivate/reassign instead.
 * TX-3: Categories may nest (parent/child); cycles are disallowed.
 
+## Learning — curriculum
+
+* LN-1: A course publishes independently of its lessons. A published course requires a title and at
+  least one lesson, but **not** that every lesson body is published (ADR-0013).
+* LN-2: A lesson whose body is unpublished is absent from the learner's view of a course, and an
+  empty module is absent with it. The authoring view shows both, so an author sees the gap.
+* LN-3: Order is a contiguous integer from zero within its parent, normalised by the aggregate after
+  every structural change. Callers request a sequence; they never assign positions.
+* LN-4: A lesson holds no blocks. Its body is a Content unit referenced by id and resolved through
+  `ILessonContentReader` (ADR-0007, ADR-0012).
+* LN-5: A course slug is immutable once published and a change creates a 301, exactly as CT-2/CT-3
+  govern articles.
+
+## Learning — enrollment & progress
+
+* LN-6: **Course completion is a moment, not a computed state.** It is recorded when the learner has
+  completed every lesson published *at that time*, and it is never revoked — not by the curriculum
+  growing, and not by the learner un-ticking a lesson afterwards.
+
+  Derived completion is retroactive: publishing one new lesson would silently un-finish everyone who
+  had ever completed the course and invalidate their certificates, for a lesson that did not exist
+  while they were studying. Courses grow after launch by design (LN-1), so this would be the ordinary
+  consequence of authoring rather than an edge case.
+
+  The visible consequence is intended: a learner can show as complete at 8 of 9 lessons. Both facts
+  are true and the platform reports both.
+* LN-7: Progress may only be recorded against a lesson the learner can actually reach — one in that
+  course, with a published body. The recordable set and the readable set are the same set.
+* LN-8: A learner's progress is addressed only as their own (`/me/...`), never by user id in a route
+  or body. The identity comes from the token.
+* LN-9: Enrolling is idempotent. A second enrolment returns the existing one rather than a conflict,
+  including when it loses a race to a concurrent request.
+* LN-10: Completing a lesson is idempotent and keeps the original timestamp; the resume point is the
+  lesson last *opened*, which is not the lesson last completed.
+* LN-11: Percent complete is derived at read time from published lessons, never stored, and capped at
+  100 — a learner who completed a course before it grew is not shown above 100%.
+
 ## Cross-cutting
 
 * XC-1: No business data is physically deleted — soft delete + history everywhere.
@@ -75,8 +112,11 @@ Domain layer. Rules are grouped by area and will grow per phase.
 
 ## Future phases (placeholders)
 
-* **Learning (P2):** lesson prerequisites gate progression; a course is "completed" only when all
-  required lessons are complete; a certificate issues only on course completion (P3).
+* **Learning (P2):** ~~a course is "completed" only when all required lessons are complete~~ — built,
+  and **refined** into LN-6: completion is recorded once against the lessons published at that
+  moment, not recomputed. The placeholder's wording would have made completion retroactive.
+  Prerequisites are recorded but do not yet gate progression (ADR-0013); a certificate issues on
+  course completion (P3) and will hang off `CourseCompletedDomainEvent`.
 * **Billing (P3):** premium content access requires an active entitlement; entitlement checks are
   server-authoritative.
 * **Enterprise (P4):** org seats are finite; a member consuming a seat cannot exceed the org's plan.

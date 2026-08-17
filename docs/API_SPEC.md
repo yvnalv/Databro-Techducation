@@ -197,6 +197,81 @@ then, and consumers render the original at full size rather than a half-built `s
 `og:image`. That is what lets the renderer resolve an image with a lookup instead of a request per
 figure on the cached read path.
 
+### Courses — public read (site)
+```
+GET /api/v1/courses                          published courses, newest first (paginated)
+GET /api/v1/courses/{slug}                   one course with its full curriculum
+```
+
+The course page returns modules, each with its lessons, each lesson carrying its **published** body
+resolved from Content. A lesson whose body is unpublished is omitted entirely, and a module left with
+nothing in it is omitted with it (LN-2). The join is one batch call however many lessons there are —
+a per-lesson lookup would be an N+1 on a learner's hottest page.
+
+### Courses — authoring (app; Author/Editor/Admin)
+```
+POST   /api/v1/authoring/courses                                       create draft
+GET    /api/v1/authoring/courses                                       all courses, drafts included
+GET    /api/v1/authoring/courses/{id}                                  full curriculum, gaps visible
+PATCH  /api/v1/authoring/courses/{id}                                  { title, summary, difficulty }
+POST   /api/v1/authoring/courses/{id}/modules                          { title }
+PATCH  /api/v1/authoring/courses/{id}/modules/{moduleId}
+DELETE /api/v1/authoring/courses/{id}/modules/{moduleId}
+PUT    /api/v1/authoring/courses/{id}/modules/order                    { orderedIds }
+POST   /api/v1/authoring/courses/{id}/modules/{moduleId}/lessons       { contentUnitId }
+PATCH  /api/v1/authoring/courses/{id}/modules/{moduleId}/lessons/{lessonId}
+DELETE /api/v1/authoring/courses/{id}/modules/{moduleId}/lessons/{lessonId}
+PUT    /api/v1/authoring/courses/{id}/modules/{moduleId}/lessons/order { orderedIds }
+POST   /api/v1/authoring/courses/{id}/publish
+POST   /api/v1/authoring/courses/{id}/unpublish
+```
+
+Structure requires **`Content.Edit`** and publishing requires **`Content.Publish`** — the same split
+articles use (CT-4), reusing Content's permissions rather than minting Learning ones so there is one
+editorial role rather than two overlapping sets.
+
+Reordering is **one call for a whole rearrangement**, not a move per row: it is one transaction
+against one aggregate, and a per-row API would let a drag half-apply. Every authoring call returns
+the whole course, so a builder UI never reconciles a patch against local state.
+
+### Progress (learner; any authenticated user)
+```
+GET    /api/v1/me/enrollments                                          dashboard (paginated)
+GET    /api/v1/me/enrollments/{courseSlug}                             progress in one course
+POST   /api/v1/me/enrollments/{courseSlug}                             enrol
+POST   /api/v1/me/enrollments/{courseSlug}/lessons/{lessonId}/visit    move the resume point
+POST   /api/v1/me/enrollments/{courseSlug}/lessons/{lessonId}/complete
+DELETE /api/v1/me/enrollments/{courseSlug}/lessons/{lessonId}/complete un-mark
+```
+
+Authenticated but with **no permission requirement**, deliberately. Every other write on the platform
+is an editorial act gated by RBAC; this is a learner acting on their own data, and a `Learning.Enrol`
+permission would mean every new signup needs a grant before the platform does the thing it exists to
+do. Being signed in is the entitlement.
+
+The authorization that matters here is the id, not the role: the learner comes from the token and
+never from the route or body, so no request shape reads or writes someone else's progress. That is
+why these live under `/me` rather than `/users/{id}` (LN-8).
+
+`visit` and `complete` are separate because opening a lesson and finishing it are different claims;
+one endpoint for both would complete a course for someone who merely scrolled through it. Both are
+idempotent (LN-9, LN-10). A lesson that is not in the course, or whose body is unpublished, is a
+**404** — the recordable set is the readable set (LN-7).
+
+```json
+{ "success": true, "data": {
+  "id": "…", "courseId": "…", "courseSlug": "rag-course",
+  "courseTitle": "Retrieval-Augmented Generation",
+  "enrolledAt": "…", "completedAt": null,
+  "lastLessonId": "…", "lastAccessedAt": "…",
+  "totalLessons": 9, "completedLessons": 4, "percentComplete": 44,
+  "completedLessonIds": ["…"] } }
+```
+
+`completedAt` is set once and never cleared, so `completedLessons` can legitimately sit below
+`totalLessons` on a completed course — the course grew after the learner finished it (LN-6).
+`percentComplete` is derived per request and capped at 100.
+
 ## 6. Contracts & types
 
 * Request/response DTOs are the source of truth for `packages/types` and `packages/api-client`.

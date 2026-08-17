@@ -1,0 +1,215 @@
+using DataBro.Modules.Learning.Domain;
+using DataBro.Platform.Abstractions;
+using DataBro.Platform.Results;
+
+namespace DataBro.Modules.Learning.Application;
+
+/// <summary>
+/// Use cases for a learner's own progress: joining a course, moving through it, finishing it.
+///
+/// <para>
+/// Every method takes the learner's id explicitly rather than reading it from an ambient
+/// <c>ICurrentUser</c>. On a surface where the id <i>is</i> the authorization boundary — this is the
+/// data one learner is allowed to see and change — an implicit parameter is the kind that gets
+/// forgotten in one branch and reads someone else's progress. Passing it makes every call site
+/// state whose progress it means.
+/// </para>
+/// </summary>
+public sealed class EnrollmentService(
+    IEnrollmentRepository enrollments,
+    ICourseRepository courses,
+    ILessonContentReader bodies,
+    IClock clock)
+{
+    /// <summary>
+    /// Enrols the learner, or returns the enrollment they already have.
+    ///
+    /// <para>
+    /// <b>Idempotent by design, not by accident.</b> A second enrol is a double-tapped button or a
+    /// retried request, and answering it with a 409 would make the client handle an error that is
+    /// not one. The unique index still exists for the concurrent case, and losing that race is
+    /// handled the same way: re-read and return the winner.
+    /// </para>
+    /// </summary>
+    public async Task<Result<EnrollmentDto>> EnrolAsync(
+        Guid userId, string courseSlug, CancellationToken ct = default)
+    {
+        var course = await courses.GetPublishedBySlugAsync(courseSlug, ct);
+        if (course is null)
+            return Result.Failure<EnrollmentDto>(Error.NotFound("Course not found."));
+
+        var existing = await enrollments.GetAsync(userId, course.Id, ct);
+        if (existing is not null)
+            return Result.Success(await ComposeAsync(existing, course, ct));
+
+        var enrollment = Enrollment.Start(Guid.NewGuid(), userId, course.Id, clock.UtcNow);
+        await enrollments.AddAsync(enrollment, ct);
+
+        if (!await enrollments.SaveHandlingDuplicateAsync(ct))
+        {
+            // The other request won the race. Its row is the real one.
+            var winner = await enrollments.GetAsync(userId, course.Id, ct);
+            if (winner is null)
+                return Result.Failure<EnrollmentDto>(Error.Conflict("Enrolment failed; please retry."));
+
+            return Result.Success(await ComposeAsync(winner, course, ct));
+        }
+
+        return Result.Success(await ComposeAsync(enrollment, course, ct));
+    }
+
+    /// <summary>The learner's progress in one course, or null when they are not enrolled.</summary>
+    public async Task<EnrollmentDto?> GetAsync(Guid userId, string courseSlug, CancellationToken ct = default)
+    {
+        var course = await courses.GetPublishedBySlugAsync(courseSlug, ct);
+        if (course is null) return null;
+
+        var enrollment = await enrollments.GetAsync(userId, course.Id, ct);
+        return enrollment is null ? null : await ComposeAsync(enrollment, course, ct);
+    }
+
+    /// <summary>The learner's dashboard: everything they are enrolled in, most recent first.</summary>
+    public async Task<PagedResult<EnrollmentDto>> ListForUserAsync(
+        Guid userId, PageRequest page, CancellationToken ct = default)
+    {
+        var result = await enrollments.ListForUserAsync(userId, page, ct);
+        if (result.Items.Count == 0)
+            return new PagedResult<EnrollmentDto>([], result.Page, result.PageSize, result.Total);
+
+        // One batch load for every course on the page, rather than one per card.
+        var courseIds = result.Items.Select(e => e.CourseId).Distinct().ToArray();
+        var loaded = (await courses.GetByIdsAsync(courseIds, ct)).ToDictionary(c => c.Id);
+
+        var items = new List<EnrollmentDto>();
+        foreach (var enrollment in result.Items)
+        {
+            // A course removed out from under an enrollment leaves the card renderable rather than
+            // throwing, the same tolerance a curriculum shows for a missing body.
+            loaded.TryGetValue(enrollment.CourseId, out var course);
+            items.Add(await ComposeAsync(enrollment, course, ct));
+        }
+
+        return new PagedResult<EnrollmentDto>(items, result.Page, result.PageSize, result.Total);
+    }
+
+    /// <summary>
+    /// Moves the resume point. Cheap and frequent — the learner opened a lesson, nothing more.
+    /// </summary>
+    public Task<Result<EnrollmentDto>> VisitLessonAsync(
+        Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
+        => MutateAsync(userId, courseSlug, lessonId, (enrollment, _) =>
+        {
+            enrollment.Visit(lessonId, clock.UtcNow);
+            return Result.Success();
+        }, ct);
+
+    /// <summary>
+    /// Marks a lesson complete, then checks whether that finished the course.
+    /// </summary>
+    public Task<Result<EnrollmentDto>> CompleteLessonAsync(
+        Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
+        => MutateAsync(userId, courseSlug, lessonId, (enrollment, publishedLessonIds) =>
+        {
+            enrollment.CompleteLesson(lessonId, clock.UtcNow);
+            enrollment.TryComplete(publishedLessonIds, clock.UtcNow);
+            return Result.Success();
+        }, ct);
+
+    /// <summary>
+    /// Un-marks a lesson. Deliberately does <b>not</b> re-open a completed course — see
+    /// <see cref="Enrollment.TryComplete"/>.
+    /// </summary>
+    public Task<Result<EnrollmentDto>> ReopenLessonAsync(
+        Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
+        => MutateAsync(userId, courseSlug, lessonId, (enrollment, _) =>
+            enrollment.ReopenLesson(lessonId), ct);
+
+    /// <summary>
+    /// The shared shape of every progress write: resolve the course, check the learner is enrolled,
+    /// check the lesson is one they are allowed to record against, mutate, save.
+    /// </summary>
+    private async Task<Result<EnrollmentDto>> MutateAsync(
+        Guid userId,
+        string courseSlug,
+        Guid lessonId,
+        Func<Enrollment, IReadOnlyCollection<Guid>, Result> mutate,
+        CancellationToken ct)
+    {
+        var course = await courses.GetPublishedBySlugAsync(courseSlug, ct);
+        if (course is null)
+            return Result.Failure<EnrollmentDto>(Error.NotFound("Course not found."));
+
+        var enrollment = await enrollments.GetAsync(userId, course.Id, ct);
+        if (enrollment is null)
+            return Result.Failure<EnrollmentDto>(Error.Rule("You are not enrolled in this course."));
+
+        var publishedLessonIds = await PublishedLessonIdsAsync(course, ct);
+
+        // Progress may only be recorded against a lesson the learner can actually reach. Without
+        // this, a client could tick a lesson whose body is still a draft — or one from an entirely
+        // different course — and complete a course it had never opened.
+        if (!publishedLessonIds.Contains(lessonId))
+            return Result.Failure<EnrollmentDto>(Error.NotFound("Lesson not found in this course."));
+
+        var result = mutate(enrollment, publishedLessonIds);
+        if (result.IsFailure) return Result.Failure<EnrollmentDto>(result.Error);
+
+        await enrollments.SaveChangesAsync(ct);
+        return Result.Success(await ComposeAsync(enrollment, course, ct));
+    }
+
+    /// <summary>
+    /// The lessons that count: in this course, with a body Content has published.
+    ///
+    /// <para>
+    /// Resolved live rather than stored on the course, because publication state belongs to Content
+    /// and a cached copy here would be the thing that goes stale (rule 10). It is the same batch
+    /// call the curriculum read already makes.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyCollection<Guid>> PublishedLessonIdsAsync(Course course, CancellationToken ct)
+    {
+        var lessons = course.Modules.SelectMany(m => m.Lessons).ToArray();
+        if (lessons.Length == 0) return [];
+
+        var resolved = await bodies.GetLessonContentAsync(
+            lessons.Select(l => l.ContentUnitId).Distinct().ToArray(), ct);
+
+        return lessons
+            .Where(l => resolved.TryGetValue(l.ContentUnitId, out var body) && body.PublishedAt is not null)
+            .Select(l => l.Id)
+            .ToHashSet();
+    }
+
+    private async Task<EnrollmentDto> ComposeAsync(Enrollment enrollment, Course? course, CancellationToken ct)
+    {
+        var total = course is null ? 0 : (await PublishedLessonIdsAsync(course, ct)).Count;
+
+        var completed = enrollment.Progress
+            .Where(p => p.IsCompleted)
+            .Select(p => p.LessonId)
+            .ToList();
+
+        // Percent is derived at read time, never stored: it is a function of two numbers that both
+        // move, and a stored copy would be wrong the moment a lesson was published.
+        //
+        // Capped at 100 for the learner who completed a course before it grew. Their CompletedAt
+        // stands (LN-6), but their ratio can legitimately exceed the denominator, and "104%
+        // complete" on a dashboard reads as a bug rather than as the honest consequence it is.
+        var percent = total == 0 ? 0 : Math.Min(100, (int)Math.Round(completed.Count * 100.0 / total));
+
+        return new EnrollmentDto(
+            enrollment.Id,
+            enrollment.CourseId,
+            course?.Slug.Value ?? string.Empty,
+            course?.Title ?? "Unavailable course",
+            enrollment.EnrolledAt,
+            enrollment.CompletedAt,
+            enrollment.LastLessonId,
+            enrollment.LastAccessedAt,
+            total,
+            completed.Count,
+            percent,
+            completed);
+    }
+}
