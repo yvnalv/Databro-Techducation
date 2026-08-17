@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// The CMS shell, not the learner one (ADR-0015). Every page under /studio opts in explicitly:
+// Nuxt's default is `default.vue`, and a studio page silently rendering the learner chrome would be
+// a confusing failure rather than a loud one.
+definePageMeta({ layout: "studio" });
+
 import { DbButton, DbChip, DbInput } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
 import type { Category, TaxonomyTerm } from "@databro/types";

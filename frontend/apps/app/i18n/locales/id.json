@@ -1,0 +1,53 @@
+{
+  "chrome": {
+    "skipToContent": "Lewati ke konten",
+    "viewSite": "Lihat situs",
+    "signOut": "Keluar",
+    "languageLabel": "Bahasa",
+    "sectionsLabel": "Bagian",
+    "openStudio": "Studio",
+    "backToLearning": "Kembali ke pembelajaran"
+  },
+  "nav": {
+    "dashboard": "Pembelajaran saya",
+    "browse": "Jelajahi kursus",
+    "articles": "Artikel",
+    "courses": "Kursus",
+    "lessons": "Pelajaran",
+    "taxonomy": "Taksonomi"
+  },
+  "dashboard": {
+    "title": "Pembelajaran saya",
+    "subtitle": "Kursus yang Anda ikuti, terbaru lebih dulu.",
+    "empty": "Anda belum mengikuti kursus apa pun.",
+    "emptyCta": "Jelajahi katalog",
+    "loadFailed": "Kursus Anda tidak dapat dimuat.",
+    "resume": "Lanjutkan",
+    "start": "Mulai",
+    "review": "Tinjau",
+    "viewCourse": "Lihat kursus",
+    "progress": "{completed} dari {total} pelajaran",
+    "percent": "{percent}% selesai",
+    "completed": "Selesai",
+    "completedOn": "Selesai {date}",
+    "joinedOn": "Bergabung {date}",
+    "lastOpened": "Terakhir dibuka {date}",
+    "notStarted": "Belum dimulai",
+    "completionStands": "Kelulusan Anda tetap berlaku. Pelajaran yang tersisa bersifat opsional.",
+    "unavailable": "Kursus ini sudah tidak tersedia."
+  },
+  "stats": {
+    "enrolled": "Kursus diikuti",
+    "inProgress": "Sedang berjalan",
+    "completed": "Selesai"
+  },
+  "login": {
+    "title": "Masuk",
+    "subtitle": "Masuk untuk melanjutkan pembelajaran.",
+    "email": "Email",
+    "password": "Kata sandi",
+    "submit": "Masuk",
+    "submitting": "Sedang masuk…",
+    "failed": "Gagal masuk. Periksa email dan kata sandi Anda."
+  }
+}

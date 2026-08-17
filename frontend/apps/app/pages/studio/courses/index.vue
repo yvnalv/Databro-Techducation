@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// The CMS shell, not the learner one (ADR-0015). Every page under /studio opts in explicitly:
+// Nuxt's default is `default.vue`, and a studio page silently rendering the learner chrome would be
+// a confusing failure rather than a loud one.
+definePageMeta({ layout: "studio" });
+
 import { DbButton, DbChip } from "@databro/ui";
 import type { CourseSummary, Paged } from "@databro/types";
 
@@ -50,7 +55,7 @@ useHead({ title: "Courses" });
           Curricula built from lesson bodies. A course can go live before every lesson is written.
         </p>
       </div>
-      <DbButton :as="NuxtLink" to="/courses/new">New course</DbButton>
+      <DbButton :as="NuxtLink" to="/studio/courses/new">New course</DbButton>
     </div>
 
     <p
@@ -74,7 +79,7 @@ useHead({ title: "Courses" });
         <tbody class="divide-y divide-line bg-surface">
           <tr v-for="course in courses" :key="course.id" class="hover:bg-surface-sunken">
             <td class="px-4 py-3">
-              <NuxtLink :to="`/courses/${course.id}`" class="font-medium text-accent hover:underline">
+              <NuxtLink :to="`/studio/courses/${course.id}`" class="font-medium text-accent hover:underline">
                 {{ course.title }}
               </NuxtLink>
               <p class="truncate text-xs text-ink-subtle">{{ course.slug }}</p>

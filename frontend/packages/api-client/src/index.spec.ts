@@ -160,3 +160,88 @@ describe("search", () => {
     expect(results.segments.map((s) => s.matchMode)).toEqual(["exact", "fuzzy"]);
   });
 });
+
+describe("progress (LN-6 … LN-11)", () => {
+  const enrollment = {
+    id: "e1",
+    courseId: "c1",
+    courseSlug: "rag-course",
+    courseTitle: "RAG",
+    enrolledAt: "2026-08-17T00:00:00Z",
+    completedAt: null,
+    lastLessonId: null,
+    lastAccessedAt: null,
+    totalLessons: 2,
+    completedLessons: 0,
+    percentComplete: 0,
+    completedLessonIds: [],
+  };
+
+  it("posts no body, and no Content-Type, for endpoints whose request is all in the URL", async () => {
+    // Declaring a JSON body and then not sending one is the sort of small dishonesty a proxy or a
+    // strict server is entitled to reject, so `json()` omits both rather than sending `{}`.
+    const fetchMock = vi.fn().mockResolvedValue(ok(enrollment));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await client.enrol("rag-course");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeUndefined();
+    // Read through Headers rather than as a plain object: `request` normalises into a Headers
+    // instance, so a property check would pass vacuously and assert nothing.
+    expect(new Headers(init.headers).has("Content-Type")).toBe(false);
+  });
+
+  it("still sends a JSON body where there is one", async () => {
+    // The guard above must not have quietly disabled bodies for every other call.
+    const fetchMock = vi.fn().mockResolvedValue(ok({ id: "t1" }));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await client.createTag({ name: "rag" });
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.body).toBe(JSON.stringify({ name: "rag" }));
+    expect(new Headers(init.headers).get("Content-Type")).toBe("application/json");
+  });
+
+  it("reopening a lesson is a DELETE against the same path as completing it", async () => {
+    // `mockImplementation`, not `mockResolvedValue`: a Response body can only be read once, so two
+    // calls sharing one Response fail on the second with "Body has already been read".
+    const fetchMock = vi.fn().mockImplementation(() => ok(enrollment));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await client.completeLesson("rag-course", "l1");
+    await client.reopenLesson("rag-course", "l1");
+
+    const [completeUrl, completeInit] = fetchMock.mock.calls[0];
+    const [reopenUrl, reopenInit] = fetchMock.mock.calls[1];
+
+    expect(String(completeUrl)).toBe(String(reopenUrl));
+    expect((completeInit as RequestInit).method).toBe("POST");
+    expect((reopenInit as RequestInit).method).toBe("DELETE");
+  });
+
+  it("escapes the slug and lesson id rather than interpolating them raw", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(ok(enrollment));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    await client.visitLesson("a course/../x", "l 1");
+
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "https://api.example/api/v1/me/enrollments/a%20course%2F..%2Fx/lessons/l%201/visit",
+    );
+  });
+
+  it("carries paging meta on the dashboard listing", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(ok([enrollment], { page: 1, pageSize: 20, total: 1, totalPages: 1 }));
+    const client = createApiClient({ baseUrl: "https://api.example", fetch: fetchMock });
+
+    const page = await client.listMyEnrollments({ pageSize: 20 });
+
+    expect(page.items).toHaveLength(1);
+    expect(page.meta.total).toBe(1);
+  });
+});

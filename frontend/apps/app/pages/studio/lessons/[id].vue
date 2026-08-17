@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// The CMS shell, not the learner one (ADR-0015). Every page under /studio opts in explicitly:
+// Nuxt's default is `default.vue`, and a studio page silently rendering the learner chrome would be
+// a confusing failure rather than a loud one.
+definePageMeta({ layout: "studio" });
+
 import { ContentRenderer, DbButton, DbChip, DbInput, mediaResolverFor } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
 import type { ArticleVersionSummary, ContentDocument, LessonContent } from "@databro/types";
@@ -66,7 +71,7 @@ async function save() {
 
       lesson.value = created;
       // Move off /new so a reload cannot create a second body.
-      await router.replace(`/lessons/${created.id}`);
+      await router.replace(`/studio/lessons/${created.id}`);
       return;
     }
 
@@ -158,7 +163,7 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/lessons" class="text-sm font-medium text-accent hover:underline">← Lessons</NuxtLink>
+        <NuxtLink to="/studio/lessons" class="text-sm font-medium text-accent hover:underline">← Lessons</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
           {{ isNew ? "New lesson" : title || "Untitled" }}
         </h1>

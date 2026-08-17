@@ -1,0 +1,53 @@
+{
+  "chrome": {
+    "skipToContent": "Skip to content",
+    "viewSite": "View site",
+    "signOut": "Sign out",
+    "languageLabel": "Language",
+    "sectionsLabel": "Sections",
+    "openStudio": "Studio",
+    "backToLearning": "Back to learning"
+  },
+  "nav": {
+    "dashboard": "My learning",
+    "browse": "Browse courses",
+    "articles": "Articles",
+    "courses": "Courses",
+    "lessons": "Lessons",
+    "taxonomy": "Taxonomy"
+  },
+  "dashboard": {
+    "title": "My learning",
+    "subtitle": "Courses you have joined, most recent first.",
+    "empty": "You have not joined a course yet.",
+    "emptyCta": "Browse the catalogue",
+    "loadFailed": "Your courses could not be loaded.",
+    "resume": "Resume",
+    "start": "Start",
+    "review": "Review",
+    "viewCourse": "View course",
+    "progress": "{completed} of {total} lessons",
+    "percent": "{percent}% complete",
+    "completed": "Completed",
+    "completedOn": "Completed {date}",
+    "joinedOn": "Joined {date}",
+    "lastOpened": "Last opened {date}",
+    "notStarted": "Not started yet",
+    "completionStands": "Your completion stands. The remaining lessons are optional.",
+    "unavailable": "This course is no longer available."
+  },
+  "stats": {
+    "enrolled": "Courses joined",
+    "inProgress": "In progress",
+    "completed": "Completed"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Sign in to continue learning.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "failed": "Sign-in failed. Check your email and password."
+  }
+}

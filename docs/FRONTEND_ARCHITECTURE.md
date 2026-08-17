@@ -10,7 +10,7 @@ frontend/
 ├── pnpm-workspace.yaml
 ├── apps/
 │   ├── site/        Public content — SEO + cache critical
-│   └── app/         Authenticated learner app
+│   └── app/         Authenticated app — learner surfaces at /, the CMS at /studio
 └── packages/
     ├── ui/          Design system (components, Tailwind preset, content-block renderers)
     ├── api-client/  Typed client for /api/v1 (generated/maintained from API contracts)
@@ -24,6 +24,18 @@ and threat models, so they are separated. The cost for a solo dev is duplication
 monorepo: **all shared UI, auth handling, API access, and types live in `packages/*`. Nothing that
 both apps use is copied.** See [ADR-0005](DECISIONS.md).
 
+**The boundary is indexability**, not audience and not feature ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)):
+
+| Surface | Indexable | App |
+|---|---|---|
+| Articles, course catalogue, course pages, lesson pages | yes | `site` |
+| Learner dashboard, progress, playground | no | `app` |
+| CMS — article/lesson editors, course builder, taxonomy | no | `app` |
+
+A learner dashboard and the CMS have identical rendering needs — authenticated, dynamic, `noindex`,
+client-heavy — so they share an app and are separated by route and role instead. Lesson *reading* is
+content and belongs to `site`, gated body and all.
+
 ## 3. `site` — public content app
 
 * **Purpose:** everything that must be indexed and cached — all article pages, category/tag pages,
@@ -35,15 +47,36 @@ both apps use is copied.** See [ADR-0005](DECISIONS.md).
   renders its full SEO metadata and a preview/teaser publicly (for indexing + conversion) and gates the
   full body behind auth/entitlement. `site` is not "logged-out only."
 
-## 4. `app` — authenticated learner app
+## 4. `app` — the authenticated app
 
-* **Purpose:** dynamic, user-specific surfaces — dashboard, progress, bookmarks, account/billing
-  (P3), the CMS authoring UI (internal roles), and the Playground (P3).
-* **Rendering:** SSR/SPA as appropriate; **not** SEO-optimized (behind auth).
+Two audiences, one shell, one session ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)).
+Every editor is also a learner, and making them log in twice to be both would be an artefact of our
+file layout rather than anything they asked for.
+
+```
+/           learner — dashboard and progress; the Playground (P3) joins it here
+/studio     CMS — article and lesson editors, course builder, taxonomy
+/login      shared
+```
+
+* **Rendering:** SSR/SPA as appropriate; **not** SEO-optimized. `X-Robots-Tag: noindex, nofollow` on
+  every route.
 * **Data:** authenticated API with the user's JWT; nothing user-specific is shared-cached.
+* **Layouts:** `default.vue` is the learner top bar; `studio.vue` is the CMS sidebar. Studio pages opt
+  in with `definePageMeta({ layout: "studio" })` — Nuxt's default is `default`, and a studio page
+  quietly rendering learner chrome should fail loudly rather than look nearly right.
+* **Landing is role-aware:** `useRoles().homePath` sends an Author/Editor/Admin to `/studio` and
+  everyone else to `/`. Learners outnumber editors by orders of magnitude, which is why they hold the
+  root.
+* **Role checks are affordances, never a boundary.** The API authorises every request independently
+  (SECURITY.md §2). A learner who types `/studio` is redirected to their dashboard because a shell
+  whose every request 403s is a bad page, not because the redirect protects anything.
+* **i18n:** `no_prefix` strategy, unlike the site's `prefix_except_default` — nothing here is indexed,
+  so there is no `/id/*` namespace to earn and a locale prefix would be pure URL noise. The
+  `databro_locale` cookie is shared with `site`, so a language choice survives crossing between them.
 
-> CMS authoring lives in `app` (behind Author/Editor/Admin roles). The **content-block renderer is
-> shared** via `packages/ui`, so the CMS preview and the public `site` render identically — no drift.
+> The **content-block renderer is shared** via `packages/ui`, so the CMS preview and the public `site`
+> render identically — no drift.
 
 ## 5. Shared packages
 

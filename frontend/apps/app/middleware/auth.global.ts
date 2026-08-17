@@ -1,9 +1,9 @@
 /**
- * Route guard for the authoring app.
+ * Route guard for the authenticated app.
  *
- * Global rather than per-page: the CMS is authenticated by default, so the safe posture is
- * "everything is protected unless listed", not "protected if someone remembered to add middleware".
- * Forgetting a `definePageMeta` should not expose a page.
+ * Global rather than per-page: everything here is behind auth by default, so the safe posture is
+ * "protected unless listed", not "protected if someone remembered to add middleware". Forgetting a
+ * `definePageMeta` should not expose a page.
  *
  * This is a **UX** guard, not a security boundary — the API enforces permissions on every request
  * (docs/SECURITY.md §2). Its job is to send someone to the login screen instead of showing them a
@@ -26,5 +26,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // expired session lands on the login screen instead of a page full of failed requests.
   if (!(await ensureUser())) {
     return navigateTo({ path: "/login", query: { redirect: to.fullPath } });
+  }
+
+  // A learner who reaches /studio — by typing it, or by an old bookmark from before ADR-0015 moved
+  // the CMS — goes to their dashboard rather than to a shell whose every request will 403. Sending
+  // them somewhere useful is the whole difference between a guard and an error page.
+  //
+  // Not a security boundary, and not treated as one: the API authorises independently, so this is
+  // purely about not showing someone a room they have no use for.
+  if (to.path === "/studio" || to.path.startsWith("/studio/")) {
+    const { canAuthor } = useRoles();
+    if (!canAuthor.value) return navigateTo("/", { replace: true });
   }
 });

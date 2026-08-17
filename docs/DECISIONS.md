@@ -12,7 +12,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0002](adr/0002-b2c-not-multitenant.md) | B2C-first — no row-level multi-tenancy | Accepted |
 | [0003](adr/0003-in-house-cms.md) | Build the CMS in-house (scoped to articles for Phase 1) | Accepted |
 | [0004](adr/0004-content-blocks-jsonb.md) | Typed content blocks stored as versioned JSONB | Accepted |
-| [0005](adr/0005-two-app-frontend-monorepo.md) | Two-app frontend in a pnpm monorepo | Accepted |
+| [0005](adr/0005-two-app-frontend-monorepo.md) | Two-app frontend in a pnpm monorepo | Accepted; boundary restated by [0015](adr/0015-authenticated-app-hosts-both-audiences.md) |
 | [0006](adr/0006-postgres-fts-search.md) | PostgreSQL full-text search for Phase 1 | Accepted; mechanism superseded by [0010](adr/0010-fts-lives-in-content.md) |
 | [0007](adr/0007-unify-article-lesson.md) | Unify Article and Lesson on one content engine | Accepted |
 | [0008](adr/0008-cross-module-contracts-in-platform.md) | Cross-module read contracts live in Platform | Accepted |
@@ -22,6 +22,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0012](adr/0012-lesson-bodies-live-in-content.md) | Lesson bodies live in Content, in their own table beside articles | Accepted |
 | [0013](adr/0013-learning-curriculum-invariants.md) | Curriculum shape and its three invariants | Accepted |
 | [0014](adr/0014-search-across-modules.md) | Searching across modules: segmented per module, never blended | Accepted |
+| [0015](adr/0015-authenticated-app-hosts-both-audiences.md) | The authenticated app hosts both audiences; the boundary is indexability | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

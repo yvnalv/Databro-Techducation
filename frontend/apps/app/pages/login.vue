@@ -1,32 +1,48 @@
 <script setup lang="ts">
 import { DbButton, DbInput } from "@databro/ui";
-import { ApiClientError } from "@databro/api-client";
 
 /**
- * Sign-in for the authoring app.
+ * Sign-in for the authenticated app — both audiences (ADR-0015).
  *
  * Uses the shared primitives rather than bespoke form markup, so the focus rings, error wiring and
  * disabled states are the ones already covered by tests in `@databro/ui`.
  */
 definePageMeta({ layout: false });
 
+const { t } = useI18n();
 const route = useRoute();
-const { login, isAuthenticated } = useAuth();
+const { login, isAuthenticated, ensureUser } = useAuth();
+const { homePath } = useRoles();
 
 const email = ref("");
 const password = ref("");
 const formError = ref<string | null>(null);
 const submitting = ref(false);
 
-// Only same-origin paths: an open redirect would let a crafted link bounce a signed-in editor to
-// an attacker's page carrying their trust in this domain.
-const redirectTo = computed(() => {
-  const target = String(route.query.redirect ?? "/");
-  return target.startsWith("/") && !target.startsWith("//") ? target : "/";
+/** An explicit `?redirect=` the guard carried over, if it is safe to honour. */
+const requested = computed(() => {
+  // Only same-origin paths: an open redirect would let a crafted link bounce a signed-in editor to
+  // an attacker's page carrying their trust in this domain.
+  const target = String(route.query.redirect ?? "");
+  return target.startsWith("/") && !target.startsWith("//") ? target : null;
 });
 
+/**
+ * Where to go after signing in: the page they were sent away from, or their role's home.
+ *
+ * Role-aware because one app now serves two audiences. Dropping an editor on the learner dashboard
+ * every morning, or a learner in the Studio, would make the shared app feel like the wrong app for
+ * whoever lost the coin toss.
+ */
+async function destination() {
+  if (requested.value) return requested.value;
+
+  await ensureUser();
+  return homePath.value;
+}
+
 // Already signed in and hitting /login directly: go where they were headed.
-if (isAuthenticated.value) await navigateTo(redirectTo.value, { replace: true });
+if (isAuthenticated.value) await navigateTo(await destination(), { replace: true });
 
 async function submit() {
   formError.value = null;
@@ -34,20 +50,18 @@ async function submit() {
 
   try {
     await login(email.value, password.value);
-    await navigateTo(redirectTo.value, { replace: true });
-  } catch (error) {
-    // Deliberately identical for a wrong password and an unknown address: distinguishing them
-    // turns the form into an account-enumeration oracle.
-    formError.value =
-      error instanceof ApiClientError && error.status === 401
-        ? "Those credentials did not match an account."
-        : "Sign-in failed. Please try again.";
+    await navigateTo(await destination(), { replace: true });
+  } catch {
+    // Deliberately identical for every failure — a wrong password, an unknown address, a server
+    // error alike. Distinguishing the first two turns the form into an account-enumeration oracle,
+    // which is why the status code is not inspected here at all.
+    formError.value = t("login.failed");
   } finally {
     submitting.value = false;
   }
 }
 
-useHead({ title: "Sign in" });
+useHead({ title: t("login.title") });
 </script>
 
 <template>
@@ -55,8 +69,10 @@ useHead({ title: "Sign in" });
     <div class="w-full max-w-sm">
       <div class="text-center">
         <span class="inline-flex text-accent"><AppBrandMark /></span>
-        <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">Sign in</h1>
-        <p class="mt-2 text-sm text-ink-muted">Manage articles and taxonomy.</p>
+        <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">
+          {{ t("login.title") }}
+        </h1>
+        <p class="mt-2 text-sm text-ink-muted">{{ t("login.subtitle") }}</p>
       </div>
 
       <form class="mt-8 space-y-4 rounded-card border border-line bg-surface p-6 shadow-card" @submit.prevent="submit">
@@ -71,7 +87,7 @@ useHead({ title: "Sign in" });
 
         <DbInput
           v-model="email"
-          label="Email"
+          :label="t('login.email')"
           type="email"
           placeholder="you@databro.id"
           required
@@ -80,14 +96,14 @@ useHead({ title: "Sign in" });
 
         <DbInput
           v-model="password"
-          label="Password"
+          :label="t('login.password')"
           type="password"
           required
           :disabled="submitting"
         />
 
         <DbButton type="submit" block size="lg" :disabled="submitting">
-          {{ submitting ? "Signing in…" : "Sign in" }}
+          {{ submitting ? t("login.submitting") : t("login.submit") }}
         </DbButton>
       </form>
     </div>

@@ -1,5 +1,58 @@
 # DataBro Changelog
 
+## [2026-08-17 14:40:39 UTC]
+
+CHG-0041 — The learner app exists (ADR-0015)
+
+CHG-0040 left a complete progress API with nowhere to render it. This gives it a home, and fixes the
+reason it had none.
+
+- **[ADR-0015](docs/adr/0015-authenticated-app-hosts-both-audiences.md)**: `apps/app` is the
+  *authenticated* app, not the *learner* app. It hosts both audiences, separated by route and role.
+
+  The docs were not so much wrong as internally inconsistent — FRONTEND_ARCHITECTURE's heading and
+  diagram said "authenticated learner app" while its own body already listed the CMS among that app's
+  purposes. The intent to host both was recorded; only the name never caught up, and the name is what
+  everyone reads. The ADR settles it in the direction the body already pointed, and states the
+  criterion so the label cannot drift again.
+- **The boundary against `site` is indexability**, which is what ADR-0005 actually derived it from
+  before it got shortened to a label. A learner dashboard and a block editor have identical rendering
+  needs — authenticated, dynamic, `noindex`, client-heavy — so they belong in the same app. Lesson
+  *reading* is content and goes to `site`, gated body and all. A third app was considered and
+  rejected: it separates two surfaces whose technical requirements are the same, at the cost of a
+  third build, deploy and session surface.
+- **The CMS moves to `/studio`**; learners take the root. Breaking for every CMS bookmark, and taken
+  deliberately — the CMS has a handful of users, all of them us, and doing it later costs strictly
+  more. Learners will outnumber editors by orders of magnitude, so the root belongs to the common
+  case.
+- **Landing is role-aware.** Dropping an editor on the learner dashboard every morning, or a learner
+  in the Studio, would make a shared app feel like the wrong app for whoever lost the coin toss. A
+  learner who reaches `/studio` is redirected to their dashboard rather than shown a shell whose
+  every request would 403. **Not a security boundary** and not treated as one: the API authorises
+  independently, so this is about not showing someone a room they have no use for.
+- **The dashboard renders LN-6 honestly.** A completed course that has since grown shows the
+  completion badge *and* "1 of 2 lessons · 50%" — both facts, rather than whichever is tidier. The
+  explanatory line is deliberately **cause-neutral**: a course growing and a learner un-ticking a
+  lesson produce the same state, the DTO cannot tell them apart, and naming either would be right
+  half the time. "Your completion stands" is right in both.
+- **i18n wired into `app` at last.** `@nuxtjs/i18n` had been a dependency since the app was created
+  but was never added to `modules`, so every string was English-only against rule 19. Now registered,
+  with 41 keys in both locales and structural parity checked. `no_prefix` rather than the site's
+  `prefix_except_default`: nothing here is indexed, so a locale prefix would be URL noise buying a
+  crawler benefit no crawler will collect. The cookie is shared with `site`, so a language choice
+  survives crossing between them. **The CMS's own body strings remain English** — recorded in STATUS
+  as owed, not silently left.
+- `Enrollment` type and six `/me` client methods, none of which takes a user id — LN-8 expressed in
+  the type system rather than only in a comment. `json()` now allows a bodyless request: declaring a
+  JSON body and then not sending one is the sort of small dishonesty a strict server is entitled to
+  reject.
+- 5 new client tests (frontend 85 → **90**), including one that the bodyless change did not quietly
+  disable bodies everywhere else.
+- Verified live in Docker, all four role paths: an admin sees the Studio link and lands in `/studio`;
+  a learner is bounced from `/studio` to their dashboard; the dashboard server-renders a real session
+  in both locales; and the LN-6 case renders "Completed · 1 of 2 · 50%" with its note in English and
+  Indonesian.
+
 ## [2026-08-17 14:22:24 UTC]
 
 CHG-0040 — Enrollment and progress (LN-6 … LN-11)

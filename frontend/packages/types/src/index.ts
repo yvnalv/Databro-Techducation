@@ -380,6 +380,34 @@ export interface CourseSummary {
   publishedAt?: string;
 }
 
+// ---- Enrollment & progress (LN-6 … LN-11) ----
+
+/**
+ * A learner's progress in one course.
+ *
+ * `completedLessons` can sit **below** `totalLessons` on a course that has `completedAt` set: the
+ * course grew after the learner finished it, and completion is a moment that is never revoked
+ * (LN-6). Render both rather than trying to reconcile them.
+ */
+export interface Enrollment {
+  id: string;
+  courseId: string;
+  courseSlug: string;
+  courseTitle: string;
+  enrolledAt: string;
+  /** Set once, never cleared. */
+  completedAt?: string | null;
+  /** The lesson last *opened*, which is not the lesson last completed. */
+  lastLessonId?: string | null;
+  lastAccessedAt?: string | null;
+  /** Published lessons right now — moves as the curriculum grows. */
+  totalLessons: number;
+  completedLessons: number;
+  /** Derived per request and capped at 100. */
+  percentComplete: number;
+  completedLessonIds: string[];
+}
+
 // ---- Version history (CT-8) ----
 
 /**

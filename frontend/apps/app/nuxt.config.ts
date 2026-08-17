@@ -1,11 +1,16 @@
-// DataBro authenticated learner app (dashboard, progress, CMS authoring, later the playground).
-// Dynamic and behind auth — not SEO-optimized. See docs/FRONTEND_ARCHITECTURE.md.
+// DataBro **authenticated** app (ADR-0015). Two audiences, one shell:
+//   /         the learner — dashboard, progress, later the playground
+//   /studio   the CMS — article and lesson editors, course builder, taxonomy
+//
+// Not "the learner app" and not "the CMS": the boundary against `site` is indexability, and both of
+// these are authenticated, dynamic and never indexed. Lesson *reading* is content and lives on
+// `site`. See docs/FRONTEND_ARCHITECTURE.md.
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-01-01",
   ssr: true,
 
-  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt"],
+  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxtjs/i18n"],
 
   build: {
     transpile: ["@databro/ui", "@databro/api-client", "@databro/types"],
@@ -33,6 +38,29 @@ export default defineNuxtConfig({
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? "http://localhost:5158",
       // Where "view site" points — the public app, which is a separate deployment.
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    },
+  },
+
+  // English default, Bahasa Indonesia secondary (CLAUDE.md rule 19). The dependency was here from
+  // the start but the module was never registered, so every string was English-only; ADR-0015 wires
+  // it up.
+  //
+  // `no_prefix`, unlike the site's `prefix_except_default`: nothing here is indexed, so there is no
+  // /id/* namespace to earn. A locale prefix on an app route would be URL noise that buys a crawler
+  // benefit no crawler will ever collect.
+  i18n: {
+    strategy: "no_prefix",
+    defaultLocale: "en",
+    locales: [
+      { code: "en", language: "en-US", file: "en.json", name: "English" },
+      { code: "id", language: "id-ID", file: "id.json", name: "Bahasa Indonesia" },
+    ],
+    detectBrowserLanguage: {
+      useCookie: true,
+      // Shared with the site, so a learner who picks Indonesian there does not switch back to
+      // English crossing into their dashboard.
+      cookieKey: "databro_locale",
+      redirectOn: "no prefix",
     },
   },
 

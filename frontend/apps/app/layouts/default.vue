@@ -1,24 +1,17 @@
 <script setup lang="ts">
 /**
- * CMS shell (docs/UI_PATTERNS.md §7).
+ * Learner shell — the default chrome of the authenticated app (ADR-0015).
  *
- * Sidebar plus main, following the reference's dashboard — but without its gradient band and the
- * profile card overlapping it. The CMS is a tool: that flourish costs vertical space on the one
- * surface where density actually matters.
+ * A top bar rather than the CMS's sidebar. A learner has two or three destinations and spends their
+ * time reading; an editor navigates constantly between a dozen. Giving both the same sidebar would
+ * hand the learner a permanent 240px of empty rail.
  */
+const { t } = useI18n();
 const { user, logout } = useAuth();
+const { canAuthor } = useRoles();
 const config = useRuntimeConfig();
 
 const publicSiteUrl = computed(() => config.public.siteUrl as string);
-
-// Lessons sits beside Courses rather than under it: a lesson body exists independently of any
-// curriculum and can belong to several, so nesting it would imply an ownership that is not there.
-const navigation = [
-  { label: "Articles", to: "/", icon: "articles" },
-  { label: "Courses", to: "/courses", icon: "courses" },
-  { label: "Lessons", to: "/lessons", icon: "lessons" },
-  { label: "Taxonomy", to: "/taxonomy", icon: "taxonomy" },
-];
 
 const route = useRoute();
 const isActive = (to: string) => (to === "/" ? route.path === "/" : route.path.startsWith(to));
@@ -32,77 +25,81 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-ink-inverted"
     >
-      Skip to content
+      {{ t("chrome.skipToContent") }}
     </a>
 
-    <div class="flex min-h-screen">
-      <!-- Sidebar. Fixed width so the main column's measure does not shift between pages. -->
-      <aside class="hidden w-60 shrink-0 border-r border-line bg-surface lg:block">
-        <div class="flex h-16 items-center border-b border-line px-5">
-          <NuxtLink to="/" class="text-accent"><AppBrandMark /></NuxtLink>
-        </div>
+    <header class="border-b border-line bg-surface">
+      <div class="mx-auto flex h-16 max-w-5xl items-center gap-6 px-4 sm:px-6">
+        <NuxtLink to="/" class="text-accent"><AppBrandMark /></NuxtLink>
 
-        <nav aria-label="Sections" class="p-3">
-          <ul class="space-y-1">
-            <li v-for="item in navigation" :key="item.to">
+        <nav :aria-label="t('chrome.sectionsLabel')">
+          <ul class="flex items-center gap-1">
+            <li>
               <NuxtLink
-                :to="item.to"
-                :aria-current="isActive(item.to) ? 'page' : undefined"
-                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                to="/"
+                :aria-current="isActive('/') ? 'page' : undefined"
+                class="rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 :class="
-                  isActive(item.to)
+                  isActive('/')
                     ? 'bg-accent-subtle text-accent'
                     : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
                 "
               >
-                {{ item.label }}
+                {{ t("nav.dashboard") }}
               </NuxtLink>
+            </li>
+            <li>
+              <!-- The catalogue is the public site's, not a second copy here: browsing courses is
+                   indexable content and belongs to `site` (ADR-0015). -->
+              <a
+                :href="`${publicSiteUrl}/courses`"
+                class="rounded-md px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                {{ t("nav.browse") }}
+              </a>
             </li>
           </ul>
         </nav>
-      </aside>
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <header class="flex h-16 items-center justify-between gap-4 border-b border-line bg-surface px-4 sm:px-6">
-          <!-- Brand repeats here only where the sidebar is hidden. -->
-          <NuxtLink to="/" class="text-accent lg:hidden"><AppBrandMark /></NuxtLink>
+        <div class="ms-auto flex items-center gap-3">
+          <!-- Shown only to someone who can actually author. A UX affordance, never a security
+               boundary: the API authorises every request on its own (docs/SECURITY.md §2), and a
+               learner who types /studio gets a UI that will not load rather than data. -->
+          <NuxtLink
+            v-if="canAuthor"
+            to="/studio"
+            class="hidden rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:block"
+          >
+            {{ t("chrome.openStudio") }}
+          </NuxtLink>
 
-          <div class="ms-auto flex items-center gap-3">
-            <a
-              :href="publicSiteUrl"
-              target="_blank"
-              rel="noopener"
-              class="hidden text-sm font-medium text-ink-muted transition-colors hover:text-ink sm:block"
+          <LocaleSwitch />
+
+          <span class="flex items-center gap-2">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent"
+              aria-hidden="true"
             >
-              View site ↗
-            </a>
-
-            <span class="flex items-center gap-2">
-              <span
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent"
-                aria-hidden="true"
-              >
-                {{ initial }}
-              </span>
-              <span class="hidden text-sm font-medium text-ink sm:block">
-                {{ user?.displayName }}
-              </span>
+              {{ initial }}
             </span>
+            <span class="hidden text-sm font-medium text-ink sm:block">
+              {{ user?.displayName }}
+            </span>
+          </span>
 
-            <button
-              type="button"
-              class="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              @click="logout"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
-
-        <main id="main" class="flex-1 p-4 sm:p-6 lg:p-8">
-          <slot />
-        </main>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            @click="logout"
+          >
+            {{ t("chrome.signOut") }}
+          </button>
+        </div>
       </div>
-    </div>
+    </header>
+
+    <main id="main" class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <slot />
+    </main>
   </div>
 </template>

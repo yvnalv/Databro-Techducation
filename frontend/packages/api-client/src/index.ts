@@ -15,6 +15,7 @@ import type {
   Course,
   CourseSummary,
   Difficulty,
+  Enrollment,
   LessonContent,
   LessonContentSummary,
   Paged,
@@ -423,6 +424,69 @@ export class ApiClient {
     return this.request<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`);
   }
 
+  // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----
+  //
+  // Addressed as `/me` throughout: the learner comes from the bearer token, never from an argument,
+  // so there is no call shape here that can read or write someone else's progress (LN-8). That is
+  // why none of these takes a user id.
+
+  /** The dashboard: everything the learner has joined, most recently touched first. */
+  async listMyEnrollments(params?: { page?: number; pageSize?: number }): Promise<Paged<Enrollment>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<Enrollment[]>(`/api/v1/me/enrollments${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  /** Progress in one course. 404s when the learner is not enrolled. */
+  getMyEnrollment(courseSlug: string): Promise<Enrollment> {
+    return this.request<Enrollment>(`/api/v1/me/enrollments/${encodeURIComponent(courseSlug)}`);
+  }
+
+  /** Joins a course. Idempotent — a second call returns the existing enrollment (LN-9). */
+  enrol(courseSlug: string): Promise<Enrollment> {
+    return this.json<Enrollment>(`/api/v1/me/enrollments/${encodeURIComponent(courseSlug)}`, "POST");
+  }
+
+  /**
+   * Moves the resume point. Distinct from {@link completeLesson} because opening a lesson and
+   * finishing it are different claims.
+   */
+  visitLesson(courseSlug: string, lessonId: string): Promise<Enrollment> {
+    return this.json<Enrollment>(
+      `/api/v1/me/enrollments/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(lessonId)}/visit`,
+      "POST",
+    );
+  }
+
+  /** Marks a lesson finished. Idempotent; keeps the original timestamp (LN-10). */
+  completeLesson(courseSlug: string, lessonId: string): Promise<Enrollment> {
+    return this.json<Enrollment>(
+      `/api/v1/me/enrollments/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(lessonId)}/complete`,
+      "POST",
+    );
+  }
+
+  /** Un-marks a lesson. Does not revoke a completed course (LN-6). */
+  reopenLesson(courseSlug: string, lessonId: string): Promise<Enrollment> {
+    return this.json<Enrollment>(
+      `/api/v1/me/enrollments/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(lessonId)}/complete`,
+      "DELETE",
+    );
+  }
+
   // ---- Learning: curriculum authoring (ADR-0013) ----
   //
   // Structure sits behind Content.Edit and publishing behind Content.Publish, the same split
@@ -626,12 +690,20 @@ export class ApiClient {
     );
   }
 
-  /** JSON body helper — these differ only in verb and payload, and repeating the ceremony hid that. */
-  private json<T>(path: string, method: string, body: unknown): Promise<T> {
+  /**
+   * JSON body helper — these differ only in verb and payload, and repeating the ceremony hid that.
+   *
+   * `body` is optional because several progress endpoints carry their whole request in the URL. They
+   * are sent with no body and no `Content-Type` rather than an empty `{}`: declaring a JSON body and
+   * then not having one is the sort of small dishonesty a proxy or a strict server is entitled to
+   * reject.
+   */
+  private json<T>(path: string, method: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      ...(body === undefined
+        ? {}
+        : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
     });
   }
 
