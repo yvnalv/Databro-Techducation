@@ -19,6 +19,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0009](adr/0009-inline-rich-text-node-tree.md) | Inline rich text as a ProseMirror-compatible node tree | Accepted |
 | [0010](adr/0010-fts-lives-in-content.md) | Phase 1 full-text search lives in Content, not the Search module | Accepted |
 | [0011](adr/0011-media-storage-and-image-processing.md) | S3-compatible media storage, with images re-encoded on upload | Accepted |
+| [0012](adr/0012-lesson-bodies-live-in-content.md) | Where a Lesson's body lives | **Proposed** |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 
