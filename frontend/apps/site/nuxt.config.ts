@@ -79,6 +79,8 @@ export default defineNuxtConfig({
     "/tags/**": { isr: 3600 },
     // Shorter than an article's hour: a curriculum changes while a course is live — lessons get
     // added, reordered, published — and a stale outline misrepresents what someone is signing up to.
+    "/learning-paths": { isr: 900 },
+    "/learning-paths/**": { isr: 3600 },
     "/courses": { isr: 900 },
     // Course and lesson pages. Longer than the catalogue: a curriculum changes when it is edited,
     // not when a new course is published elsewhere.

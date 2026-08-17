@@ -163,32 +163,31 @@ Enrollment and progress are built (LN-6 … LN-11): a learner can join a course,
 finish it, with completion recorded as a moment that a growing curriculum cannot revoke.
 
 The learner app exists ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)):
-`apps/app` now serves learners at `/` and the CMS at `/studio`, with role-aware landing. A learner
-can sign in, see their courses, and read their progress — in English or Indonesian.
+`apps/app` serves learners at `/` and the CMS at `/studio`, with role-aware landing.
 
-1. **Lesson pages** — reading a lesson is the one thing a learner still cannot do. The course page
-   currently lists lessons without linking to them, which is honest but not a product.
-2. **Learning paths** on the site. The domain and API exist; only the pages are missing.
-2. **The transactional outbox** — no longer forced by search, but still unbuilt and still needed for
-   cross-module effects generally. It now has a real second consumer waiting in
-   `CourseCompletedDomainEvent` (certificates, completion email), which is the better time to design
-   it.
-3. **Deep-link Resume.** The dashboard's Resume button lands on the course page rather than the
-   lesson: `lastLessonId` is a lesson id and the URL needs a slug, so the enrollment DTO owes a
-   `lastLessonSlug`. Small, and worth doing before it becomes habit.
+**The learner loop is closed.** Browse a path or a course, open a lesson at
+`/courses/{course}/{lesson}`, read it, mark it complete, and watch the dashboard move — whose Resume
+button goes back to that lesson. In English or Indonesian, with every page in the sitemap and
+carrying structured data.
+
+Learning paths ship too, at `/learning-paths` and `/learning-paths/{slug}`, with the curated sequence
+numbered. **An earlier revision of this file said their "domain and API exist" — the API did not.**
+There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
+on the record rather than being tidied away.
+
+1. **The transactional outbox.** `Platform/Messaging` is still one marker interface. No longer forced
+   by search — ADR-0014 settled that without it — but it is what `Enrolled` and `CourseCompleted`
+   need to reach certificates and email, and those are the first real cross-module effects. It now
+   gets to be designed with a concrete consumer in front of it, which is the better time.
+2. **A curator UI for learning paths.** The endpoints exist and are tested; the CMS has no screen for
+   them, so a path is currently assembled with `curl`. The course builder is the template.
+3. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
+   every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
 4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
-Still owed before the public course pages ship: **the search decision** and **the outbox** above —
-a course is the first thing a learner would expect to find by searching.
-
-Owed before step 5, not before step 4:
-
-* **The search decision.** ADR-0010's trigger only half-fires — lesson bodies stay in Content, but
-  course titles, path descriptions and objectives are Learning-owned and learners will expect to find
-  them. Either Learning exposes its own search, or the real Search module gets built.
-* **The transactional outbox.** `Platform/Messaging` is currently one marker interface. It is the
-  dependency under a real Search module and under `LessonCompleted` / `CourseCompleted` doing
-  anything cross-module, so it lands with step 6 at the latest.
+Two items that stood here for several revisions are now **done** and are recorded as such rather than
+quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
+per module) and the app-boundary question ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)).
 
 Independent of Phase 2:
 
@@ -264,7 +263,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **266 passing**: Content & Identity (173), Learning (60), Media (29),
+* `dotnet test` — **274 passing**: Content & Identity (173), Learning (68), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

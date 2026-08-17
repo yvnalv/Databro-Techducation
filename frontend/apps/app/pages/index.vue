@@ -55,10 +55,17 @@ const actionLabel = (e: Enrollment) => {
   return e.lastLessonId ? t("dashboard.resume") : t("dashboard.start");
 };
 
-// Points at the public course page: reading is `site`'s job (ADR-0015). Deep-linking to the resumed
-// lesson waits for lesson pages to exist — linking at a URL that 404s would be worse than landing
-// one click away from it.
-const courseHref = (e: Enrollment) => `${publicSiteUrl.value}/courses/${e.courseSlug}`;
+/**
+ * Where the card's action goes — the public site, because reading is `site`'s job (ADR-0015).
+ *
+ * Straight to the lesson they left off on when there is one. `lastLessonSlug` is null when that
+ * lesson has since been unpublished or dropped from the curriculum, and the course page is the right
+ * fallback: one click away, and unlike the stale lesson URL it exists.
+ */
+const courseHref = (e: Enrollment) => {
+  const base = `${publicSiteUrl.value}/courses/${e.courseSlug}`;
+  return e.lastLessonSlug ? `${base}/${e.lastLessonSlug}` : base;
+};
 </script>
 
 <template>

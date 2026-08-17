@@ -19,6 +19,7 @@ import type {
   LessonContent,
   LessonContentSummary,
   LessonPage,
+  LearningPath,
   Paged,
   PageMeta,
   MediaAsset,
@@ -423,6 +424,33 @@ export class ApiClient {
    */
   getCourse(slug: string): Promise<Course> {
     return this.request<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`);
+  }
+
+  /** Published learning paths, each with its resolved course cards. */
+  async listLearningPaths(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<Paged<LearningPath>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<LearningPath[]>(`/api/v1/learning-paths${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getLearningPath(slug: string): Promise<LearningPath> {
+    return this.request<LearningPath>(`/api/v1/learning-paths/${encodeURIComponent(slug)}`);
   }
 
   /**

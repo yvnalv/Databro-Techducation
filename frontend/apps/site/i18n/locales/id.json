@@ -131,5 +131,17 @@
     "markComplete": "Tandai selesai",
     "markIncomplete": "Tandai belum selesai",
     "saveFailed": "Gagal menyimpan. Silakan coba lagi."
+  },
+  "paths": {
+    "eyebrow": "Jalur pembelajaran",
+    "navLabel": "Jalur",
+    "listTitle": "Jalur pembelajaran",
+    "listDescription": "Rute terkurasi melalui beberapa kursus, dalam urutan yang kami ajarkan.",
+    "courseCount": "tidak ada kursus | {n} kursus | {n} kursus",
+    "empty": "Belum ada jalur pembelajaran yang diterbitkan.",
+    "loadFailed": "Jalur pembelajaran tidak dapat dimuat.",
+    "sequence": "Urutannya",
+    "sequenceHint": "Ikuti secara berurutan. Masing-masing dibangun dari yang sebelumnya.",
+    "noCoursesYet": "Kursus dalam jalur ini belum diterbitkan."
   }
 }

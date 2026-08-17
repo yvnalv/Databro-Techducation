@@ -101,6 +101,18 @@ public static class LearningModuleExtensions
         group.MapGet("/{slug}", async (string slug, CourseService service, CancellationToken ct) =>
             ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
 
+        // ---- Learning paths ----
+
+        var pathGroup = endpoints.MapGroup("/api/v1/learning-paths").WithTags("Learning");
+
+        pathGroup.MapGet("", async (
+            LearningPathService service, int? page, int? pageSize, CancellationToken ct) =>
+            ApiEnvelope.OkPaged(await service.ListPublishedAsync(new PageRequest(page, pageSize), ct)));
+
+        pathGroup.MapGet("/{slug}", async (
+            string slug, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetPublishedBySlugAsync(slug, ct)));
+
         // A lesson page. Nested under its course because that is what gives it prev/next, a
         // breadcrumb and a progress context — the same body reached through two courses is two
         // different positions in two different sequences, and the URL should say which.
@@ -187,6 +199,44 @@ public static class LearningModuleExtensions
 
         group.MapPost("/{id:guid}/unpublish", async (Guid id, CourseService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+
+        MapPathAuthoringEndpoints(endpoints);
+    }
+
+    // ---- Learning-path authoring. Same permission split as courses: curating is editing, and
+    // putting a path live is publishing. ----
+    private static void MapPathAuthoringEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/v1/authoring/learning-paths").WithTags("Learning.Authoring");
+
+        group.MapPost("", async (
+            CreateLearningPathRequest request, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.CreateAsync(request, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentCreate));
+
+        group.MapGet("/{id:guid}", async (Guid id, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetForAuthoringAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPost("/{id:guid}/courses/{courseId:guid}", async (
+            Guid id, Guid courseId, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.AddCourseAsync(id, courseId, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapDelete("/{id:guid}/courses/{courseId:guid}", async (
+            Guid id, Guid courseId, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.RemoveCourseAsync(id, courseId, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPut("/{id:guid}/courses/order", async (
+            Guid id, ReorderRequest request, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.ReorderCoursesAsync(id, request, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPost("/{id:guid}/publish", async (
+            Guid id, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.PublishAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentPublish));
     }
 

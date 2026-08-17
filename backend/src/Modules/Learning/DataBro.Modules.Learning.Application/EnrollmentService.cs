@@ -143,7 +143,7 @@ public sealed class EnrollmentService(
         if (enrollment is null)
             return Result.Failure<EnrollmentDto>(Error.Rule("You are not enrolled in this course."));
 
-        var publishedLessonIds = await PublishedLessonIdsAsync(course, ct);
+        var publishedLessonIds = (await PublishedLessonsAsync(course, ct)).Keys.ToHashSet();
 
         // Progress may only be recorded against a lesson the learner can actually reach. Without
         // this, a client could tick a lesson whose body is still a draft — or one from an entirely
@@ -167,23 +167,36 @@ public sealed class EnrollmentService(
     /// call the curriculum read already makes.
     /// </para>
     /// </summary>
-    private async Task<IReadOnlyCollection<Guid>> PublishedLessonIdsAsync(Course course, CancellationToken ct)
+    private async Task<IReadOnlyDictionary<Guid, string>> PublishedLessonsAsync(
+        Course course, CancellationToken ct)
     {
         var lessons = course.Modules.SelectMany(m => m.Lessons).ToArray();
-        if (lessons.Length == 0) return [];
+        if (lessons.Length == 0) return new Dictionary<Guid, string>();
 
         var resolved = await bodies.GetLessonContentAsync(
             lessons.Select(l => l.ContentUnitId).Distinct().ToArray(), ct);
 
-        return lessons
-            .Where(l => resolved.TryGetValue(l.ContentUnitId, out var body) && body.PublishedAt is not null)
-            .Select(l => l.Id)
-            .ToHashSet();
+        // Keyed by lesson id, valued by the body's slug. Both are needed and both come from the
+        // same resolve, so returning a map rather than a set costs nothing and saves the caller a
+        // second pass to turn a resume point into a URL.
+        var map = new Dictionary<Guid, string>();
+
+        foreach (var lesson in lessons)
+        {
+            if (resolved.TryGetValue(lesson.ContentUnitId, out var body) && body.PublishedAt is not null)
+                map[lesson.Id] = body.Slug;
+        }
+
+        return map;
     }
 
     private async Task<EnrollmentDto> ComposeAsync(Enrollment enrollment, Course? course, CancellationToken ct)
     {
-        var total = course is null ? 0 : (await PublishedLessonIdsAsync(course, ct)).Count;
+        var published = course is null
+            ? new Dictionary<Guid, string>()
+            : await PublishedLessonsAsync(course, ct);
+
+        var total = published.Count;
 
         var completed = enrollment.Progress
             .Where(p => p.IsCompleted)
@@ -198,6 +211,13 @@ public sealed class EnrollmentService(
         // complete" on a dashboard reads as a bug rather than as the honest consequence it is.
         var percent = total == 0 ? 0 : Math.Min(100, (int)Math.Round(completed.Count * 100.0 / total));
 
+        // The resume point as a URL, not just an id. Null when the lesson has since been unpublished
+        // or removed from the curriculum: a Resume button is only worth offering if it leads
+        // somewhere, and the id alone cannot tell a client that.
+        var lastLessonSlug = enrollment.LastLessonId is { } last && published.TryGetValue(last, out var slug)
+            ? slug
+            : null;
+
         return new EnrollmentDto(
             enrollment.Id,
             enrollment.CourseId,
@@ -206,6 +226,7 @@ public sealed class EnrollmentService(
             enrollment.EnrolledAt,
             enrollment.CompletedAt,
             enrollment.LastLessonId,
+            lastLessonSlug,
             enrollment.LastAccessedAt,
             total,
             completed.Count,

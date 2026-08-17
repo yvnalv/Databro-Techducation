@@ -3,6 +3,7 @@ import {
   allPublishedArticles,
   allPublishedCourses,
   allPublishedLessons,
+  allPublishedPaths,
   siteUrl,
   taxonomy,
   xml,
@@ -31,10 +32,11 @@ export default defineEventHandler(async (event) => {
   const origin = siteUrl(event);
 
   // A sitemap that 500s tells a crawler nothing; one missing section still gets the rest indexed.
-  const [articles, terms, courses] = await Promise.all([
+  const [articles, terms, courses, paths] = await Promise.all([
     allPublishedArticles(event).catch(() => []),
     taxonomy(event).catch(() => ({ categories: [], tags: [] })),
     allPublishedCourses(event).catch(() => []),
+    allPublishedPaths(event).catch(() => []),
   ]);
 
   // Depends on the course list, so it cannot join the batch above.
@@ -42,6 +44,17 @@ export default defineEventHandler(async (event) => {
 
   const entries: SitemapEntry[] = [
     { path: "/", changefreq: "daily", priority: "1.0" },
+
+    // Learning paths sit at the top of the hierarchy: a path is the largest commitment on offer,
+    // and the page a broad query like "learn LLM engineering" should land on.
+    { path: "/learning-paths", changefreq: "weekly", priority: "0.9" },
+
+    ...paths.map((path) => ({
+      path: `/learning-paths/${path.slug}`,
+      lastmod: path.publishedAt,
+      changefreq: "weekly" as const,
+      priority: "0.9",
+    })),
 
     // The catalogue and the courses themselves. Priority above an article's, because a course is a
     // larger commitment and the page a search result should more often land on.

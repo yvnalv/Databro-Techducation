@@ -17,6 +17,7 @@ const switchableLocales = computed(() =>
 const navigation = computed(() => [
   { label: t("nav.articles"), to: localePath("/") },
   { label: t("courses.navLabel"), to: localePath("/courses") },
+  { label: t("paths.navLabel"), to: localePath("/learning-paths") },
 ]);
 </script>
 

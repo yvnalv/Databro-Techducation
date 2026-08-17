@@ -246,6 +246,33 @@ Reordering is **one call for a whole rearrangement**, not a move per row: it is 
 against one aggregate, and a per-row API would let a drag half-apply. Every authoring call returns
 the whole course, so a builder UI never reconciles a patch against local state.
 
+### Learning paths — public read (site)
+```
+GET /api/v1/learning-paths                   published paths, each with resolved course cards
+GET /api/v1/learning-paths/{slug}
+```
+
+A path holds an **ordered list of course ids** and the read resolves them into cards, in the curated
+order — the sequence is the point of a path, and a database's natural ordering is not it. Courses
+that are not published are **dropped** from the public read, the same rule a course applies to an
+unpublished lesson (LN-1/LN-2): a path may be curated ahead of the courses in it. The authoring view
+keeps them so a curator sees the gap.
+
+### Learning paths — authoring (app; Author/Editor/Admin)
+```
+POST   /api/v1/authoring/learning-paths                            create draft
+GET    /api/v1/authoring/learning-paths/{id}                       full path, gaps visible
+POST   /api/v1/authoring/learning-paths/{id}/courses/{courseId}    append (idempotent)
+DELETE /api/v1/authoring/learning-paths/{id}/courses/{courseId}
+PUT    /api/v1/authoring/learning-paths/{id}/courses/order         { orderedIds }
+POST   /api/v1/authoring/learning-paths/{id}/publish
+```
+
+Same permission split as courses: curating is `Content.Edit`, publishing is `Content.Publish`.
+Appending a course already in the path is a **no-op, not an error** — a builder UI dropping the same
+card twice is a slip, not a decision worth refusing. Publishing requires at least one course but not
+that those courses are published.
+
 ### Progress (learner; any authenticated user)
 ```
 GET    /api/v1/me/enrollments                                          dashboard (paginated)
@@ -275,14 +302,16 @@ idempotent (LN-9, LN-10). A lesson that is not in the course, or whose body is u
   "id": "…", "courseId": "…", "courseSlug": "rag-course",
   "courseTitle": "Retrieval-Augmented Generation",
   "enrolledAt": "…", "completedAt": null,
-  "lastLessonId": "…", "lastAccessedAt": "…",
+  "lastLessonId": "…", "lastLessonSlug": "chunking-strategies", "lastAccessedAt": "…",
   "totalLessons": 9, "completedLessons": 4, "percentComplete": 44,
   "completedLessonIds": ["…"] } }
 ```
 
 `completedAt` is set once and never cleared, so `completedLessons` can legitimately sit below
 `totalLessons` on a completed course — the course grew after the learner finished it (LN-6).
-`percentComplete` is derived per request and capped at 100.
+`percentComplete` is derived per request and capped at 100. `lastLessonSlug` is the resume point as
+a URL segment, and is **null** when that lesson has since been unpublished or dropped from the
+curriculum — a client should fall back to the course page rather than link somewhere that 404s.
 
 ## 6. Contracts & types
 

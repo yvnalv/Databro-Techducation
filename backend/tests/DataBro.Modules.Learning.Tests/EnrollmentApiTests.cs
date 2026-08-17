@@ -397,4 +397,26 @@ public class EnrollmentApiTests(LearningApiFactory factory) : IClassFixture<Lear
         Assert.Equal(older, slugs[0]);
         Assert.Equal(newer, slugs[1]);
     }
+
+    [Fact]
+    public async Task The_resume_point_carries_a_slug_so_a_client_can_link_to_it()
+    {
+        // The id alone cannot be turned into a URL, and a dashboard that has to guess would guess
+        // wrong. Null rather than a stale slug is the useful answer when the lesson is unreachable.
+        var (_, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("Resumable"));
+        var lessons = await PublicLessonIdsAsync(slug);
+
+        var learner = await LearnerAsync();
+        var fresh = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}", null))).GetProperty("data");
+
+        // Nothing opened yet, so there is nothing to resume.
+        Assert.Equal(JsonValueKind.Null, fresh.GetProperty("lastLessonSlug").ValueKind);
+
+        var visited = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessons[0]}/visit", null))).GetProperty("data");
+
+        Assert.False(string.IsNullOrWhiteSpace(visited.GetProperty("lastLessonSlug").GetString()));
+        Assert.Equal(lessons[0], visited.GetProperty("lastLessonId").GetGuid());
+    }
 }

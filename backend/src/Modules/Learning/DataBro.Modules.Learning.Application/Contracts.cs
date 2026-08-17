@@ -141,6 +141,8 @@ public sealed record EnrollmentDto(
     DateTimeOffset EnrolledAt,
     DateTimeOffset? CompletedAt,
     Guid? LastLessonId,
+    /// <summary>The resume point as a URL segment. Null when that lesson is no longer reachable.</summary>
+    string? LastLessonSlug,
     DateTimeOffset? LastAccessedAt,
     int TotalLessons,
     int CompletedLessons,

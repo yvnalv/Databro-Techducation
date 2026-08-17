@@ -1,5 +1,11 @@
 import { createApiClient, type ApiClient } from "@databro/api-client";
-import type { ArticleSummary, Category, CourseSummary, TaxonomyTerm } from "@databro/types";
+import type {
+  ArticleSummary,
+  Category,
+  CourseSummary,
+  LearningPath,
+  TaxonomyTerm,
+} from "@databro/types";
 import type { H3Event } from "h3";
 
 /**
@@ -63,6 +69,23 @@ export async function allPublishedCourses(event: H3Event): Promise<CourseSummary
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     const result = await client.listCourses({ page, pageSize: PAGE_SIZE });
+    collected.push(...result.items);
+
+    if (page >= result.meta.totalPages || result.items.length === 0) break;
+  }
+
+  return collected;
+}
+
+/**
+ * Every published learning path. Same bounded walk as the other catalogues.
+ */
+export async function allPublishedPaths(event: H3Event): Promise<LearningPath[]> {
+  const client = apiClient(event);
+  const collected: LearningPath[] = [];
+
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const result = await client.listLearningPaths({ page, pageSize: PAGE_SIZE });
     collected.push(...result.items);
 
     if (page >= result.meta.totalPages || result.items.length === 0) break;

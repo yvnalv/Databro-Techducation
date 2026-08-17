@@ -367,6 +367,24 @@ export interface Course {
   modules: CourseModule[];
 }
 
+/**
+ * A curated sequence of courses — "Become an LLM Engineer".
+ *
+ * `courses` are resolved cards in the curated order, not ids: the sequence is the point of a path.
+ * On the public read, courses that are not published are **absent** — a path may be curated ahead of
+ * the courses in it, the same way a course may go live before every lesson is written.
+ */
+export interface LearningPath {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  status: CourseStatus;
+  difficulty: Difficulty;
+  publishedAt?: string;
+  courses: CourseSummary[];
+}
+
 /** A neighbouring lesson, as a prev/next link needs it. No body — it is a link. */
 export interface LessonLink {
   id: string;
@@ -427,6 +445,11 @@ export interface Enrollment {
   completedAt?: string | null;
   /** The lesson last *opened*, which is not the lesson last completed. */
   lastLessonId?: string | null;
+  /**
+   * The resume point as a URL segment. Null when that lesson has since been unpublished or removed
+   * — a Resume button is only worth offering if it leads somewhere, and the id alone cannot say.
+   */
+  lastLessonSlug?: string | null;
   lastAccessedAt?: string | null;
   /** Published lessons right now — moves as the curriculum grows. */
   totalLessons: number;

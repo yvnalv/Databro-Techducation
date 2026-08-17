@@ -131,5 +131,17 @@
     "markComplete": "Mark complete",
     "markIncomplete": "Mark incomplete",
     "saveFailed": "That could not be saved. Please try again."
+  },
+  "paths": {
+    "eyebrow": "Learning paths",
+    "navLabel": "Paths",
+    "listTitle": "Learning paths",
+    "listDescription": "Curated routes through several courses, in the order we would teach them.",
+    "courseCount": "no courses | {n} course | {n} courses",
+    "empty": "No learning paths have been published yet.",
+    "loadFailed": "Learning paths could not be loaded.",
+    "sequence": "The sequence",
+    "sequenceHint": "Take these in order. Each builds on the one before it.",
+    "noCoursesYet": "The courses in this path are not published yet."
   }
 }

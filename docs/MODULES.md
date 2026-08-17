@@ -149,7 +149,9 @@ Structured learning over the Content engine ([ADR-0013](adr/0013-learning-curric
   the operation an authoring UI performs constantly, and one root makes a whole rearrangement a
   single atomic save.
 * **`LearningPath` is a separate root** holding an ordered list of course *ids*. A course belongs to
-  several paths, so a path owning its courses would put the same course in two aggregates.
+  several paths, so a path owning its courses would put the same course in two aggregates. The read
+  resolves those ids into cards **in the path's order**, and drops unpublished courses on the public
+  view — a path is curated ahead of the courses in it, exactly as a course is ahead of its lessons.
 * **A course publishes independently of its lessons.** A published course shows only its published
   lessons; requiring every lesson first would make a large curriculum unpublishable until the last
   one was written. A lesson whose body is unpublished simply disappears — Content cannot refuse the

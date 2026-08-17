@@ -1,5 +1,38 @@
 # DataBro Changelog
 
+## [2026-08-17 15:13:54 UTC]
+
+CHG-0043 — Learning paths, and Resume goes where it says
+
+- **Learning paths were less built than STATUS claimed.** It said "the domain and API exist; only the
+  pages are missing." The domain, persistence and repository existed; there was **no service, no
+  endpoints, and an orphan `LearningPathDto` nothing referenced**. Corrected here rather than left to
+  mislead the next read of that file.
+- **`LearningPathService` and its endpoints**, public and authoring. A path holds an ordered list of
+  course *ids* and the read resolves them into cards **in the path's order** — the sequence is the
+  entire point of a path, and a repository's natural ordering is not it.
+- **An unpublished course is dropped from the public path and kept in the authoring view**, the same
+  rule a course applies to an unpublished lesson (LN-1/LN-2). A path is curated ahead of the courses
+  in it; the learner sees what is ready and the curator sees the gap. Tested from both sides.
+- Appending a course already in the path is a **no-op, not an error** — a builder UI dropping the
+  same card twice is a slip, not a decision worth refusing.
+- **Site pages** at `/learning-paths` and `/learning-paths/{slug}`, numbered because the order is the
+  point: an unordered list of the same courses would be the catalogue with a title on it. JSON-LD is
+  an **`ItemList` of Courses**, not a `Course` — claiming a path is one course would misdescribe both
+  its size and its parts. Top of the sitemap hierarchy at priority 0.9, above courses, because a path
+  is the largest commitment on offer and the page a broad query should land on.
+- **Resume now goes to the lesson**, not the course page — the debt recorded in CHG-0042. The
+  enrollment DTO gains `lastLessonSlug`, resolved from the same batch the progress read already
+  makes, so it costs no extra call. **Null when that lesson has since been unpublished**, and the
+  dashboard falls back to the course page: a Resume button is only worth offering if it leads
+  somewhere, and an id alone cannot tell a client that.
+- 8 new backend tests (Learning 60 → **68**; backend 266 → **274**). 10 new strings in both locales
+  (113 keys each).
+- Verified live: a seeded path publishes with its course, both pages render at 200 with the sequence
+  numbered and the `ItemList` present, the header links it, a bogus slug 404s, the Indonesian route
+  renders translated, the sitemap grows to 92 URLs, and the dashboard's Resume href is
+  `/courses/rag-course/evaluating-retrieval` rather than the course page.
+
 ## [2026-08-17 14:56:41 UTC]
 
 CHG-0042 — Lesson pages, and progress attached to them
