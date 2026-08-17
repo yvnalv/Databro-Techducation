@@ -1,5 +1,33 @@
 # DataBro Changelog
 
+## [2026-08-17 07:28:05 UTC]
+
+CHG-0033 — `ILessonContentReader`: the contract Learning reads bodies through (ADR-0012, step 3)
+
+The last piece before the Learning module itself. Third use of the ADR-0008 pattern, so the shape
+was already settled: batch-oriented, partial results tolerated, `Platform` holds the interface and
+Content supplies the implementation through DI.
+
+- **Named for lesson bodies, not content units** — a deliberate narrowing of the provisional name in
+  ADR-0012. A reader that resolved *any* content unit would resolve an article id too, letting
+  Learning attach an article as a lesson and quietly undoing the separation the ADR exists to
+  enforce. It reads one table because it should only ever read one table, and a test asserts an
+  article id resolves to nothing.
+- **Published blocks only, never the draft.** This is CT-6 at the module boundary: if the draft were
+  readable here, a half-written lesson would reach a learner the moment it was typed — the same
+  defect that once put a draft title on the public article page. An unpublished body resolves with
+  an empty block list and a null `PublishedAt`, so Learning can tell "no body yet" from "a body that
+  is deliberately empty" and warn an author before a course goes live around it.
+- Blocks cross the boundary as `ContentBlockView(Id, Type, JsonObject?)` — Platform's own shape
+  mirroring the stored JSONB, not a leak of Content's `ContentDocument`.
+- No version history loaded: a consumer wants the current body, and history is the heaviest thing on
+  the aggregate.
+- One test failed on my own wrong assertion rather than the code — the fixture's default body text,
+  asserted as something it never was. Corrected the test.
+- 7 reader tests against a real database and container; backend 199 green.
+
+---
+
 ## [2026-08-17 07:16:46 UTC]
 
 CHG-0032 — `LessonContent`: a lesson body beside articles (ADR-0012, step 2)

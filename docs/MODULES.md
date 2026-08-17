@@ -54,13 +54,24 @@ this in P2). See [CONTENT_MODEL.md](CONTENT_MODEL.md).
 * SEO metadata per unit (slug, meta, canonical, OG, JSON-LD) and `visibility` (Public/Premium).
 * Slug uniqueness and immutability-after-publish; 301 redirect records.
 
-Owns: `articles`, `article_versions`, `categories`, `tags`, `article_tags`, `redirects` (`redirects`
-not yet implemented — see the slug-immutability note in [CONTENT_MODEL.md](CONTENT_MODEL.md) §5b).
+Owns: `articles`, `article_versions`, `lesson_contents`, `lesson_content_versions`, `categories`,
+`tags`, `article_tags`, `redirects`.
 
-Consumes (contracts): `IUserDirectory` (author byline — implemented), `IMediaReadService` (asset URLs
-— not yet; image blocks render a placeholder until Media exists).
+**Content owns lesson bodies as well as articles** ([ADR-0012](adr/0012-lesson-bodies-live-in-content.md)).
+Both are `ContentUnit`s sharing one engine — blocks, versioning, draft/publish — in separate tables,
+so no query over articles can return a lesson. Learning owns the curriculum around them.
 
-Emits: `ArticlePublished`, `ArticleUnpublished`, `ArticleUpdated`, `ArticleDeleted`.
+Consumes (contracts): `IUserDirectory` (author byline), `IMediaDirectory` (image blocks and
+`og:image`).
+
+Exposes (contract): **`ILessonContentReader`** in Platform — batch id → published lesson body, for
+Learning. Deliberately narrower than "any content unit": a reader that resolved article ids too
+would let Learning attach an article as a lesson and undo the separation ADR-0012 exists to enforce.
+
+Emits: `ArticlePublished`, `ArticleUnpublished`, `LessonContentPublished`,
+`LessonContentUnpublished`. Lesson bodies raise their own events rather than reusing the article
+ones — a subscriber reacting to `ArticlePublished` would otherwise act on something with no public
+article URL.
 
 ---
 
