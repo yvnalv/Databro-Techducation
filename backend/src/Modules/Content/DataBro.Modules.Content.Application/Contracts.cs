@@ -140,6 +140,38 @@ public sealed record ArticleVersionDto(
     bool IsCurrent,
     ContentDocumentDto Content);
 
+// ---- Lesson bodies (ADR-0012) ----
+//
+// Notably shorter than the article DTOs: no author, taxonomy, SEO, locale or visibility. What a
+// lesson body has is what the engine gives it.
+
+public sealed record LessonContentDto(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Summary,
+    string Status,
+    int CurrentVersion,
+    int ReadingTimeMinutes,
+    ContentDocumentDto Content,
+    DateTimeOffset? PublishedAt);
+
+/// <summary>A row in the CMS picker when attaching a body to a course. No blocks — a list is a list.</summary>
+public sealed record LessonContentSummaryDto(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Summary,
+    string Status,
+    int ReadingTimeMinutes,
+    DateTimeOffset? PublishedAt);
+
+public sealed record CreateLessonContentRequest(
+    string Title, string Summary, ContentDocumentDto Content, string? Slug = null);
+
+public sealed record UpdateLessonContentRequest(
+    string Title, string Summary, ContentDocumentDto Content);
+
 public sealed record MediaVariantRefDto(string Name, string Url, int Width, int Height);
 
 /// <summary>

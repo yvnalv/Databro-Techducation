@@ -98,6 +98,16 @@ internal static class ArticleMapping
             .ToList();
     }
 
+    // ---- Lesson bodies. The authoring view only: there is no public counterpart, because a lesson
+    // body is reached through its course rather than browsed on its own (ADR-0012). ----
+
+    public static LessonContentDto ToDto(this LessonContent l) =>
+        new(l.Id, l.Slug.Value, l.Title, l.Summary, l.Status.ToWire(), l.CurrentVersion,
+            l.ReadingTimeMinutes, l.DraftBlocks.ToDto(), l.PublishedAt);
+
+    public static LessonContentSummaryDto ToSummaryDto(this LessonContent l) =>
+        new(l.Id, l.Slug.Value, l.Title, l.Summary, l.Status.ToWire(), l.ReadingTimeMinutes, l.PublishedAt);
+
     /// <summary>
     /// The draft-facing summary: what the CMS list shows, which is what an editor is working on.
     /// </summary>

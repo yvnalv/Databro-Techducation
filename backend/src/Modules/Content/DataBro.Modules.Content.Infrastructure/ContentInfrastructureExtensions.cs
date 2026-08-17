@@ -41,6 +41,8 @@ public static class ContentInfrastructureExtensions
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IRedirectRepository, RedirectRepository>();
         services.AddScoped<IContentSlugRegistry, ContentSlugRegistry>();
+        services.AddScoped<ILessonContentRepository, LessonContentRepository>();
+        services.AddScoped<LessonContentService>();
 
         // Content's side of the cross-module contract Learning reads lesson bodies through
         // (ADR-0008, ADR-0012). Consumers resolve ILessonContentReader and never learn this module

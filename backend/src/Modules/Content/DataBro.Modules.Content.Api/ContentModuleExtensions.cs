@@ -30,6 +30,7 @@ public static class ContentModuleExtensions
         MapPublicTaxonomyEndpoints(endpoints);
         MapRedirectEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
+        MapLessonContentEndpoints(endpoints);
         MapTaxonomyAuthoringEndpoints(endpoints);
         return endpoints;
     }
@@ -187,6 +188,51 @@ public static class ContentModuleExtensions
         group.MapPut("/{id:guid}/slug", async (Guid id, ChangeSlugRequest request, ArticleService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.ChangeSlugAsync(id, request.Slug, ct)))
             .AddEndpointFilter<ValidationFilter<ChangeSlugRequest>>()
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+    }
+
+    // ---- Lesson bodies (ADR-0012). Authoring only: there is no public endpoint, because a lesson
+    // body is reached through its course, and exposing one here would create a second URL for the
+    // same content outside any curriculum. Same permission split as articles (CT-4). ----
+    private static void MapLessonContentEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/v1/authoring/lessons").WithTags("Content.Lessons");
+
+        group.MapPost("", async (
+            CreateLessonContentRequest request, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.CreateAsync(request, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentCreate));
+
+        // The CMS picker's list when attaching a body to a course.
+        group.MapGet("", async (LessonContentService service, int? page, int? pageSize, CancellationToken ct) =>
+            ApiEnvelope.OkPaged(await service.ListAsync(new PageRequest(page, pageSize), ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapGet("/{id:guid}", async (Guid id, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPatch("/{id:guid}", async (
+            Guid id, UpdateLessonContentRequest request, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UpdateAsync(id, request, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapGet("/{id:guid}/versions", async (
+            Guid id, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.ListVersionsAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPost("/{id:guid}/versions/{version:int}/restore", async (
+            Guid id, int version, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.RestoreVersionAsync(id, version, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPost("/{id:guid}/publish", async (Guid id, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.PublishAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+
+        group.MapPost("/{id:guid}/unpublish", async (Guid id, LessonContentService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentPublish));
     }
 
