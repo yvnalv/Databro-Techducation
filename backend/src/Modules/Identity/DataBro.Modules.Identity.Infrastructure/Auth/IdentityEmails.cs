@@ -18,6 +18,13 @@ public sealed class IdentityEmailOptions
 
     /// <summary>`en` or `id`. Until a locale is stored per user, every email is in the default.</summary>
     public string DefaultLocale { get; set; } = "en";
+
+    /// <summary>
+    /// Whether an unconfirmed address may sign in. <b>Defaults to true</b> — secure by default, and
+    /// deliberately not turned off in development: a rule that is only enforced in production is a
+    /// rule nobody has tested.
+    /// </summary>
+    public bool RequireConfirmedEmail { get; set; } = true;
 }
 
 /// <summary>

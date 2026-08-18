@@ -1,5 +1,41 @@
 # DataBro Changelog
 
+## [2026-08-18 15:54:12 UTC]
+
+CHG-0048 — Email confirmation is enforced (ID-2)
+
+An unconfirmed address can no longer sign in. It could before, and — this is the part worth
+recording — **the setting that appeared to control it was never consulted.**
+
+- `options.SignIn.RequireConfirmedEmail = false` sat in the Identity options reading like the switch.
+  Sign-in goes through `UserManager.CheckPasswordAsync`, not `SignInManager`, so nothing ever read
+  it. Flipping it to `true` would have changed nothing while looking like a fix. Proved before
+  starting: a freshly registered account signed in with a 200.
+- The real check is now **explicit in `AuthService.LoginAsync`**, driven by
+  `Identity:Emails:RequireConfirmedEmail`, which defaults to **true — including in development.** A
+  rule enforced only in production is a rule nobody has tested, which is how the previous one stayed
+  broken.
+- **Checked after the password, and that ordering is the whole design.** Before it, "confirm your
+  email" would tell anyone which addresses have accounts. After it, the caller has already proved
+  they know the password — so the message can be specific and actionable rather than a dead end, and
+  it leaks nothing. Three tests hold the line: unconfirmed + right password is a distinct 403;
+  unconfirmed + wrong password is the generic 401; and an unknown address returns a byte-identical
+  response to an unconfirmed one.
+- **No backfill migration, deliberately.** Marking 21 existing dev accounts "confirmed" would be
+  asserting something false about addresses nobody verified, and the code would outlive the excuse.
+  They can confirm through the resend flow, which now works. The seeded `admin@databro.local` was
+  already confirmed at seed time, so the CMS is unaffected.
+- The sign-in form handles the new state with a **"send it again"** action rather than an error. The
+  one thing that fixes being locked out is a link the learner cannot otherwise ask for.
+- **Six existing tests were relying on the old behaviour** and now confirm first: two in
+  `IdentityAuthTests` (one renamed to `Register_confirm_then_login_issues_tokens`, since it no longer
+  describes registering and signing in), and the rest through a single change to both test factories
+  rather than per test.
+- 4 new tests (Content & Identity 184 → **188**; backend 294 → **298**). 3 new strings in both
+  locales.
+- Verified live: unconfirmed sign-in 403s with `email_not_confirmed`; wrong password and unknown
+  address both 401 identically; resend → confirm → sign-in succeeds; the seeded admin is unaffected.
+
 ## [2026-08-18 15:21:27 UTC]
 
 CHG-0047 — Account recovery, and the phantom endpoints

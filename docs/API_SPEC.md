@@ -76,6 +76,24 @@ GET    /api/v1/auth/oauth/{provider}/callback
 PATCH  /api/v1/me                            profile editing - unbuilt
 ```
 
+#### Sign-in and confirmation
+
+`login` returns **403 `email_not_confirmed`** when the password is correct but the address has never
+been confirmed. It returns the generic **401** for a wrong password or an unknown address, and those
+two are byte-identical.
+
+The ordering is the point: the confirmation check runs *after* the password check, so the specific
+message only ever reaches someone who has already proved the account is theirs. Running it first
+would make the endpoint an enumeration oracle.
+
+`Identity:Emails:RequireConfirmedEmail` controls it and defaults to **true**, including in
+development — a rule enforced only in production is a rule nobody has tested.
+
+> **`options.SignIn.RequireConfirmedEmail` is not the control**, despite reading like it. Sign-in goes
+> through `UserManager.CheckPasswordAsync` rather than `SignInManager`, so that setting is never
+> consulted; it sat at `false` for months while appearing to be the switch. The real check is
+> explicit in `AuthService.LoginAsync`.
+
 #### Account recovery
 
 `forgot-password` and `resend-confirmation` **always return 200**, whether or not the address belongs

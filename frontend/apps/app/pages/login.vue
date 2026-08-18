@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DbButton, DbInput } from "@databro/ui";
+import { ApiClientError, createApiClient } from "@databro/api-client";
 
 /**
  * Sign-in for the authenticated app — both audiences (ADR-0015).
@@ -19,6 +20,28 @@ const email = ref("");
 const password = ref("");
 const formError = ref<string | null>(null);
 const submitting = ref(false);
+
+/**
+ * True when sign-in was refused because the address is unconfirmed.
+ *
+ * Distinct from a generic failure, and safe to distinguish: the API only says this **after** the
+ * password matched, so anyone seeing it has already proved the account is theirs. Without it the
+ * learner gets a dead end — the one thing that would fix it is a link they cannot ask for.
+ */
+const unconfirmed = ref(false);
+const resent = ref(false);
+
+async function resend() {
+  resent.value = true;
+
+  try {
+    await createApiClient({ baseUrl: String(config.public.apiBaseUrl) })
+      .resendConfirmation(email.value);
+  } catch {
+    // Ignored, like forgot-password: the API is non-committal by design and a visible failure here
+    // would leak the difference it withholds.
+  }
+}
 
 /**
  * An explicit `?redirect=` the guard carried over, if it is safe to honour.
@@ -79,15 +102,22 @@ if (isAuthenticated.value) await go();
 
 async function submit() {
   formError.value = null;
+  unconfirmed.value = false;
+  resent.value = false;
   submitting.value = true;
 
   try {
     await login(email.value, password.value);
     await go();
-  } catch {
-    // Deliberately identical for every failure — a wrong password, an unknown address, a server
-    // error alike. Distinguishing the first two turns the form into an account-enumeration oracle,
-    // which is why the status code is not inspected here at all.
+  } catch (error) {
+    if (error instanceof ApiClientError && error.code === "email_not_confirmed") {
+      unconfirmed.value = true;
+      submitting.value = false;
+      return;
+    }
+
+    // Everything else reads the same — a wrong password, an unknown address, a server error alike.
+    // Distinguishing the first two would turn the form into an account-enumeration oracle.
     formError.value = t("login.failed");
   } finally {
     submitting.value = false;
@@ -109,6 +139,25 @@ useHead({ title: t("login.title") });
       </div>
 
       <form class="mt-8 space-y-4 rounded-card border border-line bg-surface p-6 shadow-card" @submit.prevent="submit">
+        <!-- Actionable, unlike the generic failure: the account is known to be theirs by this
+             point, so offering the fix is safe and the alternative is a dead end. -->
+        <div
+          v-if="unconfirmed"
+          role="alert"
+          class="rounded-md border border-warning/30 bg-warning-subtle px-3 py-3 text-sm text-warning"
+        >
+          <p>{{ t("login.unconfirmed") }}</p>
+          <p v-if="resent" class="mt-2 font-medium">{{ t("login.resent") }}</p>
+          <button
+            v-else
+            type="button"
+            class="mt-2 font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            @click="resend"
+          >
+            {{ t("login.resend") }}
+          </button>
+        </div>
+
         <!-- role=alert so the failure is announced, not just shown. -->
         <p
           v-if="formError"

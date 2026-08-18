@@ -64,6 +64,13 @@ public sealed class ContentApiFactory : WebApplicationFactory<Program>, IAsyncLi
         {
             var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await users.FindByEmailAsync(email);
+
+            // Confirmed here because sign-in now requires it. Tests whose subject is *not* the
+            // confirmation gate should not each have to walk it, and the gate has its own coverage
+            // in AccountRecoveryTests.
+            var confirmToken = await users.GenerateEmailConfirmationTokenAsync(user!);
+            await users.ConfirmEmailAsync(user!, confirmToken);
+
             if (role != Roles.Reader)
                 await users.AddToRoleAsync(user!, role);
         }

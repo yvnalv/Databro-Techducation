@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace DataBro.Modules.Content.Tests.Api;
@@ -19,14 +20,35 @@ public class IdentityAuthTests(ContentApiFactory factory) : IClassFixture<Conten
     private static async Task<JsonElement> BodyAsync(HttpResponseMessage response) =>
         JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
 
+    /// <summary>
+    /// Confirms a freshly registered address, because sign-in now requires it. The gate itself is
+    /// covered in <c>AccountRecoveryTests</c>; these tests are about tokens.
+    /// </summary>
+    private async Task ConfirmAsync(HttpClient client, string email)
+    {
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider
+            .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<
+                DataBro.Modules.Identity.Infrastructure.Persistence.ApplicationUser>>();
+
+        var user = await users.FindByEmailAsync(email);
+        var token = await users.GenerateEmailConfirmationTokenAsync(user!);
+
+        (await client.PostAsJsonAsync("/api/v1/auth/confirm-email",
+            new { userId = user!.Id, token })).EnsureSuccessStatusCode();
+    }
+
     [Fact]
-    public async Task Register_then_login_issues_tokens()
+    public async Task Register_confirm_then_login_issues_tokens()
     {
         var client = Client;
         var (email, payload) = NewRegistration();
 
         var register = await client.PostAsJsonAsync("/api/v1/auth/register", payload);
         Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        // Registering alone is no longer enough to sign in — see AccountRecoveryTests for the gate.
+        await ConfirmAsync(client, email);
 
         var login = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password = "Password123!" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
@@ -71,6 +93,7 @@ public class IdentityAuthTests(ContentApiFactory factory) : IClassFixture<Conten
         var client = Client;
         var (email, payload) = NewRegistration();
         await client.PostAsJsonAsync("/api/v1/auth/register", payload);
+        await ConfirmAsync(client, email);
 
         var login = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password = "Password123!" });
         var firstRefresh = (await BodyAsync(login)).GetProperty("data").GetProperty("refreshToken").GetString();

@@ -4,6 +4,7 @@ using DataBro.Modules.Identity.Infrastructure.Persistence;
 using DataBro.Platform.Results;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace DataBro.Modules.Identity.Infrastructure.Auth;
 
@@ -11,8 +12,12 @@ public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     IdentityModuleDbContext db,
     JwtTokenService tokenService,
-    IIdentityEmails emails) : IAuthService
+    IIdentityEmails emails,
+    IOptions<IdentityEmailOptions> emailOptions) : IAuthService
 {
+    private static readonly Error EmailNotConfirmed =
+        new("email_not_confirmed", "Confirm your email address before signing in.");
+
     private static readonly Error InvalidResetToken =
         new("validation_failed", "That reset link is no longer valid. Request a new one.");
 
@@ -47,6 +52,16 @@ public sealed class AuthService(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
             return Result.Failure<AuthTokens>(InvalidCredentials);
+
+        // Checked **after** the password, and that ordering is the whole reason this can be a
+        // specific message rather than the generic one.
+        //
+        // Saying "confirm your email" before the password check would be an enumeration oracle:
+        // anyone could learn which addresses have accounts. Saying it after costs nothing, because
+        // whoever reached this line has already proved they know the password — they know the
+        // account exists. So the message can be actionable instead of a dead end.
+        if (emailOptions.Value.RequireConfirmedEmail && !user.EmailConfirmed)
+            return Result.Failure<AuthTokens>(EmailNotConfirmed);
 
         return Result.Success(await IssueTokensAsync(user, ct));
     }

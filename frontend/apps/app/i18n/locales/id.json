@@ -49,7 +49,10 @@
     "password": "Kata sandi",
     "submit": "Masuk",
     "submitting": "Sedang masuk…",
-    "failed": "Gagal masuk. Periksa email dan kata sandi Anda."
+    "failed": "Gagal masuk. Periksa email dan kata sandi Anda.",
+    "unconfirmed": "Konfirmasi alamat email Anda sebelum masuk. Periksa kotak masuk untuk tautannya.",
+    "resend": "Kirim ulang",
+    "resent": "Terkirim. Periksa kotak masuk Anda."
   },
   "verify": {
     "working": "Mengonfirmasi email Anda…",

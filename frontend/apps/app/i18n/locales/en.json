@@ -49,7 +49,10 @@
     "password": "Password",
     "submit": "Sign in",
     "submitting": "Signing in…",
-    "failed": "Sign-in failed. Check your email and password."
+    "failed": "Sign-in failed. Check your email and password.",
+    "unconfirmed": "Confirm your email address before signing in. Check your inbox for the link.",
+    "resend": "Send it again",
+    "resent": "Sent. Check your inbox."
   },
   "verify": {
     "working": "Confirming your email…",

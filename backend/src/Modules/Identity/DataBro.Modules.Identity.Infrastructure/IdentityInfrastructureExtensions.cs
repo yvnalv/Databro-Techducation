@@ -40,7 +40,12 @@ public static class IdentityInfrastructureExtensions
             {
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequiredLength = 8;
-                options.SignIn.RequireConfirmedEmail = false; // enforced once an email transport is wired
+                // Deliberately left false, and it is **not** the control. Login goes through
+                // `UserManager.CheckPasswordAsync`, not `SignInManager`, so this setting is never
+                // consulted — it read like the switch for months while enforcing nothing. The real
+                // check is explicit in AuthService.LoginAsync, driven by
+                // `Identity:Emails:RequireConfirmedEmail`.
+                options.SignIn.RequireConfirmedEmail = false;
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<IdentityModuleDbContext>()

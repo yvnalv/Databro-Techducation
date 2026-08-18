@@ -58,7 +58,9 @@ public static class ApiEnvelope
         "validation_failed" => StatusCodes.Status400BadRequest,
         "conflict" or "slug_taken" => StatusCodes.Status409Conflict,
         "business_rule_violation" => StatusCodes.Status422UnprocessableEntity,
-        "forbidden" => StatusCodes.Status403Forbidden,
+        // The caller proved who they are; they are not permitted *yet*. 401 would invite a client
+        // to retry the credentials, which is exactly what will not help.
+        "forbidden" or "email_not_confirmed" => StatusCodes.Status403Forbidden,
         "unauthenticated" => StatusCodes.Status401Unauthorized,
         _ => StatusCodes.Status400BadRequest,
     };

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace DataBro.Modules.Content.Tests.Api;
@@ -25,6 +26,30 @@ public class AccountRecoveryTests(ContentApiFactory factory) : IClassFixture<Con
 
         (await client.PostAsJsonAsync("/api/v1/auth/register",
             new { email, password, displayName = "Recoverable" })).EnsureSuccessStatusCode();
+
+        return (client, email, password);
+    }
+
+    /// <summary>
+    /// Registers and confirms, for the tests whose subject is something other than the gate.
+    ///
+    /// Needed since confirmation became enforced: a freshly registered account cannot sign in, which
+    /// is the point — these two tests were quietly relying on the old behaviour.
+    /// </summary>
+    private async Task<(HttpClient Client, string Email, string Password)> RegisterConfirmedAsync()
+    {
+        var (client, email, password) = await RegisterAsync();
+
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider
+            .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<
+                DataBro.Modules.Identity.Infrastructure.Persistence.ApplicationUser>>();
+
+        var user = await users.FindByEmailAsync(email);
+        var token = await users.GenerateEmailConfirmationTokenAsync(user!);
+
+        (await client.PostAsJsonAsync("/api/v1/auth/confirm-email",
+            new { userId = user!.Id, token })).EnsureSuccessStatusCode();
 
         return (client, email, password);
     }
@@ -65,7 +90,7 @@ public class AccountRecoveryTests(ContentApiFactory factory) : IClassFixture<Con
     [Fact]
     public async Task An_invalid_reset_token_is_refused()
     {
-        var (client, email, _) = await RegisterAsync();
+        var (client, email, _) = await RegisterConfirmedAsync();
 
         var login = await ReadAsync(await client.PostAsJsonAsync("/api/v1/auth/login",
             new { email, password = "Password123!" }));
@@ -102,7 +127,7 @@ public class AccountRecoveryTests(ContentApiFactory factory) : IClassFixture<Con
     {
         // Before this existed, signing out only cleared cookies — a token copied off a shared
         // machine outlived the sign-out that was supposed to end it.
-        var (client, email, password) = await RegisterAsync();
+        var (client, email, password) = await RegisterConfirmedAsync();
 
         var login = await ReadAsync(await client.PostAsJsonAsync("/api/v1/auth/login",
             new { email, password }));
@@ -134,6 +159,78 @@ public class AccountRecoveryTests(ContentApiFactory factory) : IClassFixture<Con
 
         var response = await client.PostAsJsonAsync("/api/v1/auth/logout",
             new { refreshToken = "never-issued" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // ---- Email confirmation, enforced ----
+
+    [Fact]
+    public async Task An_unconfirmed_account_cannot_sign_in()
+    {
+        var (client, email, password) = await RegisterAsync();
+
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });
+        var body = await ReadAsync(response);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("email_not_confirmed", body.GetProperty("error").GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task A_wrong_password_on_an_unconfirmed_account_is_still_just_invalid_credentials()
+    {
+        // The confirmation check runs *after* the password check, and this is what that ordering
+        // buys. If it ran first, "confirm your email" would be returned to anyone who guessed an
+        // address — an enumeration oracle. After the password, the caller has already proved the
+        // account exists, so the specific message costs nothing.
+        var (client, email, _) = await RegisterAsync();
+
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { email, password = "WrongPassword123!" });
+        var body = await ReadAsync(response);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("unauthenticated", body.GetProperty("error").GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task An_unknown_address_and_an_unconfirmed_one_are_indistinguishable_before_the_password()
+    {
+        // The other half of the same property, from the attacker's side: guessing addresses tells
+        // you nothing, because both answers are identical until you also know the password.
+        var (client, email, _) = await RegisterAsync();
+
+        var unconfirmed = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { email, password = "Guess123!" });
+        var unknown = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { email = $"nobody-{Guid.NewGuid():N}@databro.test", password = "Guess123!" });
+
+        Assert.Equal(unknown.StatusCode, unconfirmed.StatusCode);
+        Assert.Equal(
+            await unknown.Content.ReadAsStringAsync(),
+            await unconfirmed.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Confirming_the_address_lets_the_account_in()
+    {
+        var (client, email, password) = await RegisterAsync();
+
+        // The token would normally arrive by email; generated directly here because the transport
+        // has its own tests and this one is about the gate.
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider
+            .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<
+                DataBro.Modules.Identity.Infrastructure.Persistence.ApplicationUser>>();
+
+        var user = await users.FindByEmailAsync(email);
+        var token = await users.GenerateEmailConfirmationTokenAsync(user!);
+
+        (await client.PostAsJsonAsync("/api/v1/auth/confirm-email",
+            new { userId = user!.Id, token })).EnsureSuccessStatusCode();
+
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

@@ -175,15 +175,12 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **Enforce email verification.** Recovery is built (CHG-0047), so this is now only the account
-   migration: every existing user, the seeded local admin included, is unconfirmed and would be
-   locked out by flipping `RequireConfirmedEmail`. Needs a backfill or a grace period.
-2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
-   every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
-3. **Assessment** (quizzes, attempts, scoring) — the largest remaining piece of Phase 2 and its own
+1. **Assessment** (quizzes, attempts, scoring) — the largest remaining piece of Phase 2 and its own
    module. It is what makes "completed" something a learner had to earn, and the prerequisite for
    certificates in Phase 3.
-4. Then close Phase 2: **bookmarks**, **streaks**, and **social login** (quizzes, attempts, scoring) as its own module.
+2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
+   every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
+3. Then close Phase 2: **bookmarks**, **streaks**, and **social login** (quizzes, attempts, scoring) as its own module.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
@@ -216,9 +213,9 @@ Independent of Phase 2:
   so `localhost:3000` and `localhost:3001` genuinely share one in development. In production the two
   apps are separate subdomains and the cookie needs an explicit parent `domain` — owed with the first
   real deploy, and not verifiable from here.
-* **Email verification is not enforced** (`RequireConfirmedEmail=false`). The transport exists now
-  ([ADR-0016](adr/0016-transactional-email-transport.md)) and mail is delivered and clickable in
-  development via Mailpit; what remains is the account migration and a resend endpoint.
+* **Existing dev accounts are unconfirmed** and cannot sign in since CHG-0048 enforced ID-2. Use the
+  "send it again" link on the sign-in form and confirm through Mailpit; the seeded
+  `admin@databro.local` was confirmed at seed time and is unaffected.
 * Social login (Google/GitHub) not yet implemented.
 * **Design pass complete for what exists**, matching the reference: sampled blue palette,
   pink→violet page-header gradient, navy footer. **Light mode only** — the earlier
@@ -273,7 +270,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **294 passing**: Content & Identity (184), Learning (77), Media (29),
+* `dotnet test` — **298 passing**: Content & Identity (188), Learning (77), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

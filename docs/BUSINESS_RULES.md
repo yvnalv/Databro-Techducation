@@ -6,7 +6,10 @@ Domain layer. Rules are grouped by area and will grow per phase.
 ## Identity
 
 * ID-1: An email is unique across all users (case-insensitive).
-* ID-2: Privileged actions (authoring, publishing) require a verified email.
+* ID-2: **An unconfirmed address cannot sign in** (`Identity:Emails:RequireConfirmedEmail`, default
+  true). Checked **after** the password, deliberately: before it, "confirm your email" would tell
+  anyone which addresses have accounts; after it, the caller has already proved the account is theirs,
+  so the message can be actionable instead of a dead end.
 * ID-3: A user may link multiple external logins (Google/GitHub) to one account, matched by verified
   email.
 * ID-4: Refresh tokens are single-use and rotated; detected reuse revokes the entire token chain.
