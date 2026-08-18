@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\DataBro.Modules.Assessment.Application\DataBro.Modules.Assessment.Application.csproj" />
+    <ProjectReference Include="..\DataBro.Modules.Assessment.Infrastructure\DataBro.Modules.Assessment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\DataBro.Platform.Web\DataBro.Platform.Web.csproj" />
+  </ItemGroup>
+</Project>

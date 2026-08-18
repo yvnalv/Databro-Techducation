@@ -25,6 +25,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0015](adr/0015-authenticated-app-hosts-both-audiences.md) | The authenticated app hosts both audiences; the boundary is indexability | Accepted |
 | [0016](adr/0016-transactional-email-transport.md) | Transactional email: SMTP behind a Platform abstraction, provider deferred | Accepted |
 | [0017](adr/0017-transactional-outbox.md) | A transactional outbox, one table per module | Accepted |
+| [0018](adr/0018-assessment-scoring-and-the-answer-key.md) | Assessment: separate learner and authoring shapes, all-or-nothing scoring | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

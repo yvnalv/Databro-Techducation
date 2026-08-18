@@ -328,6 +328,50 @@ response rather than patching locally, so a response carrying only the changed f
 sequence on screen. Reordering is one call for the whole order, never a move per row: it is one
 transaction against one aggregate, and a per-row API would let a drag half-apply.
 
+### Quizzes (Assessment)
+
+```
+GET    /api/v1/lessons/{lessonId}/quiz                   the quiz, without any answer key
+POST   /api/v1/lessons/{lessonId}/quiz/attempts          start, or resume an open attempt
+GET    /api/v1/lessons/{lessonId}/quiz/attempts          this learner's history for it
+GET    /api/v1/me/attempts/{attemptId}
+POST   /api/v1/me/attempts/{attemptId}/submit            { answers: { questionId: [choiceId] } }
+```
+
+Authenticated, no permission required — taking a quiz is a learner acting on their own data. The
+quiz read is authenticated rather than public: a question bank is worth something and there is no SEO
+case for exposing one.
+
+**No response on this path carries the answer key** (AS-1). It is enforced by type: the learner DTO
+has no correctness field to populate, rather than one that is conditionally omitted. Correct choices
+and explanations appear only on an attempt that has been **submitted** (AS-2) — at which point it can
+no longer change, so the same data is feedback.
+
+The submission carries **selections only**. Scoring happens in the domain from the stored key (AS-3),
+so there is no score field to fabricate. Questions are scored all-or-nothing (AS-4).
+
+```
+POST   /api/v1/authoring/quizzes                                              create draft
+GET    /api/v1/authoring/quizzes                                              all quizzes
+GET    /api/v1/authoring/quizzes/{id}                                         includes the answer key
+PATCH  /api/v1/authoring/quizzes/{id}                                         { title, passingScore }
+POST   /api/v1/authoring/quizzes/{id}/questions                               { prompt, type, points }
+PATCH  /api/v1/authoring/quizzes/{id}/questions/{questionId}
+DELETE /api/v1/authoring/quizzes/{id}/questions/{questionId}
+PUT    /api/v1/authoring/quizzes/{id}/questions/order                         { orderedIds }
+POST   /api/v1/authoring/quizzes/{id}/questions/{questionId}/choices          { text }
+DELETE /api/v1/authoring/quizzes/{id}/questions/{questionId}/choices/{choiceId}
+PUT    /api/v1/authoring/quizzes/{id}/questions/{questionId}/answer           { correctChoiceIds }
+POST   /api/v1/authoring/quizzes/{id}/publish
+POST   /api/v1/authoring/quizzes/{id}/unpublish
+```
+
+Structure requires `Content.Edit`, publishing `Content.Publish` — the same split articles and courses
+use. The answer key is set **as a whole** rather than toggled per choice, so "two correct answers on a
+single-choice question" is not a state an author can pass through. Publishing requires every question
+to have at least two choices and one correct answer (AS-5): an unanswerable question is a trap, not an
+incomplete offering.
+
 ### Progress (learner; any authenticated user)
 ```
 GET    /api/v1/me/enrollments                                          dashboard (paginated)

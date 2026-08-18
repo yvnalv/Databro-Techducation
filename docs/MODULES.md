@@ -203,12 +203,31 @@ opting in is a deliberate act, not a side effect (ADR-0017).
 
 ---
 
-## Assessment (P2)
+## Assessment (P2) — built
 
-Quizzes and (later) projects.
+Quizzes bound to lessons ([ADR-0018](adr/0018-assessment-scoring-and-the-answer-key.md)).
 
-* Quiz definitions bound to lessons; question types; attempts; scoring.
-* P3: project submissions and review.
+* `Quiz` → `Question` → `Choice`, with `QuizAttempt` → `AttemptAnswer` as a **separate root** — the
+  same split as Course/Enrollment: quizzes are authored rarely, attempts are written constantly by
+  many learners.
+* Three question types: single-choice, multiple-choice, true/false. All score unambiguously; anything
+  needing judgement waits for a grader (Phase 3).
+* **Learner and authoring DTOs are separate types.** The learner shape has no correctness field to
+  leak into — the answer key is released only once an attempt is submitted, at which point it is
+  feedback rather than the answers.
+* Scoring is **all-or-nothing** and happens in the domain from the stored key. The request carries
+  selections only; there is no score field to fake.
+* One quiz per lesson, referenced by id across the module boundary with no foreign key.
+
+Owns: `quizzes`, `questions`, `choices`, `quiz_attempts`, `attempt_answers`.
+
+Emits: `QuizAttemptSubmitted` — deliberately **internal**. Whether passing gates lesson completion is
+an unmade product decision, and publishing the event would make it by accident. It carries `LessonId`
+so promotion later needs no cross-module lookup.
+
+Not built: any CMS surface (quizzes are authored over the API today), the learner UI, and projects.
+
+P3: project submissions and review.
 
 ---
 

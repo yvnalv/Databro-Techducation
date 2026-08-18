@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\DataBro.Modules.Assessment.Domain\DataBro.Modules.Assessment.Domain.csproj" />
+  </ItemGroup>
+</Project>

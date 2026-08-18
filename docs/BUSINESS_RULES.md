@@ -105,6 +105,30 @@ Domain layer. Rules are grouped by area and will grow per phase.
 * LN-11: Percent complete is derived at read time from published lessons, never stored, and capped at
   100 — a learner who completed a course before it grew is not shown above 100%.
 
+## Assessment
+
+* AS-1: **A learner-facing response never carries the answer key.** Enforced by having separate DTO
+  types rather than one with a nullable field — the learner shape has no correctness field to
+  populate ([ADR-0018](adr/0018-assessment-scoring-and-the-answer-key.md)).
+* AS-2: Correct choices and explanations are released only once an attempt is **submitted**. At that
+  point the attempt cannot change, so the same data is feedback rather than the answers.
+* AS-3: Scoring happens server-side from the stored key. A submission carries selections only; there
+  is no score field on the request.
+* AS-4: A question is scored **all or nothing** — the selection must be exactly the correct set.
+  Partial credit rewards selecting broadly and has no defensible formula; a question that needs it
+  should be split.
+* AS-5: A quiz publishes only if every question has at least two choices and at least one correct
+  answer. Stricter than a course's publish rule (LN-1): an unanswerable question is a trap, not an
+  incomplete offering.
+* AS-6: One quiz per lesson.
+* AS-7: An attempt is submitted once and kept. A retake is a new attempt, so what someone actually
+  answered survives. Starting a quiz with an open attempt **resumes** it — a reload is not a decision
+  to discard answers.
+* AS-8: `passed` is decided at submit time against the threshold in force *then*, and stored. Raising
+  the passing score later must not retroactively fail anyone (the same reasoning as LN-6).
+* AS-9: Passing a quiz does **not** currently gate lesson completion. Recorded as unmade rather than
+  implied.
+
 ## Cross-cutting
 
 * XC-1: No business data is physically deleted — soft delete + history everywhere.

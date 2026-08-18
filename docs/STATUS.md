@@ -175,9 +175,10 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **Assessment** (quizzes, attempts, scoring) — the largest remaining piece of Phase 2 and its own
-   module. It is what makes "completed" something a learner had to earn, and the prerequisite for
-   certificates in Phase 3.
+1. **A CMS surface and learner UI for quizzes.** The Assessment module is built and tested
+   (CHG-0049) but a quiz can only be authored over the API, and no learner can take one — the same
+   gap learning paths had between CHG-0043 and CHG-0044. The learner UI is also where the unmade
+   decision in AS-9 gets easier to make: whether passing a quiz gates lesson completion.
 2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
    every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
 3. Then close Phase 2: **bookmarks**, **streaks**, and **social login** (quizzes, attempts, scoring) as its own module.
@@ -270,7 +271,8 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **298 passing**: Content & Identity (188), Learning (77), Media (29),
+* `dotnet test` — **312 passing**: Content & Identity (188), Learning (77), Media (29),
+  Assessment (14),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

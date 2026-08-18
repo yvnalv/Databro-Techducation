@@ -1,4 +1,5 @@
 using DataBro.Api;
+using DataBro.Modules.Assessment.Api;
 using DataBro.Modules.Content.Api;
 using DataBro.Modules.Identity.Api;
 using DataBro.Modules.Learning.Api;
@@ -21,6 +22,7 @@ builder.Services
     .AddContentModule(builder.Configuration)
     .AddMediaModule(builder.Configuration)
     .AddLearningModule(builder.Configuration)
+    .AddAssessmentModule(builder.Configuration)
     .AddSearchModule(builder.Configuration);
 
 // ---- CORS ----
@@ -94,6 +96,7 @@ app.MapIdentityModule()
    .MapContentModule()
    .MapMediaModule()
    .MapLearningModule()
+   .MapAssessmentModule()
    // Cross-module search: composed here because only the host may know about both (ADR-0014).
    .MapSearch()
    .MapSearchModule();

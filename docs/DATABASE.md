@@ -231,6 +231,29 @@ The platform's first write-heavy tables, and shaped for it:
 * `completed_at` on `enrollments` is **stored, not derived** (LN-6). Percent complete is the
   opposite: derived at read time, never stored.
 
+### assessment
+
+**quizzes** (id, lesson_id, title, passing_score, status, published_at) — `lesson_id` is unique,
+filtered on `is_deleted = false`: one quiz per lesson. No foreign key to `learning.lessons`; it
+crosses a module boundary.
+
+**questions** (id, quiz_id → quizzes cascade, prompt, type, "order", points, explanation).
+**choices** (id, question_id → questions cascade, text, is_correct, "order").
+
+`is_correct` is the answer key, stored plainly. Nothing hides it at the column level — the guarantee
+is that no learner-facing DTO can carry it, enforced by having two DTO types rather than one with a
+nullable field ([ADR-0018](adr/0018-assessment-scoring-and-the-answer-key.md)).
+
+**quiz_attempts** (id, quiz_id, user_id, started_at, submitted_at null, score, total_points, passed).
+**attempt_answers** (id, attempt_id → quiz_attempts cascade, question_id, selected_choice_ids jsonb,
+points_earned).
+
+`passed` and `total_points` are **stored**, not derived, for the reason LN-6 stores course
+completion: an author who later raises the passing score must not retroactively fail people who
+passed under the old one.
+
+The `(user_id, quiz_id, started_at)` index is deliberately **not unique** — retakes are the point.
+
 ### Outbox — one table per module, not one shared
 
 **{schema}.outbox_messages** (id, type, payload jsonb, occurred_at, processed_at null, attempts,

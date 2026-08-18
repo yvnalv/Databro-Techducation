@@ -1,5 +1,44 @@
 # DataBro Changelog
 
+## [2026-08-18 16:10:45 UTC]
+
+CHG-0049 — The Assessment module (ADR-0018)
+
+Phase 2's last unbuilt module. A quiz belongs to a lesson, a learner attempts it, and the attempt is
+scored server-side.
+
+- **Separate learner and authoring DTO types**, not one type with a nullable `IsCorrect`. The learner
+  shape **has no field to leak into**. This is the module's whole reason for caring: a quiz that
+  ships its own answers renders correctly, scores correctly, and passes every test that is not
+  specifically looking for it. Two tests assert against the **raw JSON**, because the point is what
+  reaches the browser rather than how the DTO happens to be structured.
+- **The key is released at exactly one moment: submission.** Before it, the attempt is open and
+  returning correct choices would simply be handing over the answers. After it, the attempt cannot
+  change, so the same data — plus the author's explanation — is feedback.
+- **All-or-nothing scoring, including multiple-choice.** Partial credit sounds kinder and is
+  arbitrary: there is no defensible number for "two of three right, one wrong", and every scheme that
+  invents one rewards ticking everything. A question that needs partial credit should be split.
+- **Scoring happens in the domain from the stored key.** The request carries selections only. A test
+  submits `score: 999` alongside wrong answers and asserts zero — there is nowhere for a fabricated
+  score to go.
+- `Quiz` and `QuizAttempt` are **separate aggregate roots**, the same split as Course/Enrollment: one
+  is authored rarely, the other written constantly by many learners each touching only their own.
+- `passed` and `totalPoints` are **stored**, not derived. An author who later raises the passing score
+  must not retroactively fail people who passed under the old one — LN-6's reasoning, applied again.
+- Starting a quiz with an open attempt **resumes** it. A page reload is not a decision to discard
+  answers.
+- **Passing does not gate lesson completion**, and `QuizAttemptSubmitted` is deliberately kept an
+  internal domain event rather than promoted. Whether a quiz must be passed is a real product decision
+  nobody has made, and publishing the event would make it by accident. It carries `LessonId` so
+  promoting it later needs no cross-module lookup.
+- True/false questions generate their own two choices, so an author cannot create one with four
+  answers, and the answer key is set as a whole rather than toggled per choice — "two correct answers
+  on a single-choice question" is not a state that can be reached.
+- 14 new tests, all passing on the first run (backend 298 → **312**). Verified live: the raw learner
+  payload for a published quiz contains no `isCorrect`.
+- Not built, and recorded: a CMS surface (quizzes are authored over the API today, exactly as learning
+  paths were before CHG-0044) and the learner UI.
+
 ## [2026-08-18 15:54:12 UTC]
 
 CHG-0048 — Email confirmation is enforced (ID-2)
