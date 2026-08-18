@@ -58,5 +58,26 @@
     "failedTitle": "Tautan itu tidak berfungsi",
     "failedBody": "Mungkin sudah kedaluwarsa atau telah digunakan. Masuk dan minta yang baru.",
     "signIn": "Ke halaman masuk"
+  },
+  "forgot": {
+    "title": "Lupa kata sandi?",
+    "subtitle": "Kami akan mengirimkan tautan untuk membuat kata sandi baru.",
+    "submit": "Kirim tautan",
+    "submitting": "Mengirim…",
+    "maybeSent": "Jika alamat itu memiliki akun, tautan sedang dikirim. Periksa kotak masuk dan folder spam Anda.",
+    "backToSignIn": "Kembali ke halaman masuk"
+  },
+  "reset": {
+    "title": "Buat kata sandi baru",
+    "newPassword": "Kata sandi baru",
+    "confirmPassword": "Konfirmasi kata sandi baru",
+    "mismatch": "Keduanya tidak cocok.",
+    "submit": "Simpan kata sandi",
+    "submitting": "Menyimpan…",
+    "doneBody": "Kata sandi Anda tersimpan. Anda telah dikeluarkan dari perangkat lain.",
+    "signIn": "Ke halaman masuk",
+    "noLink": "Halaman ini memerlukan tautan dari email pemulihan Anda.",
+    "requestNew": "Minta tautan baru",
+    "failed": "Gagal. Silakan coba lagi."
   }
 }

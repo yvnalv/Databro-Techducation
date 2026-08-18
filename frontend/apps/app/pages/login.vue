@@ -138,6 +138,13 @@ useHead({ title: t("login.title") });
         <DbButton type="submit" block size="lg" :disabled="submitting">
           {{ submitting ? t("login.submitting") : t("login.submit") }}
         </DbButton>
+
+        <!-- Without this the recovery pages exist and nobody can find them. -->
+        <p class="text-center text-sm">
+          <a href="/forgot-password" class="font-medium text-accent hover:underline">
+            {{ t("forgot.title") }}
+          </a>
+        </p>
       </form>
     </div>
   </div>

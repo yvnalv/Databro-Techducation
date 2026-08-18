@@ -1,5 +1,47 @@
 # DataBro Changelog
 
+## [2026-08-18 15:21:27 UTC]
+
+CHG-0047 — Account recovery, and the phantom endpoints
+
+A learner who forgot their password had no route back into their account. `docs/API_SPEC.md` had
+documented one since Phase 1 — `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`,
+OAuth, `PATCH /me` — and **none of the five existed**. Verified against the running API before
+starting: 404, 404, 404, 404, 405.
+
+- **Password reset, resend-confirmation and logout are built.** OAuth and `PATCH /me` are not, and
+  API_SPEC now says so under a **Not built** heading rather than continuing to describe them as
+  though they were. Deleting the lines would have hidden that Phase 1 scope is still owed.
+- **`forgot-password` and `resend-confirmation` always return 200**, whether or not the address
+  belongs to an account. Anything else is a membership oracle — an address list could be tested
+  against the endpoint to learn who has an account here. Two tests assert the responses are
+  byte-identical for a known and an unknown address, because this is the property that breaks
+  silently the moment someone "improves" an error message.
+- The cost is that a typo produces silence, so the UI says *"if that address has an account"* and
+  never *"sent"*. The client's own doc comment says the same, since a caller cannot tell either.
+- **`reset-password` distinguishes exactly one failure**: a password that breaks the policy, which is
+  actionable and tells an attacker nothing. Expired, already used, wrong user and tampered-with all
+  return one message — telling someone holding a stolen link which kind they have helps only them.
+- **A successful reset revokes every refresh token the account holds.** Resetting is what someone
+  does when they believe the account is compromised; leaving an attacker's session alive through it
+  would make the reset theatre. Verified live: the pre-reset token 401s afterwards.
+- **Signing out now actually signs out.** It previously only cleared cookies, leaving the refresh
+  token valid for a fortnight — a copy taken off a shared machine outlived the sign-out meant to end
+  it. The revoke is best-effort and the local session clears regardless: a network failure must not
+  leave someone stuck signed in on the device in front of them.
+- A user who has never confirmed their address is **still** sent a reset link. The most common reason
+  to be stuck unconfirmed is having forgotten the password too, and refusing would leave no route
+  back at all.
+- `/forgot-password` and `/reset-password` in the app, public like `/verify-email`, and **linked from
+  the sign-in form** — without that the pages exist and nobody can find them. The confirmation email
+  and the reset email now share one shell; the token is URL-encoded in one place rather than at each
+  call site.
+- 6 new tests (Content & Identity 178 → **184**; backend 288 → **294**). 15 new strings in both
+  locales (65 keys each).
+- Verified end to end on the running stack: request → email in Mailpit → weak password refused with a
+  specific message → reset succeeds → pre-reset session 401s → new password signs in → replayed token
+  refused with the generic message.
+
 ## [2026-08-18 14:59:56 UTC]
 
 CHG-0046 — The transactional outbox (ADR-0017)

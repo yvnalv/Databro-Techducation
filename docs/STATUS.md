@@ -175,12 +175,9 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **Account recovery and enforcement.** Password reset, a resend-confirmation route, then turning
-   email verification on. `docs/API_SPEC.md` documents `/auth/forgot-password`,
-   `/auth/reset-password`, `/auth/oauth/{provider}`, `/auth/logout` and `PATCH /me` **as though they
-   exist — none does**, which is the same class of drift as the Learning entry that claimed an API
-   never written. Together they mean a learner who forgets a password has no route back into their
-   account.
+1. **Enforce email verification.** Recovery is built (CHG-0047), so this is now only the account
+   migration: every existing user, the seeded local admin included, is unconfirmed and would be
+   locked out by flipping `RequireConfirmedEmail`. Needs a backfill or a grace period.
 2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
    every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
 3. **Assessment** (quizzes, attempts, scoring) — the largest remaining piece of Phase 2 and its own
@@ -206,8 +203,9 @@ Independent of Phase 2:
   ([ADR-0017](adr/0017-transactional-outbox.md)).
 * **Dead-lettered outbox messages are only visible in the database.** A parked row has no operational
   surface.
-* **`docs/API_SPEC.md` documents five auth endpoints that do not exist** — password reset (2), OAuth
-  start/callback, logout, and `PATCH /me`. Verified against the running API: 404, 404, 404, 404, 405.
+* **Social login (Google/GitHub) and `PATCH /me` are still unbuilt** — Phase 1 scope. API_SPEC now
+  lists them under an explicit "Not built" heading rather than describing them as though they exist;
+  the other three phantom endpoints were built in CHG-0047.
 
 * **The CMS is still English-only.** [ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)
   registered `@nuxtjs/i18n` in `apps/app` — it had been a dependency that was never wired — and
@@ -275,7 +273,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **288 passing**: Content & Identity (178), Learning (77), Media (29),
+* `dotnet test` — **294 passing**: Content & Identity (184), Learning (77), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

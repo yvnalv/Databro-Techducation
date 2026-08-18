@@ -216,6 +216,40 @@ export class ApiClient {
     return this.json<Record<string, never>>("/api/v1/auth/confirm-email", "POST", { userId, token });
   }
 
+  /**
+   * Starts password recovery.
+   *
+   * Resolves whether or not the address belongs to an account — the API answers identically by
+   * design, so a client cannot tell either, and must not imply it can. Say "if that address has an
+   * account", never "sent".
+   */
+  forgotPassword(email: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>("/api/v1/auth/forgot-password", "POST", { email });
+  }
+
+  resetPassword(userId: string, token: string, password: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>("/api/v1/auth/reset-password", "POST", {
+      userId,
+      token,
+      password,
+    });
+  }
+
+  /** Re-sends the confirmation email. Same non-committal answer as {@link forgotPassword}. */
+  resendConfirmation(email: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>("/api/v1/auth/resend-confirmation", "POST", { email });
+  }
+
+  /**
+   * Revokes a refresh token server-side.
+   *
+   * Clearing cookies is not signing out: the refresh token stays valid for a fortnight, so a copy
+   * taken off a shared machine outlives the sign-out that was meant to end it.
+   */
+  logout(refreshToken: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>("/api/v1/auth/logout", "POST", { refreshToken });
+  }
+
   /** The signed-in user. Requires a bearer token, so it doubles as a session probe. */
   me(): Promise<UserProfile> {
     return this.request<UserProfile>("/api/v1/me");

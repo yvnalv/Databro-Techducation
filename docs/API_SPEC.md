@@ -59,14 +59,43 @@ POST   /api/v1/auth/register                 { email, password, displayName }
 POST   /api/v1/auth/verify-email             { token }
 POST   /api/v1/auth/login                    { email, password } -> { accessToken, refreshToken }
 POST   /api/v1/auth/refresh                  { refreshToken }
-POST   /api/v1/auth/logout                   (revoke refresh)
+POST   /api/v1/auth/logout                   { refreshToken } - revokes it
 POST   /api/v1/auth/forgot-password          { email }
-POST   /api/v1/auth/reset-password           { token, password }
-GET    /api/v1/auth/oauth/{provider}         start (google|github)
-GET    /api/v1/auth/oauth/{provider}/callback
+POST   /api/v1/auth/reset-password           { userId, token, password }
+POST   /api/v1/auth/resend-confirmation      { email }
+POST   /api/v1/auth/confirm-email            { userId, token }
 GET    /api/v1/me                            current user profile
-PATCH  /api/v1/me                            update profile
 ```
+
+**Not built** — listed here previously as though they were, which is why they are now called out
+rather than quietly removed:
+
+```
+GET    /api/v1/auth/oauth/{provider}         social login (google|github) - Phase 1 scope, unbuilt
+GET    /api/v1/auth/oauth/{provider}/callback
+PATCH  /api/v1/me                            profile editing - unbuilt
+```
+
+#### Account recovery
+
+`forgot-password` and `resend-confirmation` **always return 200**, whether or not the address belongs
+to an account. An endpoint that answered differently would be a membership oracle: an address list
+could be tested against it to learn who has an account here. The cost is that a typo produces
+silence, which is why the UI says *"if that address has an account"* and never *"sent"*.
+
+`reset-password` distinguishes exactly one failure — a password that breaks the policy, which is
+actionable and tells an attacker nothing. Expired, already used, wrong user and tampered-with all
+return one message, because telling someone holding a stolen link which kind they have helps only
+them.
+
+**A successful reset revokes every refresh token the account holds.** Resetting is what someone does
+when they believe the account is compromised, and leaving an attacker's session alive through it
+would make the reset theatre.
+
+`logout` is unauthenticated on purpose: the refresh token in the body is the thing being revoked, and
+requiring a valid *access* token would make signing out impossible once one had expired — exactly
+when someone most wants to. It succeeds for an unknown or already-revoked token, because signing out
+must never fail.
 
 ### Articles — public read (site)
 ```

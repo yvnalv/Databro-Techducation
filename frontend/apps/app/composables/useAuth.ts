@@ -73,7 +73,27 @@ export function useAuth() {
     user.value = await client().me();
   }
 
+  /**
+   * Signs out, revoking the refresh token server-side first.
+   *
+   * Clearing cookies alone is not signing out — the refresh token stays valid for a fortnight, so a
+   * copy taken off a shared machine outlives the sign-out that was meant to end it.
+   *
+   * The revoke is best-effort and the local session is cleared regardless: a network failure must
+   * not leave someone stuck signed in on the device in front of them, which is the one place they
+   * can do something about it.
+   */
   async function logout() {
+    const token = refreshToken.value;
+
+    if (token) {
+      try {
+        await anonymousClient().logout(token);
+      } catch {
+        // Deliberately swallowed — see above.
+      }
+    }
+
     clearSession();
     await navigateTo("/login");
   }

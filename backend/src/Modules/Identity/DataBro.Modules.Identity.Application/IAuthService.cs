@@ -9,6 +9,20 @@ public interface IAuthService
     Task<Result<AuthTokens>> LoginAsync(LoginRequest request, CancellationToken ct = default);
     Task<Result<AuthTokens>> RefreshAsync(RefreshTokenRequest request, CancellationToken ct = default);
     Task<Result> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sends a reset link if the address belongs to an account. <b>Always succeeds</b> — see the
+    /// implementation for why the answer must not depend on whether the account exists.
+    /// </summary>
+    Task<Result> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default);
+
+    Task<Result> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
+
+    /// <summary>Re-sends the confirmation email. Always succeeds, for the same reason.</summary>
+    Task<Result> ResendConfirmationAsync(ResendConfirmationRequest request, CancellationToken ct = default);
+
+    /// <summary>Revokes one refresh token. Always succeeds — signing out must never fail.</summary>
+    Task<Result> LogoutAsync(LogoutRequest request, CancellationToken ct = default);
     Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken ct = default);
 }
 
@@ -25,5 +39,8 @@ public interface IAuthService
 public interface IIdentityEmails
 {
     Task SendEmailConfirmationAsync(
+        string email, string displayName, Guid userId, string token, CancellationToken ct = default);
+
+    Task SendPasswordResetAsync(
         string email, string displayName, Guid userId, string token, CancellationToken ct = default);
 }

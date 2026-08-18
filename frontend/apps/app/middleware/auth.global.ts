@@ -11,7 +11,14 @@
  */
 // `/verify-email` is public for the same reason `/login` is: the token in the link is the proof,
 // and a person arriving from their inbox has by definition not signed in yet.
-const PUBLIC_ROUTES = new Set(["/login", "/verify-email"]);
+// All public for the same reason: someone arriving here either cannot sign in yet or cannot sign in
+// at all, and the token in the link is the proof.
+const PUBLIC_ROUTES = new Set([
+  "/login",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 export default defineNuxtRouteMiddleware(async (to) => {
   if (PUBLIC_ROUTES.has(to.path)) return;
