@@ -120,5 +120,17 @@ internal sealed class LearningPathRepository(LearningDbContext db) : ILearningPa
         return new PagedResult<LearningPath>(items, page.Page, page.PageSize, total);
     }
 
+    public async Task<PagedResult<LearningPath>> ListAllAsync(PageRequest page, CancellationToken ct = default)
+    {
+        // Newest first by creation, not by publish date: a curator's listing is dominated by drafts,
+        // which have no publish date at all.
+        var query = Full.OrderByDescending(p => p.CreatedAt);
+
+        var total = await query.CountAsync(ct);
+        var items = await query.Skip(page.Skip).Take(page.PageSize).ToListAsync(ct);
+
+        return new PagedResult<LearningPath>(items, page.Page, page.PageSize, total);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 }

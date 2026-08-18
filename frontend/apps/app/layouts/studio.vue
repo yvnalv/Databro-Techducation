@@ -20,6 +20,7 @@ const publicSiteUrl = computed(() => config.public.siteUrl as string);
 const navigation = computed(() => [
   { label: t("nav.articles"), to: "/studio" },
   { label: t("nav.courses"), to: "/studio/courses" },
+  { label: t("nav.paths"), to: "/studio/learning-paths" },
   { label: t("nav.lessons"), to: "/studio/lessons" },
   { label: t("nav.taxonomy"), to: "/studio/taxonomy" },
 ]);

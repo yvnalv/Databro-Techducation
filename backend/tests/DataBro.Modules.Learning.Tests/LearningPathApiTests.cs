@@ -197,4 +197,59 @@ public class LearningPathApiTests(LearningApiFactory factory) : IClassFixture<Le
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    // ---- What the curator UI needs ----
+
+    [Fact]
+    public async Task The_curator_listing_includes_drafts()
+    {
+        // The public listing serves published paths only, so without this a curator could create a
+        // path and then have no screen that shows it.
+        var (curator, _, slug) = await SeedPathAsync();
+
+        var listing = await ReadAsync(await curator.GetAsync("/api/v1/authoring/learning-paths?pageSize=100"));
+        var slugs = listing.GetProperty("data").EnumerateArray()
+            .Select(p => p.GetProperty("slug").GetString())
+            .ToArray();
+
+        Assert.Contains(slug, slugs);
+    }
+
+    [Fact]
+    public async Task Renaming_a_path_returns_the_whole_path()
+    {
+        // The builder replaces its state from every response rather than patching, so a mutation
+        // that returned only the changed fields would blank the sequence on screen.
+        var editor = await EditorAsync();
+        var course = await SeedCourseAsync(editor, "Kept");
+        var (curator, pathId, _) = await SeedPathAsync(course.Id);
+
+        var updated = (await ReadAsync(await curator.PatchAsJsonAsync(
+            $"/api/v1/authoring/learning-paths/{pathId}",
+            new { title = "Renamed", summary = "New summary", difficulty = "advanced" })))
+            .GetProperty("data");
+
+        Assert.Equal("Renamed", updated.GetProperty("title").GetString());
+        Assert.Equal("advanced", updated.GetProperty("difficulty").GetString());
+        Assert.Equal(["Kept"], Titles(updated));
+    }
+
+    [Fact]
+    public async Task A_published_path_can_be_taken_down_again()
+    {
+        var editor = await EditorAsync();
+        var course = await SeedCourseAsync(editor, "Live");
+        var (curator, pathId, slug) = await SeedPathAsync(course.Id);
+
+        (await curator.PostAsync($"/api/v1/authoring/learning-paths/{pathId}/publish", null))
+            .EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK,
+            (await factory.CreateClient().GetAsync($"/api/v1/learning-paths/{slug}")).StatusCode);
+
+        (await curator.PostAsync($"/api/v1/authoring/learning-paths/{pathId}/unpublish", null))
+            .EnsureSuccessStatusCode();
+
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await factory.CreateClient().GetAsync($"/api/v1/learning-paths/{slug}")).StatusCode);
+    }
 }

@@ -62,5 +62,8 @@ public interface ILearningPathRepository
 
     Task<PagedResult<LearningPath>> ListPublishedAsync(PageRequest page, CancellationToken ct = default);
 
+    /// <summary>Every path, drafts included — the curator's listing.</summary>
+    Task<PagedResult<LearningPath>> ListAllAsync(PageRequest page, CancellationToken ct = default);
+
     Task SaveChangesAsync(CancellationToken ct = default);
 }

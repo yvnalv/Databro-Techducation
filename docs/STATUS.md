@@ -3,7 +3,7 @@
 Snapshot of where the project is, what's next, and what's open. Update this with every meaningful
 milestone.
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-18.
 
 ## Current phase
 
@@ -175,14 +175,17 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **The transactional outbox.** `Platform/Messaging` is still one marker interface. No longer forced
-   by search — ADR-0014 settled that without it — but it is what `Enrolled` and `CourseCompleted`
-   need to reach certificates and email, and those are the first real cross-module effects. It now
-   gets to be designed with a concrete consumer in front of it, which is the better time.
-2. **A curator UI for learning paths.** The endpoints exist and are tested; the CMS has no screen for
-   them, so a path is currently assembled with `curl`. The course builder is the template.
-3. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
+1. **The transactional outbox — still waiting for a consumer, deliberately.** `Platform/Messaging` is
+   one marker interface, and domain events are raised into a list nothing reads. It was next on this
+   list and was skipped once already after checking: Redis is in compose but nothing caches,
+   `IEmailSender` is Identity-only and a no-op, and search needs no reindex now that it runs on
+   generated columns. Building it now would be the speculative infrastructure ADR-0014 avoided. The
+   trigger is a real second consumer — most likely a general email transport, so `CourseCompleted`
+   has somewhere to go.
+2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
    every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
+3. **A general email transport**, which is both a gap of its own (email verification is not enforced
+   because nothing can send mail) and the outbox's most likely first consumer.
 4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
@@ -263,7 +266,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **274 passing**: Content & Identity (173), Learning (68), Media (29),
+* `dotnet test` — **277 passing**: Content & Identity (173), Learning (71), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

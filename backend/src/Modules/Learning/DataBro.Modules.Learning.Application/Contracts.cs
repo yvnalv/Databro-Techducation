@@ -90,6 +90,8 @@ public sealed record ReorderRequest(IReadOnlyList<Guid> OrderedIds);
 
 public sealed record CreateLearningPathRequest(string Title, string Summary, string? Slug = null, string? Difficulty = null);
 
+public sealed record UpdateLearningPathRequest(string Title, string Summary, string? Difficulty = null);
+
 /// <summary>A neighbouring lesson, as a prev/next link needs it. No body — it is a link.</summary>
 public sealed record LessonLinkDto(Guid Id, string Slug, string Title);
 

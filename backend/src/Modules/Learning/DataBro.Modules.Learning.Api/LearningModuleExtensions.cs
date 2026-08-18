@@ -215,8 +215,18 @@ public static class LearningModuleExtensions
             ApiEnvelope.From(await service.CreateAsync(request, ct)))
             .RequireAuthorization(Perm(Permissions.ContentCreate));
 
+        group.MapGet("", async (
+            LearningPathService service, int? page, int? pageSize, CancellationToken ct) =>
+            ApiEnvelope.OkPaged(await service.ListAllAsync(new PageRequest(page, pageSize), ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
         group.MapGet("/{id:guid}", async (Guid id, LearningPathService service, CancellationToken ct) =>
             ApiEnvelope.OkOrNotFound(await service.GetForAuthoringAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
+        group.MapPatch("/{id:guid}", async (
+            Guid id, UpdateLearningPathRequest request, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UpdateAsync(id, request, ct)))
             .RequireAuthorization(Perm(Permissions.ContentEdit));
 
         group.MapPost("/{id:guid}/courses/{courseId:guid}", async (
@@ -237,6 +247,11 @@ public static class LearningModuleExtensions
         group.MapPost("/{id:guid}/publish", async (
             Guid id, LearningPathService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.PublishAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentPublish));
+
+        group.MapPost("/{id:guid}/unpublish", async (
+            Guid id, LearningPathService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.UnpublishAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentPublish));
     }
 

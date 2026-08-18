@@ -1,5 +1,39 @@
 # DataBro Changelog
 
+## [2026-08-18 14:08:39 UTC]
+
+CHG-0044 — A curator UI for learning paths
+
+Paths could be created but only with `curl`. The endpoints shipped in CHG-0043 and the CMS had no
+screen for them, so the one thing a curator does had no interface.
+
+- **`/studio/learning-paths`** — a listing and a builder, following the course builder exactly:
+  details, the sequence with move/remove, a picker for courses not yet in the path, and publish /
+  unpublish.
+- **Three endpoints the UI needed and CHG-0043 had not built**: an authoring listing (the public one
+  serves published paths only, so without it a curator could create a path and then have no screen
+  that showed it), `PATCH` for title/summary/difficulty, and `unpublish`.
+- **Every mutation returns the whole path, `PATCH` included.** The builder replaces its state from
+  the response rather than patching locally — reordering renumbers every sibling in the domain, and
+  reproducing that here would be a second implementation of an invariant that already exists. A
+  response carrying only the changed fields would blank the sequence on screen; a test pins that
+  rename comes back with its courses intact.
+- The picker offers only courses **not already in the path**. Adding one twice is a no-op
+  server-side, but offering it is noise. Drafts are offered on purpose: a path is routinely assembled
+  before its courses go live, which is the affordance the whole design exists for.
+- The sequence section is **hidden entirely until the path exists**, rather than shown disabled. A
+  course cannot attach to something with no id, and a disabled picker on a `/new` form is a puzzle
+  rather than a hint.
+- **The outbox was next on the list and was deliberately skipped.** It still has no consumer: Redis
+  is in compose but nothing caches, `IEmailSender` is Identity-only and a no-op, and search needs no
+  reindex now that it runs on generated columns. Building it now would be exactly the speculative
+  infrastructure that ADR-0014 avoided. It waits for a real second consumer, which is the reasoning
+  STATUS already recorded.
+- 3 new backend tests (Learning 68 → **71**; backend 274 → **277**).
+- Verified live through the running CMS: the sidebar links it, the listing shows drafts, the builder
+  loads a path with its sequence, and the full loop — create, refuse to publish empty, add, rename,
+  publish, view public page, unpublish, 404 — behaves correctly end to end.
+
 ## [2026-08-17 15:13:54 UTC]
 
 CHG-0043 — Learning paths, and Resume goes where it says

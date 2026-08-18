@@ -40,6 +40,19 @@ public sealed class LearningPathService(
         return new PagedResult<LearningPathDto>(composed, result.Page, result.PageSize, result.Total);
     }
 
+    /// <summary>Every path, drafts included — what the curator's listing needs.</summary>
+    public async Task<PagedResult<LearningPathDto>> ListAllAsync(
+        PageRequest page, CancellationToken ct = default)
+    {
+        var result = await paths.ListAllAsync(page, ct);
+
+        var composed = new List<LearningPathDto>();
+        foreach (var path in result.Items)
+            composed.Add(await ComposeAsync(path, publishedOnly: false, ct));
+
+        return new PagedResult<LearningPathDto>(composed, result.Page, result.PageSize, result.Total);
+    }
+
     /// <summary>
     /// Resolves a path's course ids into cards, in the curated order.
     ///
@@ -119,6 +132,14 @@ public sealed class LearningPathService(
         return Result.Success(await ComposeAsync(path, publishedOnly: false, ct));
     }
 
+    public Task<Result<LearningPathDto>> UpdateAsync(
+        Guid id, UpdateLearningPathRequest request, CancellationToken ct = default)
+        => MutateAsync(id, path =>
+        {
+            path.Describe(request.Title, request.Summary, LearningMapping.ParseDifficulty(request.Difficulty));
+            return Result.Success();
+        }, ct);
+
     public Task<Result<LearningPathDto>> AddCourseAsync(
         Guid id, Guid courseId, CancellationToken ct = default)
         => MutateAsync(id, path =>
@@ -141,6 +162,9 @@ public sealed class LearningPathService(
 
     public Task<Result<LearningPathDto>> PublishAsync(Guid id, CancellationToken ct = default)
         => MutateAsync(id, path => path.Publish(clock.UtcNow), ct);
+
+    public Task<Result<LearningPathDto>> UnpublishAsync(Guid id, CancellationToken ct = default)
+        => MutateAsync(id, path => path.Unpublish(), ct);
 
     private async Task<Result<LearningPathDto>> MutateAsync(
         Guid id, Func<LearningPath, Result> mutate, CancellationToken ct)

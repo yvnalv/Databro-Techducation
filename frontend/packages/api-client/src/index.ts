@@ -527,6 +527,95 @@ export class ApiClient {
     );
   }
 
+  // ---- Learning paths: curation (Content.Edit) and publishing (Content.Publish) ----
+
+  async listAuthoringLearningPaths(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<Paged<LearningPath>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<LearningPath[]>(
+      `/api/v1/authoring/learning-paths${suffix}`,
+    );
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getAuthoringLearningPath(id: string): Promise<LearningPath> {
+    return this.request<LearningPath>(`/api/v1/authoring/learning-paths/${encodeURIComponent(id)}`);
+  }
+
+  createLearningPath(input: {
+    title: string;
+    summary: string;
+    slug?: string;
+    difficulty?: Difficulty;
+  }): Promise<LearningPath> {
+    return this.json<LearningPath>("/api/v1/authoring/learning-paths", "POST", input);
+  }
+
+  updateLearningPath(
+    id: string,
+    input: { title: string; summary: string; difficulty?: Difficulty },
+  ): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}`,
+      "PATCH",
+      input,
+    );
+  }
+
+  // Every mutation returns the whole path, so the builder replaces its state rather than
+  // reconciling a patch against it — the same contract the course builder relies on.
+
+  addCourseToPath(id: string, courseId: string): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}/courses/${encodeURIComponent(courseId)}`,
+      "POST",
+    );
+  }
+
+  removeCourseFromPath(id: string, courseId: string): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}/courses/${encodeURIComponent(courseId)}`,
+      "DELETE",
+    );
+  }
+
+  reorderPathCourses(id: string, orderedIds: string[]): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}/courses/order`,
+      "PUT",
+      { orderedIds },
+    );
+  }
+
+  publishLearningPath(id: string): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}/publish`,
+      "POST",
+    );
+  }
+
+  unpublishLearningPath(id: string): Promise<LearningPath> {
+    return this.json<LearningPath>(
+      `/api/v1/authoring/learning-paths/${encodeURIComponent(id)}/unpublish`,
+      "POST",
+    );
+  }
+
   // ---- Learning: curriculum authoring (ADR-0013) ----
   //
   // Structure sits behind Content.Edit and publishing behind Content.Publish, the same split

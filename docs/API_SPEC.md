@@ -261,17 +261,25 @@ keeps them so a curator sees the gap.
 ### Learning paths — authoring (app; Author/Editor/Admin)
 ```
 POST   /api/v1/authoring/learning-paths                            create draft
+GET    /api/v1/authoring/learning-paths                            all paths, drafts included
 GET    /api/v1/authoring/learning-paths/{id}                       full path, gaps visible
+PATCH  /api/v1/authoring/learning-paths/{id}                       { title, summary, difficulty }
 POST   /api/v1/authoring/learning-paths/{id}/courses/{courseId}    append (idempotent)
 DELETE /api/v1/authoring/learning-paths/{id}/courses/{courseId}
 PUT    /api/v1/authoring/learning-paths/{id}/courses/order         { orderedIds }
 POST   /api/v1/authoring/learning-paths/{id}/publish
+POST   /api/v1/authoring/learning-paths/{id}/unpublish
 ```
 
 Same permission split as courses: curating is `Content.Edit`, publishing is `Content.Publish`.
 Appending a course already in the path is a **no-op, not an error** — a builder UI dropping the same
 card twice is a slip, not a decision worth refusing. Publishing requires at least one course but not
 that those courses are published.
+
+**Every mutation returns the whole path**, including `PATCH`. The builder replaces its state from the
+response rather than patching locally, so a response carrying only the changed fields would blank the
+sequence on screen. Reordering is one call for the whole order, never a move per row: it is one
+transaction against one aggregate, and a per-row API would let a drag half-apply.
 
 ### Progress (learner; any authenticated user)
 ```
