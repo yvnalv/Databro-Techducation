@@ -1,5 +1,51 @@
 # DataBro Changelog
 
+## [2026-08-18 14:59:56 UTC]
+
+CHG-0046 — The transactional outbox (ADR-0017)
+
+Domain events finally mean something. `Platform/Messaging` had been a single marker interface since
+the project began: aggregates raised events into a list, and nothing ever read it.
+
+- **[ADR-0017](docs/adr/0017-transactional-outbox.md)**. Built now, after being top of the next-up
+  list three times and skipped twice — the same reasoning ADR-0014 used to settle search without one.
+  CHG-0045 supplied the consumer that was missing: `CourseCompleted` → a completion email, an effect
+  that **must** happen if the completion happened and **need not** happen in the same request.
+- **The row is written in the same `SaveChanges` as the state change**, by an interceptor, so it
+  joins the transaction already in flight. That is the entire mechanism. The two alternatives are
+  both wrong: publish before the commit and the mail goes out for a transaction that rolls back;
+  publish after it and the process dies in between with nothing recording that anything was owed.
+- **One outbox table per module**, not a shared one. The row must be written by the same `DbContext`
+  to be in the same transaction, so every module maps it anyway — and two contexts mapping one
+  physical table leaves "whose migration creates it" unanswerable. Per-module also keeps rule 10
+  intact and makes extraction mechanical.
+- **Publishing is opt-in twice over**: a domain event must implement `IIntegrationEvent` *and* be
+  registered with a contract name. `CourseCompleted` is the only one so far; `Enrolled` sits right
+  beside it and stays internal. Publishing everything an aggregate raises would make every internal
+  rename someone else's breaking change, and a test pins that enrolling queues nothing.
+- **Contract names are hand-written, never derived from the CLR type.** A queued row outlives the
+  code that wrote it, so an assembly-qualified name baked into it would make renaming a class
+  silently undeliver every message already queued — a refactor that breaks production days later in a
+  way no compiler catches. Registering two types under one name throws at startup.
+- **At-least-once, and the interface says so.** The process can die between the effect and the row
+  being marked processed, and no ordering of those two writes avoids it. Handlers must be idempotent;
+  that is stated on `IIntegrationEventHandler<T>` rather than in a document nobody reads while
+  writing one.
+- Failures back off exponentially and **park** after eight attempts. A dead-lettered message is never
+  deleted — it is exactly what someone needs to read afterwards.
+- `IUserContacts` in Platform, **deliberately separate from `IUserDirectory`**. The directory is a
+  byline, resolved in bulk on cached public pages; an email address is PII and has no business on
+  that route. Keeping them apart means a template rendering an author card cannot accidentally have
+  an address in hand, which beats remembering not to use one. Not batch-shaped either: contacting is
+  one-at-a-time by nature, and a batch API here would exist only to be misused for an export.
+- 6 new tests (Learning 71 → **77**; backend 282 → **288**).
+- **Verified end to end on the running stack**: completing a course wrote
+  `learning.course-completed` unprocessed; the minutely Hangfire sweep logged
+  `Outbox: dispatched 1 Learning message(s)`; Mailpit received *"You finished
+  Retrieval-Augmented Generation"*; the row is now `processed=t, attempts=0`.
+- Owed, and recorded: a retention sweep for processed rows, and somewhere to see dead-lettered
+  messages other than the database.
+
 ## [2026-08-18 14:33:12 UTC]
 
 CHG-0045 — Transactional email, and the link in it works (ADR-0016)

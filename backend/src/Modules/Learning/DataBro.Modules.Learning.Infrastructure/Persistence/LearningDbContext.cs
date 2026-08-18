@@ -1,5 +1,6 @@
 using DataBro.Modules.Learning.Domain;
 using DataBro.Platform.Persistence;
+using DataBro.Platform.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataBro.Modules.Learning.Infrastructure.Persistence;
@@ -23,5 +24,9 @@ public sealed class LearningDbContext(DbContextOptions<LearningDbContext> option
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LearningDbContext).Assembly);
         modelBuilder.ApplyClientGeneratedKeys();
         modelBuilder.ApplySoftDeleteQueryFilter();
+
+        // Learning's own queue, in Learning's schema. Written by this context so an outbox row and
+        // the state change that caused it share one transaction.
+        modelBuilder.ApplyOutbox();
     }
 }

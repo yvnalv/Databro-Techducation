@@ -24,6 +24,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0014](adr/0014-search-across-modules.md) | Searching across modules: segmented per module, never blended | Accepted |
 | [0015](adr/0015-authenticated-app-hosts-both-audiences.md) | The authenticated app hosts both audiences; the boundary is indexability | Accepted |
 | [0016](adr/0016-transactional-email-transport.md) | Transactional email: SMTP behind a Platform abstraction, provider deferred | Accepted |
+| [0017](adr/0017-transactional-outbox.md) | A transactional outbox, one table per module | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

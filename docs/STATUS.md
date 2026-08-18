@@ -175,17 +175,18 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **The transactional outbox — now unblocked.** `Platform/Messaging` is one marker interface and
-   domain events are raised into a list nothing reads. It was skipped twice, correctly, for having no
-   consumer; [ADR-0016](adr/0016-transactional-email-transport.md) supplies one. `CourseCompleted` →
-   completion email is a real effect that must be reliable and may be eventually consistent, which is
-   the exact shape an outbox exists for.
+1. **Account recovery and enforcement.** Password reset, a resend-confirmation route, then turning
+   email verification on. `docs/API_SPEC.md` documents `/auth/forgot-password`,
+   `/auth/reset-password`, `/auth/oauth/{provider}`, `/auth/logout` and `PATCH /me` **as though they
+   exist — none does**, which is the same class of drift as the Learning entry that claimed an API
+   never written. Together they mean a learner who forgets a password has no route back into their
+   account.
 2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
    every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
-3. **Enforce email verification.** Unblocked by ADR-0016 but a change of its own: every existing
-   account, the seeded local admin included, is unconfirmed and would be locked out. Needs a
-   backfill or a grace period, and a "resend confirmation" endpoint that does not exist yet.
-4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
+3. **Assessment** (quizzes, attempts, scoring) — the largest remaining piece of Phase 2 and its own
+   module. It is what makes "completed" something a learner had to earn, and the prerequisite for
+   certificates in Phase 3.
+4. Then close Phase 2: **bookmarks**, **streaks**, and **social login** (quizzes, attempts, scoring) as its own module.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
@@ -199,6 +200,14 @@ Independent of Phase 2:
 * **ESLint has no backend counterpart.** No analyzer ruleset is configured for the C# side.
 
 ## Known gaps / deferred
+
+* **Outbox retention.** Processed rows are kept as an audit of what the system decided to do, which is
+  worth having while volume is negligible. A sweep is owed before it is not
+  ([ADR-0017](adr/0017-transactional-outbox.md)).
+* **Dead-lettered outbox messages are only visible in the database.** A parked row has no operational
+  surface.
+* **`docs/API_SPEC.md` documents five auth endpoints that do not exist** — password reset (2), OAuth
+  start/callback, logout, and `PATCH /me`. Verified against the running API: 404, 404, 404, 404, 405.
 
 * **The CMS is still English-only.** [ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)
   registered `@nuxtjs/i18n` in `apps/app` — it had been a dependency that was never wired — and
@@ -266,7 +275,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **282 passing**: Content & Identity (178), Learning (71), Media (29),
+* `dotnet test` — **288 passing**: Content & Identity (178), Learning (77), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

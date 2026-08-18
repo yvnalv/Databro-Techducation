@@ -1,9 +1,14 @@
 namespace DataBro.Platform.Messaging;
 
 /// <summary>
-/// A domain-meaningful event published across module boundaries (e.g. ArticlePublished).
-/// Delivered in-process via a mediator today; reliable effects are dispatched through the
-/// transactional outbox. See docs/ARCHITECTURE.md — Inter-module communication.
+/// A domain-meaningful event published across module boundaries (e.g. CourseCompleted), carried by
+/// the transactional outbox. See docs/ARCHITECTURE.md — Inter-module communication.
+///
+/// <para>
+/// A domain event crosses a module boundary <b>only</b> by also implementing this interface. That is
+/// deliberate opt-in at the type level: most domain events are internal bookkeeping, and publishing
+/// everything an aggregate raises would make every internal rename someone else's breaking change.
+/// </para>
 /// </summary>
 public interface IIntegrationEvent
 {

@@ -85,6 +85,7 @@ public static class IdentityInfrastructureExtensions
         // Identity's outward-facing contract for other modules (ADR-0008). Registered against the
         // shared Platform abstraction so consumers never reference this module.
         services.AddScoped<IUserDirectory, UserDirectory>();
+        services.AddScoped<IUserContacts, UserContacts>();
 
         // The transport itself is registered once by the host (Platform.Email); Identity only says
         // what its own emails look like.

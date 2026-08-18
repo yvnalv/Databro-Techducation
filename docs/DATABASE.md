@@ -231,9 +231,22 @@ The platform's first write-heavy tables, and shaped for it:
 * `completed_at` on `enrollments` is **stored, not derived** (LN-6). Percent complete is the
   opposite: derived at read time, never stored.
 
-### platform
+### Outbox — one table per module, not one shared
 
-**outbox_messages** (id, occurred_at, type, payload jsonb, processed_at null, attempts, error null).
+**{schema}.outbox_messages** (id, type, payload jsonb, occurred_at, processed_at null, attempts,
+next_attempt_at null, error null, is_dead_lettered) — currently in `learning`
+([ADR-0017](adr/0017-transactional-outbox.md)).
+
+Per-module rather than a single `platform.outbox_messages`, because the row must be written by the
+**same `DbContext`** as the state change or it is not in the same transaction. Two contexts mapping
+one physical table would also leave "whose migration creates it" unanswerable. Per-module keeps rule
+10 intact and makes extraction mechanical.
+
+`ix_outbox_messages_pending` is filtered on `processed_at IS NULL AND is_dead_lettered = false`, so
+it stays the size of the backlog rather than of all history — processed rows are kept for audit and
+would otherwise dominate it. Retention is owed.
+
+### platform
 
 ### hangfire
 

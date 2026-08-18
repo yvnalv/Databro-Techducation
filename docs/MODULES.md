@@ -16,10 +16,17 @@ Cross-cutting concerns shared by all modules. Deliberately thin; contains no bus
 * Result / error envelope and problem-details mapping.
 * `ICurrentUser`, `IClock`, `IUnitOfWork` abstractions.
 * Caching abstraction (Redis) and cache-key helpers.
-* Transactional outbox scaffolding and the in-process event mediator.
+* **Transactional outbox** ([ADR-0017](adr/0017-transactional-outbox.md)): `OutboxMessage`,
+  `OutboxInterceptor`, `OutboxProcessor<TContext>`, `OutboxRegistry` and
+  `IIntegrationEventHandler<T>`. The interceptor writes queue rows during the same `SaveChanges` as
+  the state change, so an effect and its cause commit together. **One table per module**, in that
+  module's schema — the row must be written by the same context to be in the same transaction.
+* **Email transport** ([ADR-0016](adr/0016-transactional-email-transport.md)): `IEmailSender` with
+  logging and SMTP implementations, selected by configuration.
 * Base EF Core conventions (GUID keys, soft delete, snake_case mapping).
 
-Owns: `outbox_messages`, shared conventions. Exposes: base abstractions. Emits: nothing.
+Owns: shared conventions and the outbox *shape* — each module owns its own `outbox_messages` table.
+Exposes: base abstractions. Emits: nothing.
 
 ---
 
@@ -189,8 +196,10 @@ Consumes (contract): **`ILessonContentReader`** from Content, for lesson bodies.
 
 Provides (contract): **`IModuleSearch`** — the courses segment of cross-module search (ADR-0014).
 
-Emits: `CoursePublished`, `CourseUnpublished`, `Enrolled`, `CourseCompleted`. Nothing consumes the
-last two yet; they are what the outbox will carry to certificates and completion email.
+Emits: `CoursePublished`, `CourseUnpublished`, `Enrolled` (internal), and **`CourseCompleted`**,
+which is the module's only integration event — registered as `learning.course-completed` and carried
+by Learning's own outbox to a completion email. The others stay internal until something needs them;
+opting in is a deliberate act, not a side effect (ADR-0017).
 
 ---
 

@@ -1,3 +1,4 @@
+using DataBro.Platform.Messaging;
 using DataBro.Platform.SharedKernel;
 
 namespace DataBro.Modules.Learning.Domain;
@@ -15,9 +16,19 @@ public sealed record EnrolledDomainEvent(Guid EnrollmentId, Guid UserId, Guid Co
 /// Raised once, on the transition to complete — never on a later save of an already-complete
 /// enrollment. Certificates and completion notifications hang off this, and both are things a
 /// learner must not receive twice.
+///
+/// <para>
+/// Also an <see cref="IIntegrationEvent"/>, which is what makes it cross the module boundary: the
+/// outbox writes a row for it in the same transaction as the completion, and Notification picks it
+/// up. Nothing else in this file opts in — the rest is Learning's own bookkeeping.
+/// </para>
 /// </summary>
 public sealed record CourseCompletedDomainEvent(
     Guid EnrollmentId,
     Guid UserId,
     Guid CourseId,
-    DateTimeOffset CompletedAt) : IDomainEvent;
+    DateTimeOffset CompletedAt) : IDomainEvent, IIntegrationEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    DateTimeOffset IIntegrationEvent.OccurredAt => CompletedAt;
+}
