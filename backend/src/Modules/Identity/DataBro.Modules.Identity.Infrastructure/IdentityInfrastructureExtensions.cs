@@ -86,7 +86,10 @@ public static class IdentityInfrastructureExtensions
         // shared Platform abstraction so consumers never reference this module.
         services.AddScoped<IUserDirectory, UserDirectory>();
 
-        services.AddScoped<IEmailSender, NoOpEmailSender>();
+        // The transport itself is registered once by the host (Platform.Email); Identity only says
+        // what its own emails look like.
+        services.Configure<IdentityEmailOptions>(configuration.GetSection(IdentityEmailOptions.SectionName));
+        services.AddScoped<IIdentityEmails, IdentityEmails>();
         services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
         services.AddHostedService<IdentityInitializer>();

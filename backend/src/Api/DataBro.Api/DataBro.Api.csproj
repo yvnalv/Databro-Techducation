@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\DataBro.Platform\DataBro.Platform.csproj" />
+    <ProjectReference Include="..\..\Shared\DataBro.Platform.Email\DataBro.Platform.Email.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\DataBro.Modules.Identity.Api\DataBro.Modules.Identity.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\DataBro.Modules.Identity.Infrastructure\DataBro.Modules.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Content\DataBro.Modules.Content.Api\DataBro.Modules.Content.Api.csproj" />

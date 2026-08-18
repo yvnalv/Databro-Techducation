@@ -189,6 +189,23 @@ Development applies pending migrations on startup. Deployed environments never d
 
 ---
 
+## Email in development
+
+Every outbound email is captured by **Mailpit** and delivered nowhere. Read them at
+**<http://localhost:8025>**.
+
+The API talks real SMTP to it (`Email:Provider=smtp`), so the whole path is exercised locally rather
+than stubbed — composing, sending, delivering, opening. Registering a user produces a confirmation
+message whose link is clickable and lands on `/verify-email` in the app.
+
+Running the API on the host instead of in Compose defaults to `Email:Provider=log`, which writes the
+message to the console. Point it at Mailpit with `Email:Smtp:Host=localhost` and `Port=1025` if you
+want the UI.
+
+Nothing relays outward. `MP_SMTP_AUTH_ACCEPT_ANY` means Mailpit accepts anything and forwards
+nothing, which is precisely the accident it is there to prevent.
+
+
 ## 6. Troubleshooting
 
 | Symptom | Cause and fix |

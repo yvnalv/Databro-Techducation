@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataBro.Platform\DataBro.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- No SMTP package. MailKit is the usual choice and was tried first, but every published
+         version - including the newest - carries GHSA-9j88-vvj5-vhgr, so there is no patched
+         release to move to. Taking an open moderate advisory into the build for a transport this
+         small is the wrong trade (CLAUDE.md rule 20), so this uses System.Net.Mail from the BCL:
+         fewer features, no dependency, and enough for SMTP submission.
+
+         Revisit if the transport ever needs what MailKit has that this lacks - OAuth2 to a mailbox,
+         or IMAP - by which point the advisory may also have a fix. -->
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

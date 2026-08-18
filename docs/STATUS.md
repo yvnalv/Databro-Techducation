@@ -175,17 +175,16 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **The transactional outbox — still waiting for a consumer, deliberately.** `Platform/Messaging` is
-   one marker interface, and domain events are raised into a list nothing reads. It was next on this
-   list and was skipped once already after checking: Redis is in compose but nothing caches,
-   `IEmailSender` is Identity-only and a no-op, and search needs no reindex now that it runs on
-   generated columns. Building it now would be the speculative infrastructure ADR-0014 avoided. The
-   trigger is a real second consumer — most likely a general email transport, so `CourseCompleted`
-   has somewhere to go.
+1. **The transactional outbox — now unblocked.** `Platform/Messaging` is one marker interface and
+   domain events are raised into a list nothing reads. It was skipped twice, correctly, for having no
+   consumer; [ADR-0016](adr/0016-transactional-email-transport.md) supplies one. `CourseCompleted` →
+   completion email is a real effect that must be reliable and may be eventually consistent, which is
+   the exact shape an outbox exists for.
 2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
    every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
-3. **A general email transport**, which is both a gap of its own (email verification is not enforced
-   because nothing can send mail) and the outbox's most likely first consumer.
+3. **Enforce email verification.** Unblocked by ADR-0016 but a change of its own: every existing
+   account, the seeded local admin included, is unconfirmed and would be locked out. Needs a
+   backfill or a grace period, and a "resend confirmation" endpoint that does not exist yet.
 4. Then **Assessment** (quizzes, attempts, scoring) as its own module.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
@@ -210,8 +209,9 @@ Independent of Phase 2:
   so `localhost:3000` and `localhost:3001` genuinely share one in development. In production the two
   apps are separate subdomains and the cookie needs an explicit parent `domain` — owed with the first
   real deploy, and not verifiable from here.
-* Email transport not wired — email verification not yet enforced on login
-  (`RequireConfirmedEmail=false`); the no-op sender logs the confirmation token.
+* **Email verification is not enforced** (`RequireConfirmedEmail=false`). The transport exists now
+  ([ADR-0016](adr/0016-transactional-email-transport.md)) and mail is delivered and clickable in
+  development via Mailpit; what remains is the account migration and a resend endpoint.
 * Social login (Google/GitHub) not yet implemented.
 * **Design pass complete for what exists**, matching the reference: sampled blue palette,
   pink→violet page-header gradient, navy footer. **Light mode only** — the earlier
@@ -266,7 +266,7 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **277 passing**: Content & Identity (173), Learning (71), Media (29),
+* `dotnet test` — **282 passing**: Content & Identity (178), Learning (71), Media (29),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
   directions.

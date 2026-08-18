@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Modules.Learning.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Modules.Learning.Tests", "tests\DataBro.Modules.Learning.Tests\DataBro.Modules.Learning.Tests.csproj", "{D1B06835-BB01-421C-82DF-E2F9180BAB7E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBro.Platform.Email", "src\Shared\DataBro.Platform.Email\DataBro.Platform.Email.csproj", "{EF502A28-6D03-4651-9017-FFA01BBB6CB2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -417,6 +419,18 @@ Global
 		{D1B06835-BB01-421C-82DF-E2F9180BAB7E}.Release|x64.Build.0 = Release|Any CPU
 		{D1B06835-BB01-421C-82DF-E2F9180BAB7E}.Release|x86.ActiveCfg = Release|Any CPU
 		{D1B06835-BB01-421C-82DF-E2F9180BAB7E}.Release|x86.Build.0 = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|x64.Build.0 = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Debug|x86.Build.0 = Debug|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|x64.ActiveCfg = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|x64.Build.0 = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|x86.ActiveCfg = Release|Any CPU
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -454,5 +468,6 @@ Global
 		{2D5EC137-C742-4E63-901A-1A29F3074A22} = {1811FD36-8D32-C900-604C-35B0137141EF}
 		{16D2E6ED-35E0-45F8-92F1-174CBF920CE5} = {1811FD36-8D32-C900-604C-35B0137141EF}
 		{D1B06835-BB01-421C-82DF-E2F9180BAB7E} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{EF502A28-6D03-4651-9017-FFA01BBB6CB2} = {C8E42992-5E42-0C2B-DBFE-AA848D06431C}
 	EndGlobalSection
 EndGlobal

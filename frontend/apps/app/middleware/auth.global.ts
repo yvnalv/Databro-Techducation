@@ -9,7 +9,9 @@
  * (docs/SECURITY.md §2). Its job is to send someone to the login screen instead of showing them a
  * dashboard that will only 401.
  */
-const PUBLIC_ROUTES = new Set(["/login"]);
+// `/verify-email` is public for the same reason `/login` is: the token in the link is the proof,
+// and a person arriving from their inbox has by definition not signed in yet.
+const PUBLIC_ROUTES = new Set(["/login", "/verify-email"]);
 
 export default defineNuxtRouteMiddleware(async (to) => {
   if (PUBLIC_ROUTES.has(to.path)) return;

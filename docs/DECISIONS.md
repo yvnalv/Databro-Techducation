@@ -23,6 +23,7 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0013](adr/0013-learning-curriculum-invariants.md) | Curriculum shape and its three invariants | Accepted |
 | [0014](adr/0014-search-across-modules.md) | Searching across modules: segmented per module, never blended | Accepted |
 | [0015](adr/0015-authenticated-app-hosts-both-audiences.md) | The authenticated app hosts both audiences; the boundary is indexability | Accepted |
+| [0016](adr/0016-transactional-email-transport.md) | Transactional email: SMTP behind a Platform abstraction, provider deferred | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 
@@ -30,7 +31,12 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 * LLM/embedding provider selection and abstraction specifics — Phase 3.
 * Payment provider specifics and entitlement model — Phase 3.
 * Search upgrade trigger and OpenSearch adoption — when FTS limits are hit.
-* Newsletter provider — end of Phase 1 / Phase 2.
+* Newsletter provider — end of Phase 1 / Phase 2. Transactional email is settled separately in
+  [0016](adr/0016-transactional-email-transport.md); a bulk/newsletter provider is a different
+  product with different deliverability needs.
+* **Deliverability provider** (Resend / Postmark / SES) — deferred by
+  [0016](adr/0016-transactional-email-transport.md) until there is a domain and a bounce rate to
+  care about. SMTP is the seam that survives the choice.
 * ~~Syntax highlighting strategy for code blocks (build-time e.g. Shiki vs. client-side)~~ —
   **decided and built.** Shiki, run on the server, with the result travelling in the page payload
   and the renderer doing a lookup rather than a computation. No highlighter reaches the browser

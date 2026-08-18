@@ -50,5 +50,13 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "failed": "Sign-in failed. Check your email and password."
+  },
+  "verify": {
+    "working": "Confirming your email…",
+    "confirmedTitle": "Email confirmed",
+    "confirmedBody": "Your address is verified. You can sign in now.",
+    "failedTitle": "That link did not work",
+    "failedBody": "It may have expired or already been used. Sign in and request a new one.",
+    "signIn": "Go to sign in"
   }
 }

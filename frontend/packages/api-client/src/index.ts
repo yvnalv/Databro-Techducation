@@ -205,6 +205,17 @@ export class ApiClient {
     });
   }
 
+  /**
+   * Confirms an email address from the link in a verification message.
+   *
+   * Deliberately unauthenticated: the token in the link *is* the proof, and requiring a session
+   * would mean a person who followed a link from their inbox had to sign in before they were
+   * allowed to finish signing up.
+   */
+  confirmEmail(userId: string, token: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>("/api/v1/auth/confirm-email", "POST", { userId, token });
+  }
+
   /** The signed-in user. Requires a bearer token, so it doubles as a session probe. */
   me(): Promise<UserProfile> {
     return this.request<UserProfile>("/api/v1/me");

@@ -65,6 +65,28 @@ services:
       timeout: 5s
       retries: 10
 
+  # Captures every outbound email instead of delivering it, with a web UI to read them. Development
+  # only, and the reason the API's email provider is `smtp` here rather than `log`: a verification
+  # link you can actually click beats a token pasted out of a log line.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: databro-mailpit
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+      # Everything is accepted; nothing leaves. Relaying from a dev box is exactly the accident this
+      # container exists to prevent.
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"  # SMTP submission
+      - "${MAILPIT_UI_PORT:-8025}:8025"    # Web UI
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # --- Application services (profile: apps) -------------------------------------------
   # Opt-in. Source is bind-mounted; both stacks watch and reload on change.
 
@@ -84,6 +106,8 @@ services:
       # warning instead, leaving uploads failing until it is restarted.
       minio:
         condition: service_healthy
+      mailpit:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: "8080"
@@ -98,6 +122,14 @@ services:
       Media__PublicBaseUrl: "http://localhost:${MINIO_PORT:-9000}"
       Media__AccessKey: ${MINIO_ROOT_USER:-databro}
       Media__SecretKey: ${MINIO_ROOT_PASSWORD:-databro_dev_pw}
+      # Real SMTP into Mailpit rather than the `log` provider, so the whole path is exercised
+      # locally: composing, sending, and a message you can open.
+      Email__Provider: "smtp"
+      Email__Smtp__Host: "mailpit"
+      Email__Smtp__Port: "1025"
+      # The confirmation link is clicked by a person in a browser, so it points at the app on the
+      # host, not at the container network.
+      Identity__Emails__AppBaseUrl: "http://localhost:${APP_PORT:-3001}"
     ports:
       - "${API_PORT:-5158}:8080"
     volumes:

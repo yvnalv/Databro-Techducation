@@ -132,10 +132,20 @@ aggregate — a union across modules cannot live inside one of them.
 
 ## Notification (P1-lite / P2)
 
-Outbound messaging. Minimal in P1 (transactional email: verification, password reset) via a
-provider-abstracted `IEmailSender`. Expands in P2 (newsletter, digests).
+Outbound messaging.
 
-Owns: `notifications`, `email_log`.
+**The transport is built and lives in Platform**, not here ([ADR-0016](adr/0016-transactional-email-transport.md)):
+`IEmailSender` in `Platform.Abstractions` with `LoggingEmailSender` and `SmtpEmailSender` in
+`Platform.Email`, selected by configuration. A transport is Platform's for the same reason `IClock`
+is — Learning must be able to send a completion email without depending on Identity or on a
+Notification module that does not exist.
+
+What a Notification *module* would add, and why it has not been built: a record of what was sent
+(`notifications`, `email_log`), preference management, and digests. None has a consumer yet, and the
+platform sends exactly one email.
+
+Composition stays with the module that raises the message: Identity owns `IIdentityEmails` and its
+templates, because Identity knows what a verification email is and the transport must not.
 
 ---
 

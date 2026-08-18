@@ -11,7 +11,7 @@ public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     IdentityModuleDbContext db,
     JwtTokenService tokenService,
-    IEmailSender emailSender) : IAuthService
+    IIdentityEmails emails) : IAuthService
 {
     private static readonly Error InvalidCredentials =
         new("unauthenticated", "Invalid email or password.");
@@ -34,7 +34,7 @@ public sealed class AuthService(
         await userManager.AddToRoleAsync(user, Roles.Default);
 
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        await emailSender.SendEmailConfirmationAsync(user.Email!, user.Id, token, ct);
+        await emails.SendEmailConfirmationAsync(user.Email!, user.DisplayName, user.Id, token, ct);
 
         return Result.Success(await BuildProfileAsync(user));
     }

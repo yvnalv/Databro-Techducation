@@ -4,10 +4,15 @@ using DataBro.Modules.Identity.Api;
 using DataBro.Modules.Learning.Api;
 using DataBro.Modules.Media.Api;
 using DataBro.Modules.Search.Api;
+using DataBro.Platform.Email;
 using Hangfire;
 using Hangfire.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// One transactional email transport for the whole host, selected by configuration (rule 14). The
+// modules compose their own messages; only this line knows how they travel.
+builder.Services.AddPlatformEmail(builder.Configuration, builder.Environment);
 
 // ---- Module registration (composition root) ----
 // Each module owns its own DI wiring; the host only composes them.

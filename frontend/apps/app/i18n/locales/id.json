@@ -50,5 +50,13 @@
     "submit": "Masuk",
     "submitting": "Sedang masuk…",
     "failed": "Gagal masuk. Periksa email dan kata sandi Anda."
+  },
+  "verify": {
+    "working": "Mengonfirmasi email Anda…",
+    "confirmedTitle": "Email dikonfirmasi",
+    "confirmedBody": "Alamat Anda terverifikasi. Anda dapat masuk sekarang.",
+    "failedTitle": "Tautan itu tidak berfungsi",
+    "failedBody": "Mungkin sudah kedaluwarsa atau telah digunakan. Masuk dan minta yang baru.",
+    "signIn": "Ke halaman masuk"
   }
 }

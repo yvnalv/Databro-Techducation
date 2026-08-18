@@ -1,5 +1,48 @@
 # DataBro Changelog
 
+## [2026-08-18 14:33:12 UTC]
+
+CHG-0045 — Transactional email, and the link in it works (ADR-0016)
+
+The platform can send mail. It could not before: `IEmailSender` lived in Identity, described exactly
+one message, and its only implementation logged a token and returned.
+
+- **[ADR-0016](docs/adr/0016-transactional-email-transport.md)**: a provider-agnostic `IEmailSender`
+  in `Platform.Abstractions`, two implementations in a new `Platform.Email`, selected by
+  configuration (rule 14). A transport belongs to Platform for the same reason `IClock` does —
+  Learning must be able to send a completion email without depending on Identity.
+- **`System.Net.Mail`, and no SMTP package.** MailKit is the conventional choice and was tried first;
+  every published version, including the newest, carries GHSA-9j88-vvj5-vhgr, so there is no patched
+  release to move to. Taking an open moderate advisory into the build for a transport this small is
+  the wrong trade (rule 20). Four versions were checked before switching, and the reasoning is in the
+  csproj so the next person does not repeat the search.
+- **A SaaS provider is deliberately not chosen.** SMTP is the lowest common denominator every one of
+  them speaks, so it commits to nothing. That choice waits for a domain, SPF/DKIM and a bounce rate.
+- **Mailpit in `docker-compose`**, so email is *visible* locally at `http://localhost:8025` rather
+  than pasted out of a log line. The API talks real SMTP to it, which means the whole path —
+  composing, sending, delivering, opening — is exercised in development rather than stubbed.
+- **The confirmation token is URL-encoded**, which is the bug this would otherwise have shipped with:
+  ASP.NET Core Identity's tokens are base64 and routinely contain `+` and `/`, and an unencoded `+`
+  arrives at the server as a space. It fails for a fraction of users and works for whoever tests it
+  once. A test pins it, and the live message shows `%2F` and `%2B`.
+- **The display name is HTML-encoded into the body.** It is user input going into markup, and an
+  email client is a HTML renderer like any other. Verified with a registration whose display name was
+  `Ada <b>Lovelace</b>`: the delivered HTML contains `&lt;b&gt;` and no raw tag.
+- Every message is **multipart with a real text part**, and the link appears in full there — a text
+  client cannot click a button, and HTML-only is a spam signal.
+- **`/verify-email` in the app**, because the email would otherwise link at a 404. Public, like
+  `/login`: the token in the link is the proof, and demanding a session would mean signing in before
+  being allowed to finish signing up. Every failure reads the same, so a stolen link learns nothing.
+- An unknown provider name **throws at startup** rather than falling back to `log`, which would hide
+  a typo in production while mail went nowhere. Selecting `log` outside development logs a warning
+  instead of refusing to start — email should not take a healthy deployment offline.
+- **Verification is still not enforced.** The transport unblocks it; turning it on is its own change,
+  because every existing account including the seeded local admin would be locked out until confirmed.
+- 5 new tests (Content & Identity 173 → **178**; backend 277 → **282**). 6 new strings in both
+  locales (48 keys each).
+- **This unblocks the outbox**, which has now been correctly skipped twice for having no consumer.
+  `CourseCompleted` → completion email is a real one.
+
 ## [2026-08-18 14:08:39 UTC]
 
 CHG-0044 — A curator UI for learning paths
