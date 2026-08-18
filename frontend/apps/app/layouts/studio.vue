@@ -22,6 +22,7 @@ const navigation = computed(() => [
   { label: t("nav.courses"), to: "/studio/courses" },
   { label: t("nav.paths"), to: "/studio/learning-paths" },
   { label: t("nav.lessons"), to: "/studio/lessons" },
+  { label: t("nav.quizzes"), to: "/studio/quizzes" },
   { label: t("nav.taxonomy"), to: "/studio/taxonomy" },
 ]);
 

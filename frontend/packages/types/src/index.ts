@@ -426,6 +426,90 @@ export interface CourseSummary {
   publishedAt?: string;
 }
 
+// ---- Assessment (ADR-0018, AS-1 … AS-9) ----
+
+export type QuestionType = "singlechoice" | "multiplechoice" | "truefalse";
+export type QuizStatus = "draft" | "published" | "unpublished";
+
+/**
+ * A choice as the person answering sees it.
+ *
+ * **There is no correctness field, and that is the design** (AS-1): the API has a separate shape for
+ * authoring, so this one has nothing to leak into. Do not add one here.
+ */
+export interface QuizChoice {
+  id: string;
+  text: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  prompt: string;
+  type: QuestionType;
+  points: number;
+  choices: QuizChoice[];
+}
+
+/** A quiz as a learner receives it. Published only, and carrying no answers. */
+export interface Quiz {
+  id: string;
+  lessonId: string;
+  title: string;
+  passingScore: number;
+  totalPoints: number;
+  questions: QuizQuestion[];
+}
+
+/** The authoring counterpart. Carries the answer key; never fetched by learner-facing code. */
+export interface AuthoringQuizChoice extends QuizChoice {
+  isCorrect: boolean;
+}
+
+export interface AuthoringQuizQuestion {
+  id: string;
+  prompt: string;
+  type: QuestionType;
+  points: number;
+  explanation?: string | null;
+  choices: AuthoringQuizChoice[];
+}
+
+export interface AuthoringQuiz {
+  id: string;
+  lessonId: string;
+  title: string;
+  status: QuizStatus;
+  passingScore: number;
+  totalPoints: number;
+  publishedAt?: string;
+  questions: AuthoringQuizQuestion[];
+}
+
+/**
+ * One question's outcome. Present only on a **submitted** attempt (AS-2) — before that the answers
+ * would simply be the answers.
+ */
+export interface AttemptAnswerResult {
+  questionId: string;
+  selectedChoiceIds: string[];
+  correctChoiceIds: string[];
+  pointsEarned: number;
+  explanation?: string | null;
+}
+
+export interface QuizAttempt {
+  id: string;
+  quizId: string;
+  startedAt: string;
+  submittedAt?: string | null;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  passed: boolean;
+  /** Empty until submitted. */
+  results: AttemptAnswerResult[];
+}
+
 // ---- Enrollment & progress (LN-6 … LN-11) ----
 
 /**

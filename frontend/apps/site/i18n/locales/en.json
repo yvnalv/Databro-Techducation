@@ -132,6 +132,20 @@
     "markIncomplete": "Mark incomplete",
     "saveFailed": "That could not be saved. Please try again."
   },
+  "quiz": {
+    "pointsAndPass": "{points} points · {pass}% to pass",
+    "signInToTake": "Sign in to take this quiz.",
+    "intro": "no questions | 1 question | {count} questions",
+    "start": "Start quiz",
+    "selectAll": "Select all that apply.",
+    "submit": "Submit answers",
+    "retake": "Try again",
+    "answered": "{answered} of {total} answered",
+    "passed": "Passed",
+    "notPassed": "Not passed yet",
+    "scoreLine": "{score} of {total} points ({percent}%)",
+    "saveFailed": "That could not be submitted. Please try again."
+  },
   "paths": {
     "eyebrow": "Learning paths",
     "navLabel": "Paths",

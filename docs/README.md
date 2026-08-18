@@ -8,6 +8,7 @@ This is the documentation index. The master project instructions live in the roo
 * New to the project? Read [../CLAUDE.md](../CLAUDE.md), then [PRD.md](PRD.md), then
   [ARCHITECTURE.md](ARCHITECTURE.md).
 * Want current state / what's next? See [STATUS.md](STATUS.md).
+* Want the list of everything still owed, and by whom? See [OPEN_ITEMS.md](OPEN_ITEMS.md).
 * Setting up your machine? See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 
 ## Index
@@ -16,6 +17,8 @@ This is the documentation index. The master project instructions live in the roo
 * [PRD.md](PRD.md) — product requirements, personas, scope.
 * [ROADMAP.md](ROADMAP.md) — phased delivery plan.
 * [STATUS.md](STATUS.md) — where we are, what's next.
+* [OPEN_ITEMS.md](OPEN_ITEMS.md) — everything outstanding, grouped by who has to act: decisions
+  awaiting the product owner, manual work, surfaces that were never built, and operational debt.
 
 ### Architecture & Technical Spine
 * [ARCHITECTURE.md](ARCHITECTURE.md) — modular monolith, clean architecture, communication.

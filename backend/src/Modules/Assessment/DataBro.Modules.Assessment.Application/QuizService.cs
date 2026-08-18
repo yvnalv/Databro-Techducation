@@ -25,6 +25,17 @@ public sealed class QuizService(IQuizRepository quizzes, IClock clock)
         return quiz?.ToAuthoringDto();
     }
 
+    /// <summary>
+    /// The authoring view of a lesson's quiz, whatever its status. Lets a builder answer "does this
+    /// lesson have one yet" in a single request rather than one per lesson on load.
+    /// </summary>
+    public async Task<AuthoringQuizDto?> GetForAuthoringByLessonAsync(
+        Guid lessonId, CancellationToken ct = default)
+    {
+        var quiz = await quizzes.GetForLessonAsync(lessonId, ct);
+        return quiz?.ToAuthoringDto();
+    }
+
     public async Task<PagedResult<AuthoringQuizDto>> ListAllAsync(
         PageRequest page, CancellationToken ct = default)
     {

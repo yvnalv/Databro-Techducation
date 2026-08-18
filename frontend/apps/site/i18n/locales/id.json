@@ -132,6 +132,20 @@
     "markIncomplete": "Tandai belum selesai",
     "saveFailed": "Gagal menyimpan. Silakan coba lagi."
   },
+  "quiz": {
+    "pointsAndPass": "{points} poin · lulus {pass}%",
+    "signInToTake": "Masuk untuk mengerjakan kuis ini.",
+    "intro": "tidak ada pertanyaan | 1 pertanyaan | {count} pertanyaan",
+    "start": "Mulai kuis",
+    "selectAll": "Pilih semua yang sesuai.",
+    "submit": "Kirim jawaban",
+    "retake": "Coba lagi",
+    "answered": "{answered} dari {total} terjawab",
+    "passed": "Lulus",
+    "notPassed": "Belum lulus",
+    "scoreLine": "{score} dari {total} poin ({percent}%)",
+    "saveFailed": "Gagal mengirim. Silakan coba lagi."
+  },
   "paths": {
     "eyebrow": "Jalur pembelajaran",
     "navLabel": "Jalur",

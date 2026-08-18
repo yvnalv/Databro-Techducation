@@ -20,6 +20,9 @@ import type {
   LessonContentSummary,
   LessonPage,
   LearningPath,
+  AuthoringQuiz,
+  Quiz,
+  QuizAttempt,
   Paged,
   PageMeta,
   MediaAsset,
@@ -507,6 +510,137 @@ export class ApiClient {
     return this.request<LessonPage>(
       `/api/v1/courses/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(lessonSlug)}`,
     );
+  }
+
+  // ---- Assessment: taking a quiz (ADR-0018) ----
+  //
+  // Nothing on this path carries the answer key. `Quiz` has no correctness field to deserialise
+  // into, and `QuizAttempt.results` is empty until the attempt is submitted (AS-1, AS-2).
+
+  /** The published quiz for a lesson, without answers. 404s when the lesson has none. */
+  getLessonQuiz(lessonId: string): Promise<Quiz> {
+    return this.request<Quiz>(`/api/v1/lessons/${encodeURIComponent(lessonId)}/quiz`);
+  }
+
+  /** Starts an attempt, or resumes the open one — a reload is not a decision to discard answers. */
+  startAttempt(lessonId: string): Promise<QuizAttempt> {
+    return this.json<QuizAttempt>(
+      `/api/v1/lessons/${encodeURIComponent(lessonId)}/quiz/attempts`, "POST");
+  }
+
+  listAttempts(lessonId: string): Promise<QuizAttempt[]> {
+    return this.request<QuizAttempt[]>(
+      `/api/v1/lessons/${encodeURIComponent(lessonId)}/quiz/attempts`);
+  }
+
+  /**
+   * Submits selections. Carries **no score** — scoring happens server-side from the stored answer
+   * key (AS-3), so there is nothing here to fabricate.
+   */
+  submitAttempt(
+    attemptId: string,
+    answers: Record<string, string[]>,
+  ): Promise<QuizAttempt> {
+    return this.json<QuizAttempt>(
+      `/api/v1/me/attempts/${encodeURIComponent(attemptId)}/submit`, "POST", { answers });
+  }
+
+  // ---- Assessment: authoring (Content.Edit / Content.Publish) ----
+
+  async listAuthoringQuizzes(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<Paged<AuthoringQuiz>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<AuthoringQuiz[]>(
+      `/api/v1/authoring/quizzes${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  getAuthoringQuiz(id: string): Promise<AuthoringQuiz> {
+    return this.request<AuthoringQuiz>(`/api/v1/authoring/quizzes/${encodeURIComponent(id)}`);
+  }
+
+  /**
+   * The quiz for a lesson, whatever its status. 404s when there is none.
+   *
+   * Exists so a curriculum builder can answer "does this lesson have a quiz" in one request when the
+   * author clicks, rather than one request per lesson on load.
+   */
+  getAuthoringQuizForLesson(lessonId: string): Promise<AuthoringQuiz> {
+    return this.request<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/by-lesson/${encodeURIComponent(lessonId)}`);
+  }
+
+  createQuiz(input: { lessonId: string; title: string; passingScore?: number }): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>("/api/v1/authoring/quizzes", "POST", input);
+  }
+
+  updateQuiz(id: string, input: { title: string; passingScore: number }): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(`/api/v1/authoring/quizzes/${encodeURIComponent(id)}`, "PATCH", input);
+  }
+
+  // Every mutation returns the whole quiz, so the builder replaces its state rather than patching.
+
+  addQuestion(id: string, input: { prompt: string; type: string; points?: number }): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions`, "POST", input);
+  }
+
+  updateQuestion(
+    id: string,
+    questionId: string,
+    input: { prompt: string; points: number; explanation?: string | null },
+  ): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions/${encodeURIComponent(questionId)}`,
+      "PATCH", input);
+  }
+
+  removeQuestion(id: string, questionId: string): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions/${encodeURIComponent(questionId)}`,
+      "DELETE");
+  }
+
+  addChoice(id: string, questionId: string, text: string): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions/${encodeURIComponent(questionId)}/choices`,
+      "POST", { text });
+  }
+
+  removeChoice(id: string, questionId: string, choiceId: string): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions/${encodeURIComponent(questionId)}/choices/${encodeURIComponent(choiceId)}`,
+      "DELETE");
+  }
+
+  /** Sets the answer key **as a whole** — the API refuses two correct answers on a single-choice question. */
+  setCorrectChoices(id: string, questionId: string, correctChoiceIds: string[]): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/questions/${encodeURIComponent(questionId)}/answer`,
+      "PUT", { correctChoiceIds });
+  }
+
+  publishQuiz(id: string): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(`/api/v1/authoring/quizzes/${encodeURIComponent(id)}/publish`, "POST");
+  }
+
+  unpublishQuiz(id: string): Promise<AuthoringQuiz> {
+    return this.json<AuthoringQuiz>(`/api/v1/authoring/quizzes/${encodeURIComponent(id)}/unpublish`, "POST");
   }
 
   // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----

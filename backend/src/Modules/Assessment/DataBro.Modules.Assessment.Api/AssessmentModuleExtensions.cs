@@ -104,6 +104,13 @@ public static class AssessmentModuleExtensions
             ApiEnvelope.OkOrNotFound(await service.GetForAuthoringAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentEdit));
 
+        // "Does this lesson have a quiz yet?" — one request, so a curriculum builder does not make
+        // one per lesson just to decide what to label a button.
+        group.MapGet("/by-lesson/{lessonId:guid}", async (
+            Guid lessonId, QuizService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.GetForAuthoringByLessonAsync(lessonId, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
         group.MapPatch("/{id:guid}", async (
             Guid id, UpdateQuizRequest request, QuizService service, CancellationToken ct) =>
             ApiEnvelope.From(await service.UpdateAsync(id, request, ct)))

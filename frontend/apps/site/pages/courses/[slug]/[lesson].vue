@@ -139,6 +139,12 @@ useHead(() => ({
       <ContentRenderer :document="{ version: 1, blocks: lesson.blocks }" :highlight-code="highlightCode" />
     </div>
 
+    <!-- Between the body and the progress control: check what you read, then mark it done. Renders
+         nothing at all when the lesson has no quiz. -->
+    <div class="mt-12">
+      <LessonQuiz :key="`quiz-${lesson.id}`" :lesson-id="lesson.id" :return-to="path" />
+    </div>
+
     <!-- Below the body: the natural moment to mark something done is after reading it. -->
     <div class="mt-12">
       <LessonProgressBar

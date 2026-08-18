@@ -168,6 +168,35 @@ async function removeModule(moduleId: string, lessonCount: number) {
   await run((api) => api.removeCourseModule(course.value!.id, moduleId));
 }
 
+/**
+ * Opens a lesson's quiz, creating one if it has none.
+ *
+ * Create-or-open rather than two separate affordances: whether a quiz exists is not something the
+ * author is thinking about, and asking the API once per lesson on page load — just to decide what to
+ * label a button — would be an N+1 to avoid a click.
+ *
+ * A 409 means it already exists, which is the ordinary path on the second visit.
+ */
+async function openQuiz(lessonId: string, lessonTitle: string) {
+  formError.value = null;
+  busy.value = true;
+
+  try {
+    const existing = await withAuth((api) =>
+      api.getAuthoringQuizForLesson(lessonId).catch(() => null),
+    );
+
+    const quiz = existing
+      ?? (await withAuth((api) => api.createQuiz({ lessonId, title: `${lessonTitle} — quiz` })));
+
+    await router.push(`/studio/quizzes/${quiz.id}`);
+  } catch (error) {
+    formError.value = describe(error);
+  } finally {
+    busy.value = false;
+  }
+}
+
 async function removeLesson(moduleId: string, lessonId: string) {
   // Worth confirming even though it is cheap to undo: the wording is what tells an author the body
   // survives, which is not obvious from a delete button.
@@ -352,6 +381,17 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
 
                 <DbChip v-if="!lesson.isPublished" tone="warning">body draft</DbChip>
                 <span class="text-xs tabular-nums text-ink-subtle">{{ lesson.estimatedMinutes }} min</span>
+
+                <!-- A quiz binds to the *curriculum* lesson, not to the content body, so this is the
+                     only screen that knows the right id. Create-or-open in one click rather than
+                     asking every lesson on load whether it has one. -->
+                <button
+                  type="button"
+                  class="rounded border border-line px-2 py-1 text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+                  :disabled="busy"
+                  :aria-label="`Quiz for ${lesson.title}`"
+                  @click="openQuiz(lesson.id, lesson.title)"
+                >Quiz</button>
 
                 <button
                   type="button"

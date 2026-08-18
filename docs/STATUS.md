@@ -1,7 +1,10 @@
 # DataBro — Status
 
-Snapshot of where the project is, what's next, and what's open. Update this with every meaningful
-milestone.
+Snapshot of where the project is and what's next. Update this with every meaningful milestone.
+
+**Everything outstanding lives in [OPEN_ITEMS.md](OPEN_ITEMS.md)**, grouped by who has to act —
+decisions awaiting the product owner, manual work, surfaces that were never built, and operational
+debt. This file describes progress; that one describes what is owed.
 
 Last updated: 2026-08-18.
 

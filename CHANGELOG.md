@@ -1,5 +1,47 @@
 # DataBro Changelog
 
+## [2026-08-18 16:56:03 UTC]
+
+CHG-0050 — Quiz surfaces, and an open-items register
+
+Gives the Assessment module the surfaces it shipped without (CHG-0049), which is the third time on
+this project a module has landed with no way to reach it.
+
+> Written while the build tooling was unavailable and held uncommitted until it returned. Verified
+> before committing rather than after: 312 backend tests, 90 frontend, lint and typecheck clean, and
+> the whole flow walked on the running stack. One real defect surfaced — an unused `DbChip` import in
+> `LessonQuiz.vue` that failed lint — which is exactly the argument for not committing on trust.
+
+- **`/studio/quizzes`** — a list, and a builder with questions, choices, the answer key, points and
+  publishing.
+- **The entry point is the course builder**, a **Quiz** button per lesson row, because a quiz binds
+  to the *curriculum* lesson id and not the content-body id — that screen is the only one that knows
+  the right one. It is create-or-open in a single click, backed by a new
+  `GET /api/v1/authoring/quizzes/by-lesson/{lessonId}`: asking once when the author clicks beats one
+  request per lesson on load just to decide what to label a button.
+- **The answer-key control makes the invalid state unreachable rather than validated.** A radio group
+  on single-choice and true/false, checkboxes only where several answers are genuinely allowed. The
+  API refuses two correct choices on a single-choice question; the UI makes it impossible to ask.
+- Each question shows inline what would block publishing — *"No correct answer set"*, *"Needs at
+  least two choices"* — so an author does not press Publish to find out.
+- **`LessonQuiz` on the site**, between the lesson body and the progress control: check what you
+  read, then mark it done. Client-only and secondary, like the progress bar — a lesson with no quiz,
+  or a signed-out reader, sees nothing extra rather than an error.
+- Nothing in the learner component can display a correct answer before submission because nothing in
+  it *has* one: the payload has no correctness field (AS-1) and `results` is empty until the attempt
+  closes (AS-2). The guarantee is upstream in the types, not in this component's discipline.
+- 12 site locale keys + 1 nav key, both locales.
+- Verified on the running stack: `by-lesson` 404s before a quiz exists and resolves after, so the
+  button label is driven by one request rather than guessed; publishing is refused (422) until every
+  question has an answer key, which is what the builder's disabled state mirrors; the learner payload
+  contains no `isCorrect`; an open attempt has empty `results`; and the lesson page's server-rendered
+  HTML contains no quiz data at all, signed in or out.
+- **[OPEN_ITEMS.md](docs/OPEN_ITEMS.md)** — everything outstanding, grouped by who has to act:
+  4 decisions awaiting the product owner, 2 manual tasks, 1 surface still unbuilt, 5 scope items,
+  6 pieces of operational debt. Linked from `docs/README.md` and `STATUS.md`. It also records the two
+  habits it exists to enforce: build the surface in the same slice as the module, and check a doc
+  against the running API before trusting it.
+
 ## [2026-08-18 16:10:45 UTC]
 
 CHG-0049 — The Assessment module (ADR-0018)
