@@ -104,6 +104,13 @@ public static class AssessmentModuleExtensions
             ApiEnvelope.OkOrNotFound(await service.GetForAuthoringAsync(id, ct)))
             .RequireAuthorization(Perm(Permissions.ContentEdit));
 
+        // Who has taken this quiz and how they scored (U-1). A read for the author, so it sits behind
+        // the same editorial permission as the rest of authoring — never the learner path, which only
+        // ever shows a learner their own attempts.
+        group.MapGet("/{id:guid}/attempts", async (Guid id, QuizService service, CancellationToken ct) =>
+            ApiEnvelope.OkOrNotFound(await service.ListAttemptsAsync(id, ct)))
+            .RequireAuthorization(Perm(Permissions.ContentEdit));
+
         // "Does this lesson have a quiz yet?" — one request, so a curriculum builder does not make
         // one per lesson just to decide what to label a button.
         group.MapGet("/by-lesson/{lessonId:guid}", async (

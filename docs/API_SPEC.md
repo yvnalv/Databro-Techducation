@@ -354,6 +354,8 @@ so there is no score field to fabricate. Questions are scored all-or-nothing (AS
 POST   /api/v1/authoring/quizzes                                              create draft
 GET    /api/v1/authoring/quizzes                                              all quizzes
 GET    /api/v1/authoring/quizzes/{id}                                         includes the answer key
+GET    /api/v1/authoring/quizzes/by-lesson/{lessonId}                         "does this lesson have one?"
+GET    /api/v1/authoring/quizzes/{id}/attempts                                submitted attempts, no answer key
 PATCH  /api/v1/authoring/quizzes/{id}                                         { title, passingScore }
 POST   /api/v1/authoring/quizzes/{id}/questions                               { prompt, type, points }
 PATCH  /api/v1/authoring/quizzes/{id}/questions/{questionId}
@@ -371,6 +373,12 @@ use. The answer key is set **as a whole** rather than toggled per choice, so "tw
 single-choice question" is not a state an author can pass through. Publishing requires every question
 to have at least two choices and one correct answer (AS-5): an unanswerable question is a trap, not an
 incomplete offering.
+
+The attempts read (`Content.Edit`) is a roll-up for the author's review screen: one row per submitted
+attempt — learner (resolved through `IUserDirectory`), score and pass/fail — and deliberately **no
+per-question selections and no answer key**. In-progress attempts are omitted; they have no score to
+review. It is the authoring counterpart to the learner's `/api/v1/lessons/{lessonId}/quiz/attempts`,
+which only ever returns the caller's own attempts.
 
 ### Progress (learner; any authenticated user)
 ```

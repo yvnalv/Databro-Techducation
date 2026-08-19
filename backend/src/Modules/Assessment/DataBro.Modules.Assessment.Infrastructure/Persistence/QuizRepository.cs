@@ -52,6 +52,14 @@ internal sealed class QuizAttemptRepository(AssessmentDbContext db) : IQuizAttem
             .OrderByDescending(a => a.StartedAt)
             .ToListAsync(ct);
 
+    // No answer graph: the review is a roll-up of scores, so loading each attempt's selections would
+    // be paying for a column the summary never reads.
+    public async Task<IReadOnlyList<QuizAttempt>> ListForQuizAsync(Guid quizId, CancellationToken ct = default)
+        => await db.Attempts
+            .Where(a => a.QuizId == quizId && a.SubmittedAt != null)
+            .OrderByDescending(a => a.SubmittedAt)
+            .ToListAsync(ct);
+
     public Task<QuizAttempt?> GetOpenAttemptAsync(Guid userId, Guid quizId, CancellationToken ct = default)
         => Full
             .Where(a => a.UserId == userId && a.QuizId == quizId && a.SubmittedAt == null)

@@ -23,6 +23,7 @@ import type {
   AuthoringQuiz,
   Quiz,
   QuizAttempt,
+  QuizAttemptSummary,
   Paged,
   PageMeta,
   MediaAsset,
@@ -641,6 +642,12 @@ export class ApiClient {
 
   unpublishQuiz(id: string): Promise<AuthoringQuiz> {
     return this.json<AuthoringQuiz>(`/api/v1/authoring/quizzes/${encodeURIComponent(id)}/unpublish`, "POST");
+  }
+
+  /** Submitted attempts at a quiz, newest first — the author's review screen (U-1). */
+  listQuizAttempts(id: string): Promise<QuizAttemptSummary[]> {
+    return this.request<QuizAttemptSummary[]>(
+      `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/attempts`);
   }
 
   // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----

@@ -33,6 +33,13 @@ public interface IQuizAttemptRepository
         Guid userId, Guid quizId, CancellationToken ct = default);
 
     /// <summary>
+    /// Every <b>submitted</b> attempt at one quiz, across all learners, newest first — the author's
+    /// review of who has been assessed. In-progress attempts are excluded: they have no score to
+    /// review and are transient, resumed on the next page load rather than recorded.
+    /// </summary>
+    Task<IReadOnlyList<QuizAttempt>> ListForQuizAsync(Guid quizId, CancellationToken ct = default);
+
+    /// <summary>
     /// The learner's open attempt at a quiz, if any. Starting a quiz twice should resume rather than
     /// abandon — a page reload is not a decision to throw away answers.
     /// </summary>

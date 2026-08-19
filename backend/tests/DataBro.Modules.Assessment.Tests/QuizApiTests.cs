@@ -266,6 +266,94 @@ public class QuizApiTests(AssessmentApiFactory factory) : IClassFixture<Assessme
                 new { answers = new Dictionary<Guid, Guid[]>() })).StatusCode);
     }
 
+    // ---- Attempt review (U-1) ----
+
+    [Fact]
+    public async Task Attempt_review_lists_every_submitted_attempt_with_its_score()
+    {
+        var (editor, quizId, lessonId, key) = await SeedQuizAsync();
+
+        // One learner passes, another fails, so the review has both outcomes to show.
+        var winner = await LearnerAsync();
+        var winnerAttempt = (await ReadAsync(await winner.PostAsync(
+            $"/api/v1/lessons/{lessonId}/quiz/attempts", null))).GetProperty("data").GetProperty("id").GetGuid();
+        (await winner.PostAsJsonAsync($"/api/v1/me/attempts/{winnerAttempt}/submit",
+            new { answers = key.ToDictionary(k => k.QuestionId, k => new[] { k.CorrectChoiceId }) }))
+            .EnsureSuccessStatusCode();
+
+        var loser = await LearnerAsync();
+        var loserAttempt = (await ReadAsync(await loser.PostAsync(
+            $"/api/v1/lessons/{lessonId}/quiz/attempts", null))).GetProperty("data").GetProperty("id").GetGuid();
+        (await loser.PostAsJsonAsync($"/api/v1/me/attempts/{loserAttempt}/submit",
+            new { answers = key.ToDictionary(k => k.QuestionId, k => new[] { k.WrongChoiceId }) }))
+            .EnsureSuccessStatusCode();
+
+        var review = (await ReadAsync(await editor.GetAsync(
+            $"/api/v1/authoring/quizzes/{quizId}/attempts"))).GetProperty("data").EnumerateArray().ToList();
+
+        Assert.Equal(2, review.Count);
+        Assert.All(review, a => Assert.False(string.IsNullOrWhiteSpace(a.GetProperty("learnerName").GetString())));
+        Assert.Contains(review, a => a.GetProperty("passed").GetBoolean());
+        Assert.Contains(review, a => !a.GetProperty("passed").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Attempt_review_omits_an_in_progress_attempt()
+    {
+        // A started-but-unsubmitted attempt has no score to review and is transient — it must not
+        // appear as though someone was assessed.
+        var (editor, quizId, lessonId, _) = await SeedQuizAsync();
+
+        var learner = await LearnerAsync();
+        (await learner.PostAsync($"/api/v1/lessons/{lessonId}/quiz/attempts", null)).EnsureSuccessStatusCode();
+
+        var review = (await ReadAsync(await editor.GetAsync(
+            $"/api/v1/authoring/quizzes/{quizId}/attempts"))).GetProperty("data").EnumerateArray().ToList();
+
+        Assert.Empty(review);
+    }
+
+    [Fact]
+    public async Task Attempt_review_carries_no_answer_selections()
+    {
+        // The review is a roll-up of outcomes, not a second answer key. The bytes must not carry the
+        // per-question selections a learner made, however the summary happens to be shaped.
+        var (editor, quizId, lessonId, key) = await SeedQuizAsync();
+
+        var learner = await LearnerAsync();
+        var attemptId = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/lessons/{lessonId}/quiz/attempts", null))).GetProperty("data").GetProperty("id").GetGuid();
+        (await learner.PostAsJsonAsync($"/api/v1/me/attempts/{attemptId}/submit",
+            new { answers = key.ToDictionary(k => k.QuestionId, k => new[] { k.CorrectChoiceId }) }))
+            .EnsureSuccessStatusCode();
+
+        var raw = await (await editor.GetAsync($"/api/v1/authoring/quizzes/{quizId}/attempts"))
+            .Content.ReadAsStringAsync();
+
+        Assert.DoesNotContain("selectedChoiceIds", raw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("correctChoiceIds", raw, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Attempt_review_404s_for_an_unknown_quiz()
+    {
+        var editor = await EditorAsync();
+
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await editor.GetAsync($"/api/v1/authoring/quizzes/{Guid.NewGuid()}/attempts")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Attempt_review_requires_an_editorial_permission()
+    {
+        // A learner may take a quiz but never see who else did — the review is an authoring read.
+        var (_, quizId, _, _) = await SeedQuizAsync();
+        var learner = await LearnerAsync();
+
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await learner.GetAsync($"/api/v1/authoring/quizzes/{quizId}/attempts")).StatusCode);
+    }
+
     // ---- Publishing ----
 
     [Fact]

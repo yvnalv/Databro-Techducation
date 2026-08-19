@@ -1,5 +1,39 @@
 # DataBro Changelog
 
+## [2026-08-19 10:29:56 UTC]
+
+CHG-0051 — Quiz attempt review in the CMS (U-1)
+
+Closes the last unreachable surface the register was tracking: a quiz could be authored and taken,
+but nothing showed who had taken it. The same pattern learning paths (CHG-0043 → CHG-0044) and the
+quiz surfaces themselves went through — a module reachable in one direction only.
+
+> Verified before committing, not after: backend builds clean, 317 backend tests pass (5 new), the
+> frontend typechecks, and the screen was driven end to end in a browser against the running stack —
+> the review lists two real submitted attempts with the learner resolved to a name, and 404s for an
+> unknown quiz.
+
+- **`GET /api/v1/authoring/quizzes/{id}/attempts`** — every *submitted* attempt at a quiz, newest
+  first, behind `Content.Edit` like the rest of authoring. In-progress attempts are excluded: they
+  have no score to review and are resumed rather than recorded.
+- **A roll-up, never a paper.** The summary carries score and pass/fail only — no per-question
+  selections and no answer key. An author reviewing outcomes does not need, and is not sent, the
+  distractor a learner fell for. A test asserts the bytes carry neither `selectedChoiceIds` nor
+  `correctChoiceIds`, the same raw-JSON discipline the learner path uses.
+- **The learner's name is resolved through `IUserDirectory`** (Platform), the batch-shaped contract
+  Content already uses for author bylines — Assessment never reaches into Identity (ADR-0008). A
+  since-deleted account degrades to *"Unknown learner"* rather than breaking the row.
+- **`/studio/quizzes/{id}/attempts`** — a table of learner × result × score × submitted, with a
+  pass rate in the header and an empty state for a quiz nobody has taken. Reached from an **Attempts**
+  link on the builder. The builder page moved from `[id].vue` to `[id]/index.vue` so the review can be
+  its sibling route; its URL is unchanged.
+- **[OPEN_ITEMS.md](docs/OPEN_ITEMS.md):** U-1 done; M-2 recorded done (the quiz UI was driven by
+  hand in a browser); D-1 decided — a passing quiz will gate lesson completion — and its
+  implementation booked as S-6. One incidental finding logged as O-7: the lesson-visit call 422s for
+  an unenrolled reader (the progress bar, not the quiz).
+- CMS strings remain hardcoded English, consistent with the rest of `/studio` and tracked whole as
+  S-5; this slice does not widen the gap.
+
 ## [2026-08-18 16:56:03 UTC]
 
 CHG-0050 — Quiz surfaces, and an open-items register

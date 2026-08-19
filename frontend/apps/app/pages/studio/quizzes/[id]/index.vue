@@ -124,6 +124,12 @@ useHead(() => ({ title: title.value || "Quiz" }));
 
       <div class="flex items-center gap-3">
         <span v-if="savedAt" class="text-xs text-ink-subtle">Saved {{ savedAt }}</span>
+        <NuxtLink
+          :to="`/studio/quizzes/${quizId}/attempts`"
+          class="text-sm font-medium text-accent hover:underline"
+        >
+          Attempts
+        </NuxtLink>
         <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ quiz.status }}</DbChip>
       </div>
     </div>

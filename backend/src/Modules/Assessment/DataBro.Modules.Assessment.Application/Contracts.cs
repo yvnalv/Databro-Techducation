@@ -80,6 +80,27 @@ public sealed record AttemptDto(
     /// <summary>Empty until submitted — an in-progress attempt has nothing to review.</summary>
     IReadOnlyList<AttemptAnswerResultDto> Results);
 
+/// <summary>
+/// One learner's submitted attempt, as an author reviewing a quiz sees it (U-1).
+///
+/// <para>
+/// A roll-up, not a paper: score and outcome, never the individual selections. An author who needs
+/// to see who passed does not need to see which distractor a learner fell for, and the smaller shape
+/// keeps the review screen a read of results rather than a second answer key. The learner's name is
+/// resolved through <see cref="DataBro.Platform.Abstractions.IUserDirectory"/> — Assessment never
+/// reaches into Identity, exactly as Content does for author bylines (ADR-0008).
+/// </para>
+/// </summary>
+public sealed record AttemptSummaryDto(
+    Guid AttemptId,
+    Guid UserId,
+    string LearnerName,
+    int Score,
+    int TotalPoints,
+    int Percentage,
+    bool Passed,
+    DateTimeOffset SubmittedAt);
+
 // ---- Requests ----
 
 public sealed record CreateQuizRequest(Guid LessonId, string Title, int PassingScore = 70);

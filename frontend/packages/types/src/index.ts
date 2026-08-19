@@ -510,6 +510,22 @@ export interface QuizAttempt {
   results: AttemptAnswerResult[];
 }
 
+/**
+ * One learner's submitted attempt, as an author reviewing a quiz sees it (U-1). A roll-up of the
+ * outcome — score and pass/fail — never the individual selections, which the author does not need
+ * and the summary endpoint does not send.
+ */
+export interface QuizAttemptSummary {
+  attemptId: string;
+  userId: string;
+  learnerName: string;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  passed: boolean;
+  submittedAt: string;
+}
+
 // ---- Enrollment & progress (LN-6 … LN-11) ----
 
 /**

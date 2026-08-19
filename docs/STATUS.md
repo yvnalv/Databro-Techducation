@@ -6,7 +6,7 @@ Snapshot of where the project is and what's next. Update this with every meaning
 decisions awaiting the product owner, manual work, surfaces that were never built, and operational
 debt. This file describes progress; that one describes what is owed.
 
-Last updated: 2026-08-18.
+Last updated: 2026-08-19.
 
 ## Current phase
 
@@ -178,13 +178,20 @@ numbered. **An earlier revision of this file said their "domain and API exist" �
 There was no service and no endpoints, only an orphan DTO. Both exist now, and the correction stays
 on the record rather than being tidied away.
 
-1. **A CMS surface and learner UI for quizzes.** The Assessment module is built and tested
-   (CHG-0049) but a quiz can only be authored over the API, and no learner can take one — the same
-   gap learning paths had between CHG-0043 and CHG-0044. The learner UI is also where the unmade
-   decision in AS-9 gets easier to make: whether passing a quiz gates lesson completion.
-2. **Finish the CMS's Indonesian strings.** ADR-0015 wired up i18n and covered the chrome, login and
-   every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
-3. Then close Phase 2: **bookmarks**, **streaks**, and **social login** (quizzes, attempts, scoring) as its own module.
+1. ~~**A CMS surface and learner UI for quizzes.**~~ **Shipped (CHG-0050) and verified live
+   (2026-08-19).** The builder and the lesson-page quiz were driven end to end in a browser: radio
+   on single-choice with single-selection enforced, inline publish blockers, submit-and-score with
+   the answer key revealed only afterwards.
+2. ~~**Quiz attempt review in the CMS (U-1).**~~ **Shipped (CHG-0051) and verified live.** The last
+   unreachable surface the register tracked: `/studio/quizzes/{id}/attempts` lists who submitted, their
+   score and pass/fail, learner names resolved through `IUserDirectory` — a roll-up, never the answer
+   key. All three "module without a surface" tickets are now closed.
+3. **Gate lesson completion on a passing quiz (S-6).** AS-9 was decided (D-1, 2026-08-19): yes. The
+   wiring — `QuizAttemptSubmitted` consumed by Learning, completion of a quiz-bearing lesson blocked
+   until a passing attempt — is booked but not yet built.
+4. **Finish the CMS's Indonesian strings (S-5).** ADR-0015 wired up i18n and covered the chrome, login
+   and every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
+5. Then close Phase 2: **bookmarks** and **streaks**, plus **social login** carried over from Phase 1.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
@@ -274,11 +281,12 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **312 passing**: Content & Identity (188), Learning (77), Media (29),
-  Assessment (14),
+* `dotnet test` — **317 passing**: Content & Identity (188), Learning (77), Media (29),
+  Assessment (19),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
-  regressions, curriculum invariants, segmented search, and the LN-6 completion rule from both
-  directions.
+  regressions, curriculum invariants, segmented search, the LN-6 completion rule from both
+  directions, and quiz attempt review (the roll-up carries no answer key, excludes in-progress
+  attempts, and is refused to a learner).
 * `pnpm test` — **90 passing** across the frontend workspaces: block renderer, embed allowlist,
   inline rich text (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, the
   primitives' accessibility contracts, and the API client (Vitest).

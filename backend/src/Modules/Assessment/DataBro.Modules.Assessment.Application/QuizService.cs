@@ -5,7 +5,11 @@ using DataBro.Platform.Results;
 namespace DataBro.Modules.Assessment.Application;
 
 /// <summary>Authoring use cases for the <see cref="Quiz"/> aggregate.</summary>
-public sealed class QuizService(IQuizRepository quizzes, IClock clock)
+public sealed class QuizService(
+    IQuizRepository quizzes,
+    IQuizAttemptRepository attempts,
+    IUserDirectory users,
+    IClock clock)
 {
     // ---- Reads ----
 
@@ -44,6 +48,39 @@ public sealed class QuizService(IQuizRepository quizzes, IClock clock)
         return new PagedResult<AuthoringQuizDto>(
             result.Items.Select(q => q.ToAuthoringDto()).ToList(),
             result.Page, result.PageSize, result.Total);
+    }
+
+    /// <summary>
+    /// The submitted attempts at a quiz, for the author's review screen (U-1). Null when the quiz
+    /// does not exist, so the endpoint can 404; an empty list means it exists but nobody has taken it.
+    /// </summary>
+    public async Task<IReadOnlyList<AttemptSummaryDto>?> ListAttemptsAsync(
+        Guid quizId, CancellationToken ct = default)
+    {
+        // Confirm the quiz exists before reporting "no attempts": an unknown id and a quiz nobody has
+        // taken are different answers, and only the second is an empty list.
+        if (await quizzes.GetByIdAsync(quizId, ct) is null) return null;
+
+        var taken = await attempts.ListForQuizAsync(quizId, ct);
+        if (taken.Count == 0) return [];
+
+        // One batched lookup for every learner on the screen — the reason IUserDirectory is
+        // batch-shaped (ADR-0008) rather than resolved one row at a time.
+        var directory = await users.GetUsersAsync(taken.Select(a => a.UserId).Distinct().ToList(), ct);
+
+        return taken
+            .Select(a => new AttemptSummaryDto(
+                a.Id,
+                a.UserId,
+                // A learner whose account was since deleted still has attempts worth showing; the
+                // directory tolerates a partial map, so a missing name degrades rather than breaks.
+                directory.TryGetValue(a.UserId, out var user) ? user.DisplayName : "Unknown learner",
+                a.Score,
+                a.TotalPoints,
+                a.Percentage,
+                a.Passed,
+                a.SubmittedAt!.Value))
+            .ToList();
     }
 
     // ---- Authoring ----
