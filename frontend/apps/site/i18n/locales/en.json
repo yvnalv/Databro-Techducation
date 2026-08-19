@@ -130,7 +130,8 @@
     "courseProgressLabel": "Course progress",
     "markComplete": "Mark complete",
     "markIncomplete": "Mark incomplete",
-    "saveFailed": "That could not be saved. Please try again."
+    "saveFailed": "That could not be saved. Please try again.",
+    "completeBlockedByQuiz": "Pass the quiz above to complete this lesson."
   },
   "quiz": {
     "pointsAndPass": "{points} points · {pass}% to pass",

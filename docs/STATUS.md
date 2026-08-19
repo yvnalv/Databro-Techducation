@@ -186,9 +186,12 @@ on the record rather than being tidied away.
    unreachable surface the register tracked: `/studio/quizzes/{id}/attempts` lists who submitted, their
    score and pass/fail, learner names resolved through `IUserDirectory` — a roll-up, never the answer
    key. All three "module without a surface" tickets are now closed.
-3. **Gate lesson completion on a passing quiz (S-6).** AS-9 was decided (D-1, 2026-08-19): yes. The
-   wiring — `QuizAttemptSubmitted` consumed by Learning, completion of a quiz-bearing lesson blocked
-   until a passing attempt — is booked but not yet built.
+3. ~~**Gate lesson completion on a passing quiz (S-6).**~~ **Shipped (CHG-0052) and verified live.**
+   AS-9, decided in D-1: a lesson with a published quiz cannot be completed until passed. Built as a
+   synchronous `IQuizGate` query (Assessment answers Learning at completion time) rather than by
+   consuming the submit event, which would refuse a learner who had just passed. Draft quizzes do not
+   gate; a quiz added after completion does not revoke it; the learner is pointed at the quiz in both
+   locales.
 4. **Finish the CMS's Indonesian strings (S-5).** ADR-0015 wired up i18n and covered the chrome, login
    and every learner string; `/studio`'s own labels are still hardcoded English against rule 19.
 5. Then close Phase 2: **bookmarks** and **streaks**, plus **social login** carried over from Phase 1.
@@ -281,12 +284,13 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **317 passing**: Content & Identity (188), Learning (77), Media (29),
+* `dotnet test` — **322 passing**: Content & Identity (188), Learning (82), Media (29),
   Assessment (19),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, the LN-6 completion rule from both
-  directions, and quiz attempt review (the roll-up carries no answer key, excludes in-progress
-  attempts, and is refused to a learner).
+  directions, quiz attempt review (the roll-up carries no answer key, excludes in-progress attempts,
+  and is refused to a learner), and the AS-9 completion gate (blocked until passed, a draft does not
+  gate, a quiz added after completion does not revoke it).
 * `pnpm test` — **90 passing** across the frontend workspaces: block renderer, embed allowlist,
   inline rich text (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, the
   primitives' accessibility contracts, and the API client (Vitest).

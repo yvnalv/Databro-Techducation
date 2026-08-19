@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DataBro.Modules.Assessment.Infrastructure.Persistence;
 using DataBro.Modules.Content.Infrastructure.Persistence;
 using DataBro.Modules.Learning.Infrastructure.Persistence;
 using DataBro.Modules.Identity.Domain;
@@ -41,6 +42,9 @@ public sealed class LearningApiFactory : WebApplicationFactory<Program>, IAsyncL
         using var scope = Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<ContentDbContext>().Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<LearningDbContext>().Database.MigrateAsync();
+        // The completion gate (AS-9) asks Assessment whether a lesson's quiz has been passed, so the
+        // full-host tests need its schema too.
+        await scope.ServiceProvider.GetRequiredService<AssessmentDbContext>().Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<IdentityModuleDbContext>().Database.MigrateAsync();
         await IdentitySeeder.EnsureRolesAsync(Services);
     }

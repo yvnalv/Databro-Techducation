@@ -33,11 +33,12 @@ public static class AssessmentInfrastructureExtensions
             options.AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
         });
 
-        // No outbox here yet: QuizAttemptSubmitted has no consumer, and adding a queue with nothing
-        // reading it is the speculative move ADR-0017 declined twice before being built.
-
+        // Still no outbox: the only consumer, Learning's completion gate, asks a synchronous question
+        // (IQuizGate) rather than subscribing to QuizAttemptSubmitted — a decision-time check cannot
+        // be eventually consistent without refusing a learner who has just passed. See IQuizGate.
         services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
+        services.AddScoped<IQuizGate, QuizGate>();
         services.AddScoped<QuizService>();
         services.AddScoped<AttemptService>();
 

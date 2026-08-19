@@ -372,6 +372,154 @@ public class EnrollmentApiTests(LearningApiFactory factory) : IClassFixture<Lear
         Assert.Equal(0, data.GetProperty("completedLessons").GetInt32());
     }
 
+    // ---- The quiz gate (AS-9 / D-1) ----
+
+    /// <summary>
+    /// A one-question single-choice quiz bound to a curriculum lesson, published by default. Returns
+    /// the question and its correct/wrong choice so a test can pass or fail it.
+    /// </summary>
+    private static async Task<(Guid QuestionId, Guid Correct, Guid Wrong)> SeedQuizForLessonAsync(
+        HttpClient editor, Guid lessonId, bool publish = true)
+    {
+        var created = await ReadAsync(await editor.PostAsJsonAsync("/api/v1/authoring/quizzes",
+            new { lessonId, title = "Lesson check", passingScore = 50 }));
+        var quizId = created.GetProperty("data").GetProperty("id").GetGuid();
+
+        var withQuestion = await ReadAsync(await editor.PostAsJsonAsync(
+            $"/api/v1/authoring/quizzes/{quizId}/questions",
+            new { prompt = "Understood?", type = "singlechoice", points = 1 }));
+        var questionId = withQuestion.GetProperty("data").GetProperty("questions")[0]
+            .GetProperty("id").GetGuid();
+
+        foreach (var text in new[] { "Yes", "No" })
+            (await editor.PostAsJsonAsync(
+                $"/api/v1/authoring/quizzes/{quizId}/questions/{questionId}/choices", new { text }))
+                .EnsureSuccessStatusCode();
+
+        var withChoices = await ReadAsync(await editor.GetAsync($"/api/v1/authoring/quizzes/{quizId}"));
+        var choices = withChoices.GetProperty("data").GetProperty("questions")[0]
+            .GetProperty("choices").EnumerateArray().ToList();
+        var correct = choices.First(c => c.GetProperty("text").GetString() == "Yes").GetProperty("id").GetGuid();
+        var wrong = choices.First(c => c.GetProperty("text").GetString() == "No").GetProperty("id").GetGuid();
+
+        (await editor.PutAsJsonAsync(
+            $"/api/v1/authoring/quizzes/{quizId}/questions/{questionId}/answer",
+            new { correctChoiceIds = new[] { correct } })).EnsureSuccessStatusCode();
+
+        if (publish)
+            (await editor.PostAsync($"/api/v1/authoring/quizzes/{quizId}/publish", null))
+                .EnsureSuccessStatusCode();
+
+        return (questionId, correct, wrong);
+    }
+
+    private static async Task SubmitAttemptAsync(
+        HttpClient learner, Guid lessonId, Guid questionId, Guid choiceId)
+    {
+        var attemptId = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/lessons/{lessonId}/quiz/attempts", null))).GetProperty("data").GetProperty("id").GetGuid();
+
+        (await learner.PostAsJsonAsync($"/api/v1/me/attempts/{attemptId}/submit",
+            new { answers = new Dictionary<Guid, Guid[]> { [questionId] = [choiceId] } }))
+            .EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task A_lesson_with_a_published_quiz_cannot_be_completed_until_it_is_passed()
+    {
+        var (editor, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("One"));
+        var lessonId = (await PublicLessonIdsAsync(slug))[0];
+        await SeedQuizForLessonAsync(editor, lessonId);
+
+        var learner = await LearnerAsync();
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+
+        var blocked = await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, blocked.StatusCode);
+    }
+
+    [Fact]
+    public async Task Passing_the_quiz_unlocks_completion()
+    {
+        var (editor, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("One"));
+        var lessonId = (await PublicLessonIdsAsync(slug))[0];
+        var (questionId, correct, _) = await SeedQuizForLessonAsync(editor, lessonId);
+
+        var learner = await LearnerAsync();
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+        await SubmitAttemptAsync(learner, lessonId, questionId, correct);
+
+        var data = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null))).GetProperty("data");
+
+        Assert.Equal(1, data.GetProperty("completedLessons").GetInt32());
+    }
+
+    [Fact]
+    public async Task A_failed_attempt_does_not_unlock_completion()
+    {
+        // A submitted attempt exists, but the gate wants a passing one — submitting and failing is not
+        // a way around it.
+        var (editor, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("One"));
+        var lessonId = (await PublicLessonIdsAsync(slug))[0];
+        var (questionId, _, wrong) = await SeedQuizForLessonAsync(editor, lessonId);
+
+        var learner = await LearnerAsync();
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+        await SubmitAttemptAsync(learner, lessonId, questionId, wrong);
+
+        var blocked = await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, blocked.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_draft_quiz_does_not_gate_completion()
+    {
+        // Only a published quiz is a promise to the learner. A draft one must not lock a lesson that
+        // was completable the moment before the author started writing it.
+        var (editor, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("One"));
+        var lessonId = (await PublicLessonIdsAsync(slug))[0];
+        await SeedQuizForLessonAsync(editor, lessonId, publish: false);
+
+        var learner = await LearnerAsync();
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+
+        var data = (await ReadAsync(await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null))).GetProperty("data");
+
+        Assert.Equal(1, data.GetProperty("completedLessons").GetInt32());
+    }
+
+    [Fact]
+    public async Task A_quiz_added_after_completion_does_not_revoke_it()
+    {
+        // The gate stands in front of a completion still to be made, never behind one already made —
+        // the same one-way stance LN-6 takes on a growing curriculum.
+        var (editor, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("One"));
+        var lessonId = (await PublicLessonIdsAsync(slug))[0];
+
+        var learner = await LearnerAsync();
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+        (await learner.PostAsync($"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null))
+            .EnsureSuccessStatusCode();
+
+        // The author gates the lesson only now, after the learner already finished it.
+        await SeedQuizForLessonAsync(editor, lessonId);
+
+        var after = (await ReadAsync(await learner.GetAsync($"/api/v1/me/enrollments/{slug}")))
+            .GetProperty("data");
+        Assert.Equal(1, after.GetProperty("completedLessons").GetInt32());
+
+        // And re-completing it stays the no-op it always was, rather than turning into a refusal.
+        var again = await learner.PostAsync(
+            $"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null);
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+    }
+
     // ---- The dashboard ----
 
     [Fact]

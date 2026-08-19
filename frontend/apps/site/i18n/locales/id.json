@@ -130,7 +130,8 @@
     "courseProgressLabel": "Kemajuan kursus",
     "markComplete": "Tandai selesai",
     "markIncomplete": "Tandai belum selesai",
-    "saveFailed": "Gagal menyimpan. Silakan coba lagi."
+    "saveFailed": "Gagal menyimpan. Silakan coba lagi.",
+    "completeBlockedByQuiz": "Lulus kuis di atas untuk menyelesaikan pelajaran ini."
   },
   "quiz": {
     "pointsAndPass": "{points} poin · lulus {pass}%",

@@ -19,6 +19,7 @@ public sealed class EnrollmentService(
     IEnrollmentRepository enrollments,
     ICourseRepository courses,
     ILessonContentReader bodies,
+    IQuizGate quizGate,
     IClock clock)
 {
     /// <summary>
@@ -100,16 +101,33 @@ public sealed class EnrollmentService(
         => MutateAsync(userId, courseSlug, lessonId, (enrollment, _) =>
         {
             enrollment.Visit(lessonId, clock.UtcNow);
-            return Result.Success();
+            return Task.FromResult(Result.Success());
         }, ct);
 
     /// <summary>
     /// Marks a lesson complete, then checks whether that finished the course.
+    ///
+    /// <para>
+    /// A lesson with a published quiz cannot be completed until the learner has passed it (AS-9,
+    /// decided in D-1). The gate is asked here, at completion time, rather than driven by the submit
+    /// event — a learner who passes and immediately clicks complete must not be refused because an
+    /// outbox has not caught up (see <see cref="IQuizGate"/>). A lesson with no quiz is unaffected,
+    /// and a quiz added <i>after</i> a lesson was completed does not revoke that completion — the gate
+    /// only stands in front of a completion still to be made, the same one-way stance LN-6 takes.
+    /// </para>
     /// </summary>
     public Task<Result<EnrollmentDto>> CompleteLessonAsync(
         Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
-        => MutateAsync(userId, courseSlug, lessonId, (enrollment, publishedLessonIds) =>
+        => MutateAsync(userId, courseSlug, lessonId, async (enrollment, publishedLessonIds) =>
         {
+            // The gate stands in front of a completion still to be made — never behind one already
+            // made. Re-completing a lesson the learner has finished must stay the no-op it is
+            // (CompleteLesson is idempotent), even if a quiz was added afterwards: a completion is a
+            // moment that stands (LN-6), and a later quiz does not reach back and revoke it.
+            if (!enrollment.HasCompleted(lessonId)
+                && await quizGate.IsCompletionBlockedAsync(userId, lessonId, ct))
+                return Result.Failure(Error.Rule("Pass this lesson's quiz before marking it complete."));
+
             enrollment.CompleteLesson(lessonId, clock.UtcNow);
             enrollment.TryComplete(publishedLessonIds, clock.UtcNow);
             return Result.Success();
@@ -122,7 +140,7 @@ public sealed class EnrollmentService(
     public Task<Result<EnrollmentDto>> ReopenLessonAsync(
         Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
         => MutateAsync(userId, courseSlug, lessonId, (enrollment, _) =>
-            enrollment.ReopenLesson(lessonId), ct);
+            Task.FromResult(enrollment.ReopenLesson(lessonId)), ct);
 
     /// <summary>
     /// The shared shape of every progress write: resolve the course, check the learner is enrolled,
@@ -132,7 +150,7 @@ public sealed class EnrollmentService(
         Guid userId,
         string courseSlug,
         Guid lessonId,
-        Func<Enrollment, IReadOnlyCollection<Guid>, Result> mutate,
+        Func<Enrollment, IReadOnlyCollection<Guid>, Task<Result>> mutate,
         CancellationToken ct)
     {
         var course = await courses.GetPublishedBySlugAsync(courseSlug, ct);
@@ -151,7 +169,7 @@ public sealed class EnrollmentService(
         if (!publishedLessonIds.Contains(lessonId))
             return Result.Failure<EnrollmentDto>(Error.NotFound("Lesson not found in this course."));
 
-        var result = mutate(enrollment, publishedLessonIds);
+        var result = await mutate(enrollment, publishedLessonIds);
         if (result.IsFailure) return Result.Failure<EnrollmentDto>(result.Error);
 
         await enrollments.SaveChangesAsync(ct);

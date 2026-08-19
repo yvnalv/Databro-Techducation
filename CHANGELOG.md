@@ -1,5 +1,35 @@
 # DataBro Changelog
 
+## [2026-08-19 11:41:36 UTC]
+
+CHG-0052 — Gate lesson completion on a passing quiz (AS-9 / D-1, S-6)
+
+Implements the decision made in D-1: a lesson with a published quiz cannot be marked complete until
+the learner has passed it. A lesson with no quiz, or one whose quiz is still a draft, completes
+exactly as before.
+
+> Verified before committing: backend builds clean, 322 backend tests pass (5 new), the frontend
+> typechecks, and the gate was driven both over the API (422 before a pass, 200 after) and in a
+> browser — a learner who clicks *Mark complete* without passing sees "Pass the quiz above to
+> complete this lesson."
+
+- **A synchronous contract, not the submit event.** `IQuizGate` (Platform), implemented by
+  Assessment, consumed by Learning at completion time — the same shape as `IUserDirectory` and
+  `ILessonContentReader`. `QuizAttemptSubmitted` is deliberately *not* used: a decision-time check
+  cannot be eventually consistent without refusing a learner who passed a second ago and an outbox
+  has not caught up. Learning asks; Assessment answers from its current state.
+- **Only a published quiz gates**, and only until it is passed. A draft quiz is not yet a promise to
+  the learner and must not lock a lesson that was completable a moment before.
+- **The gate stands in front of a completion still to be made, never behind one already made.** A
+  quiz added after a lesson was completed does not revoke that completion (LN-6's one-way stance), and
+  re-completing an already-done lesson stays the no-op it always was.
+- **The learner is told what to do, not that something failed.** `LessonProgressBar` shows a distinct
+  message pointing at the quiz above rather than the generic save error, in both locales (rule 19).
+- 5 Learning tests (322 total): blocked until passed, passing unlocks, a failed attempt does not, a
+  draft does not gate, and a quiz added after completion does not revoke it. `LearningApiFactory` now
+  migrates the Assessment schema so the full-host tests can exercise the cross-module path.
+- Docs: BUSINESS_RULES (AS-9 now resolved), OPEN_ITEMS (S-6 done, D-1 closed), STATUS.
+
 ## [2026-08-19 10:29:56 UTC]
 
 CHG-0051 — Quiz attempt review in the CMS (U-1)

@@ -66,5 +66,9 @@ internal sealed class QuizAttemptRepository(AssessmentDbContext db) : IQuizAttem
             .OrderByDescending(a => a.StartedAt)
             .FirstOrDefaultAsync(ct);
 
+    // No answer graph, and existence only: the gate asks "has this learner passed?", not "with what".
+    public Task<bool> HasPassedAsync(Guid userId, Guid quizId, CancellationToken ct = default)
+        => db.Attempts.AnyAsync(a => a.UserId == userId && a.QuizId == quizId && a.Passed, ct);
+
     public Task SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 }

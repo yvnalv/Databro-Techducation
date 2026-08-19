@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DbButton } from "@databro/ui";
+import { ApiClientError } from "@databro/api-client";
 import type { Enrollment } from "@databro/types";
 
 /**
@@ -23,6 +24,12 @@ const expired = ref(false);
 const busy = ref(false);
 /** Set when a write fails for a reason that is not an expired session. */
 const failed = ref(false);
+/**
+ * Set when completion is refused because this lesson's quiz has not been passed (AS-9). Distinct from
+ * a generic failure: it is not an error the learner should retry, it is a step pointing at the quiz
+ * above.
+ */
+const blocked = ref(false);
 
 const isEnrolled = computed(() => enrollment.value !== null);
 const isComplete = computed(() =>
@@ -60,6 +67,7 @@ async function toggle() {
   if (busy.value) return;
   busy.value = true;
   failed.value = false;
+  blocked.value = false;
 
   const call = isComplete.value
     ? (api: import("@databro/api-client").ApiClient) =>
@@ -71,8 +79,12 @@ async function toggle() {
     const result = await tryAuthed(call);
     if (result.ok) enrollment.value = result.value;
     else expired.value = result.expired;
-  } catch {
-    failed.value = true;
+  } catch (error) {
+    // A 422 on completion is the quiz gate: the learner is enrolled (the button only shows then), so
+    // the one rule that refuses a completion here is an unpassed quiz. Anything else is a real
+    // failure worth a retry.
+    if (error instanceof ApiClientError && error.status === 422) blocked.value = true;
+    else failed.value = true;
   } finally {
     busy.value = false;
   }
@@ -147,7 +159,10 @@ async function join() {
         </DbButton>
       </div>
 
-      <p v-if="failed" role="alert" class="mt-3 text-sm text-danger">
+      <p v-if="blocked" role="alert" class="mt-3 text-sm text-warning">
+        {{ t("lesson.completeBlockedByQuiz") }}
+      </p>
+      <p v-else-if="failed" role="alert" class="mt-3 text-sm text-danger">
         {{ t("lesson.saveFailed") }}
       </p>
     </div>

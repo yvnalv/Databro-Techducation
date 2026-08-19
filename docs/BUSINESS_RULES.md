@@ -126,8 +126,13 @@ Domain layer. Rules are grouped by area and will grow per phase.
   to discard answers.
 * AS-8: `passed` is decided at submit time against the threshold in force *then*, and stored. Raising
   the passing score later must not retroactively fail anyone (the same reasoning as LN-6).
-* AS-9: Passing a quiz does **not** currently gate lesson completion. Recorded as unmade rather than
-  implied.
+* AS-9: A lesson with a **published** quiz cannot be completed until the learner has a **passing**
+  attempt (decided in D-1, 2026-08-19). A lesson with no quiz, or one whose quiz is still a draft,
+  completes exactly as before. The check is a synchronous query Learning makes of Assessment at
+  completion time (`IQuizGate`), never a subscription to `QuizAttemptSubmitted`: the answer has to be
+  right the instant a learner clicks complete, and an eventually-consistent copy would refuse someone
+  who had just passed. The gate stands only in front of a completion still to be made — a quiz added
+  after a lesson was completed does not revoke that completion (the one-way stance of LN-6).
 
 ## Cross-cutting
 

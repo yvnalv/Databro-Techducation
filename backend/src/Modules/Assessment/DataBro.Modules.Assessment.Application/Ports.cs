@@ -45,5 +45,12 @@ public interface IQuizAttemptRepository
     /// </summary>
     Task<QuizAttempt?> GetOpenAttemptAsync(Guid userId, Guid quizId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Whether the learner has any passing attempt at a quiz — the one fact the completion gate needs
+    /// (<see cref="DataBro.Platform.Abstractions.IQuizGate"/>). <c>Passed</c> is only ever set on a
+    /// submitted attempt, so this needs no separate submitted check.
+    /// </summary>
+    Task<bool> HasPassedAsync(Guid userId, Guid quizId, CancellationToken ct = default);
+
     Task SaveChangesAsync(CancellationToken ct = default);
 }

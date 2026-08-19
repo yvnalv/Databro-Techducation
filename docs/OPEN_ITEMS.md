@@ -17,7 +17,7 @@ because defaulting them silently is how a product acquires rules nobody chose.
 
 | # | Item | Why it is open |
 |---|---|---|
-| ~~D-1~~ | ~~Does passing a quiz gate lesson completion?~~ (AS-9) | **Decided 2026-08-19: yes.** For a lesson that has a quiz, completion requires a passing attempt; a lesson with no quiz completes as before. `QuizAttemptSubmitted` moves from internal to consumed by Learning. **Implementation pending** as its own slice (now scope, not a decision) — see S-6. |
+| ~~D-1~~ | ~~Does passing a quiz gate lesson completion?~~ (AS-9) | **Decided 2026-08-19: yes, and shipped (CHG-0052, S-6).** A lesson with a published quiz requires a passing attempt; a lesson with no quiz completes as before. Built as a synchronous `IQuizGate` query rather than by consuming `QuizAttemptSubmitted` — a decision-time check cannot be eventually consistent without refusing a just-passed learner. |
 | D-2 | **Deliverability provider** — Resend / Postmark / SES | Deferred by [ADR-0016](adr/0016-transactional-email-transport.md). SMTP is the seam every one of them speaks, so waiting costs nothing until there is a domain, SPF/DKIM and a bounce rate. |
 | D-3 | **Staging deploy on DigitalOcean** | Deferred deliberately; nothing depends on it while the stack runs locally. Becomes urgent the moment someone else needs to see this. |
 | D-4 | **Partial credit on multiple-choice** | [ADR-0018](adr/0018-assessment-scoring-and-the-answer-key.md) chose all-or-nothing and explained why. Listed here because it is the decision most likely to be revisited once real learners hit a five-option question. |
@@ -56,7 +56,7 @@ the record, so the next module is built with its surface rather than owing one.
 | S-3 | **Bookmarks** | 2 | Untouched. |
 | S-4 | **Streaks** | 2 | Untouched. |
 | S-5 | **`/studio` Indonesian strings** | — | i18n is wired ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)); the CMS's own labels are still hardcoded English, against rule 19. Mechanical now. |
-| S-6 | **Gate lesson completion on a passing quiz** | 2 | Decided in D-1 (2026-08-19). Consume `QuizAttemptSubmitted` in Learning; block completion of a quiz-bearing lesson until a passing attempt exists; leave quiz-less lessons unchanged. Needs the retake/idempotency rules and Learning-side tests. |
+| ~~S-6~~ | ~~Gate lesson completion on a passing quiz~~ | 2 | **Done — CHG-0052.** A lesson with a published quiz cannot be completed until passed, via a synchronous `IQuizGate` query (not the submit event, which would refuse a just-passed learner). Draft quizzes do not gate; a quiz added after completion does not revoke it. Learner sees a message pointing at the quiz, both locales. 5 Learning tests. |
 
 ---
 
@@ -76,7 +76,7 @@ the record, so the next module is built with its surface rather than owing one.
 
 ## 6. Verification status
 
-Everything committed to date is built, linted, typechecked and tested — 317 backend, 90 frontend.
+Everything committed to date is built, linted, typechecked and tested — 322 backend, 90 frontend.
 
 CHG-0050 (the quiz surfaces) was written while the build tooling was unavailable and **held
 uncommitted until it returned**, then verified before committing. That caught one real defect (an
