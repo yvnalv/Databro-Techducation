@@ -6,6 +6,8 @@ definePageMeta({ layout: "studio" });
 
 import { ContentRenderer, DbButton, DbChip, DbInput, mediaResolverFor } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
+
+const { t } = useI18n();
 import type {
   Article,
   ArticleVersionSummary,
@@ -39,7 +41,7 @@ const { data: loaded, error: loadError } = await useAsyncData(
   },
 );
 
-if (loadError.value) throw createError({ statusCode: 404, statusMessage: "Article not found", fatal: true });
+if (loadError.value) throw createError({ statusCode: 404, statusMessage: t("studio.articles.notFound"), fatal: true });
 
 const categories = computed<Category[]>(() => loaded.value?.categories ?? []);
 const allTags = computed<TaxonomyTerm[]>(() => loaded.value?.tags ?? []);
@@ -79,7 +81,7 @@ function describe(error: unknown) {
       : "";
     return [error.message, details].filter(Boolean).join(" — ");
   }
-  return "Something went wrong. Please try again.";
+  return t("studio.common.genericError");
 }
 
 async function save() {
@@ -158,14 +160,14 @@ async function schedule() {
   formError.value = null;
 
   if (!scheduleAt.value) {
-    formError.value = "Pick a date and time to schedule this article.";
+    formError.value = t("studio.articles.pickDate");
     return;
   }
 
   const when = new Date(scheduleAt.value);
   if (Number.isNaN(when.getTime()) || when <= new Date()) {
     // The API rejects a past time too; catching it here means the editor is told before a round trip.
-    formError.value = "The scheduled time must be in the future.";
+    formError.value = t("studio.articles.futureOnly");
     return;
   }
 
@@ -238,7 +240,7 @@ async function restore(version: number) {
 
   // Restoring overwrites the editor's current draft, which is the one thing here that can lose
   // unsaved work — so it asks first. Publishing does not, because it saves rather than discards.
-  if (!confirm(`Restore version ${version}? This replaces the current draft. Nothing published changes.`))
+  if (!confirm(t("studio.articles.restoreConfirm", { version })))
     return;
 
   formError.value = null;
@@ -270,27 +272,27 @@ function toggleTag(id: string) {
     : [...tagIds.value, id];
 }
 
-useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "Edit article")) });
+useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || t("studio.articles.editTitle") }));
 </script>
 
 <template>
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/studio" class="text-sm font-medium text-accent hover:underline">← Articles</NuxtLink>
+        <NuxtLink to="/studio" class="text-sm font-medium text-accent hover:underline">← {{ t("studio.articles.back") }}</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
-          {{ isNew ? "New article" : title || "Untitled" }}
+          {{ isNew ? t("studio.articles.new") : title || t("studio.common.untitled") }}
         </h1>
         <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ status }}</DbChip>
           <span v-if="isScheduled">Publishes {{ scheduledForLabel }}</span>
-          <span v-if="savedAt">Saved {{ savedAt }}</span>
+          <span v-if="savedAt">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         </p>
       </div>
 
       <div class="flex flex-wrap gap-2">
         <DbButton variant="outline" :disabled="saving || publishing" @click="save">
-          {{ saving ? "Saving…" : "Save draft" }}
+          {{ saving ? t("studio.articles.saving") : t("studio.common.saveDraft") }}
         </DbButton>
         <DbButton
           :variant="isPublished ? 'outline' : 'primary'"
@@ -313,31 +315,31 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div class="space-y-6">
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Details</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.details") }}</h2>
 
-          <DbInput v-model="title" label="Title" required />
-          <DbInput v-model="summary" label="Summary" hint="Used as the excerpt and meta description fallback." />
+          <DbInput v-model="title" :label="t('studio.common.title')" required />
+          <DbInput v-model="summary" :label="t('studio.common.summary')" :hint="t('studio.articles.summaryHint')" />
           <DbInput
             v-model="slug"
-            label="Slug"
+            :label="t('studio.common.slug')"
             :disabled="slugLocked"
-            :hint="slugLocked ? 'Immutable once published — moving it needs a 301 redirect.' : 'Leave blank to derive from the title.'"
+            :hint="slugLocked ? t('studio.articles.slugHintLocked') : t('studio.articles.slugHintFree')"
           />
 
           <div>
-            <label for="category" class="mb-1.5 block text-sm font-medium text-ink-muted">Category</label>
+            <label for="category" class="mb-1.5 block text-sm font-medium text-ink-muted">{{ t("studio.articles.category") }}</label>
             <select
               id="category"
               v-model="categoryId"
               class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
             >
-              <option value="">No category</option>
+              <option value="">{{ t("studio.articles.noCategory") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
           </div>
 
           <fieldset>
-            <legend class="mb-1.5 text-sm font-medium text-ink-muted">Tags</legend>
+            <legend class="mb-1.5 text-sm font-medium text-ink-muted">{{ t("studio.articles.tags") }}</legend>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="tag in allTags"
@@ -354,20 +356,20 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
               >
                 #{{ tag.name }}
               </button>
-              <p v-if="!allTags.length" class="text-sm text-ink-subtle">No tags defined yet.</p>
+              <p v-if="!allTags.length" class="text-sm text-ink-subtle">{{ t("studio.articles.noTags") }}</p>
             </div>
           </fieldset>
         </section>
 
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Content</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.content") }}</h2>
           <BlockEditor v-model="content" />
         </section>
 
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">SEO</h2>
-          <DbInput v-model="metaTitle" label="Meta title" hint="Falls back to the article title." />
-          <DbInput v-model="metaDescription" label="Meta description" hint="Falls back to the summary." />
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.seo") }}</h2>
+          <DbInput v-model="metaTitle" :label="t('studio.articles.metaTitle')" :hint="t('studio.articles.metaTitleHint')" />
+          <DbInput v-model="metaDescription" :label="t('studio.articles.metaDescription')" :hint="t('studio.articles.metaDescriptionHint')" />
         </section>
 
         <!-- Scheduling (CT-7). Hidden while the article is published: a published article has to be
@@ -378,24 +380,24 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
           class="space-y-4 rounded-card border border-line bg-surface p-5"
         >
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
-            Schedule
+            {{ t("studio.articles.schedule") }}
           </h2>
 
           <template v-if="isScheduled">
             <p class="text-sm text-ink-muted">
-              Publishes automatically on
+              {{ t("studio.articles.publishesOn") }}
               <strong class="text-ink">{{ scheduledForLabel }}</strong
               >. Editing the draft before then is fine — whatever is saved at that moment goes live.
             </p>
             <DbButton variant="outline" size="sm" :disabled="scheduling" @click="cancelSchedule">
-              {{ scheduling ? "Working…" : "Cancel schedule" }}
+              {{ scheduling ? t("studio.common.working") : t("studio.articles.cancelSchedule") }}
             </DbButton>
           </template>
 
           <template v-else>
             <div>
               <label for="schedule-at" class="mb-1.5 block text-sm font-medium text-ink-muted">
-                Publish at
+                {{ t("studio.articles.publishAt") }}
               </label>
               <input
                 id="schedule-at"
@@ -404,11 +406,11 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
                 class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
               />
               <p class="mt-1.5 text-xs text-ink-subtle">
-                Your local time. Saves the draft first, then schedules it.
+                {{ t("studio.articles.publishAtHint") }}
               </p>
             </div>
             <DbButton variant="outline" size="sm" :disabled="scheduling || saving" @click="schedule">
-              {{ scheduling ? "Scheduling…" : "Schedule" }}
+              {{ scheduling ? t("studio.articles.scheduling") : t("studio.articles.schedule") }}
             </DbButton>
           </template>
         </section>
@@ -418,7 +420,7 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
         <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface p-5">
           <div class="flex items-center justify-between">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
-              Version history
+              {{ t("studio.articles.versionHistory") }}
             </h2>
             <button
               type="button"
@@ -426,14 +428,14 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
               :aria-expanded="versionsOpen"
               @click="toggleVersions"
             >
-              {{ versionsOpen ? "Hide" : "Show" }}
+              {{ versionsOpen ? t("studio.common.hide") : t("studio.common.show") }}
             </button>
           </div>
 
           <template v-if="versionsOpen">
-            <p v-if="versionsLoading" class="text-sm text-ink-muted">Loading…</p>
+            <p v-if="versionsLoading" class="text-sm text-ink-muted">{{ t("studio.common.loading") }}</p>
             <p v-else-if="versions.length === 0" class="text-sm text-ink-muted">
-              No versions yet — history starts at the first publish.
+              {{ t("studio.articles.noVersions") }}
             </p>
 
             <ul v-else class="divide-y divide-line">
@@ -441,7 +443,7 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
                 <div class="min-w-0 flex-1">
                   <p class="flex items-center gap-2 text-sm font-medium text-ink">
                     v{{ v.version }}
-                    <DbChip v-if="v.isCurrent" tone="success">live</DbChip>
+                    <DbChip v-if="v.isCurrent" tone="success">{{ t("studio.articles.live") }}</DbChip>
                   </p>
                   <p class="truncate text-sm text-ink-muted">{{ v.title }}</p>
                   <p class="text-xs text-ink-subtle">
@@ -454,7 +456,7 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
                   :disabled="restoring !== null"
                   @click="restore(v.version)"
                 >
-                  {{ restoring === v.version ? "Restoring…" : "Restore" }}
+                  {{ restoring === v.version ? t("studio.articles.restoring") : t("studio.articles.restore") }}
                 </DbButton>
               </li>
             </ul>
@@ -472,11 +474,11 @@ useHead({ title: computed(() => (isNew.value ? "New article" : title.value || "E
       <aside class="xl:sticky xl:top-6 xl:self-start">
         <div class="rounded-card border border-line bg-surface">
           <div class="border-b border-line px-4 py-2">
-            <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Preview</h2>
+            <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.preview") }}</h2>
           </div>
           <div class="max-h-[70vh] overflow-y-auto p-5">
             <h3 class="font-display text-xl font-bold tracking-tight text-ink">
-              {{ title || "Untitled" }}
+              {{ title || t("studio.common.untitled") }}
             </h3>
             <p v-if="summary" class="mt-2 text-sm text-ink-muted">{{ summary }}</p>
             <hr class="my-4 border-line" />

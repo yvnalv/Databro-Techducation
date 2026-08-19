@@ -2,6 +2,8 @@
 import { DbButton, SUPPORTED_BLOCK_TYPES } from "@databro/ui";
 import type { ContentBlock, ContentDocument, RichText } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Block list editor (docs/CONTENT_MODEL.md).
  *
@@ -163,7 +165,7 @@ function removeRow(data: unknown, row: number) {
 <template>
   <div class="space-y-3">
     <p v-if="!blocks.length" class="rounded-card border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted">
-      No blocks yet. Add one below.
+      {{ t("studio.blocks.noBlocks") }}
     </p>
 
     <div
@@ -179,7 +181,7 @@ function removeRow(data: unknown, row: number) {
             type="button"
             class="h-7 w-7 rounded border border-line text-xs text-ink-muted transition-colors hover:bg-surface-sunken disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             :disabled="index === 0"
-            :aria-label="`Move ${block.type} block up`"
+            :aria-label="t('studio.blocks.moveUp', { type: block.type })"
             @click="move(index, -1)"
           >
             ↑
@@ -188,7 +190,7 @@ function removeRow(data: unknown, row: number) {
             type="button"
             class="h-7 w-7 rounded border border-line text-xs text-ink-muted transition-colors hover:bg-surface-sunken disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             :disabled="index === blocks.length - 1"
-            :aria-label="`Move ${block.type} block down`"
+            :aria-label="t('studio.blocks.moveDown', { type: block.type })"
             @click="move(index, 1)"
           >
             ↓
@@ -196,7 +198,7 @@ function removeRow(data: unknown, row: number) {
           <button
             type="button"
             class="h-7 rounded border border-line px-2 text-xs text-danger transition-colors hover:bg-danger-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-            :aria-label="`Delete ${block.type} block`"
+            :aria-label="t('studio.blocks.deleteBlock', { type: block.type })"
             @click="remove(index)"
           >
             Delete
@@ -211,7 +213,7 @@ function removeRow(data: unknown, row: number) {
             <select
               :value="(block.data as any).level ?? 2"
               class="h-9 rounded-md border border-line-strong bg-surface px-2 text-sm"
-              aria-label="Heading level"
+              :aria-label="t('studio.blocks.headingLevel')"
               @change="updateData(index, { ...(block.data as any), level: Number(($event.target as HTMLSelectElement).value) })"
             >
               <option :value="2">H2</option>
@@ -222,7 +224,7 @@ function removeRow(data: unknown, row: number) {
               :value="(block.data as any).text"
               class="h-9 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm"
               placeholder="Heading text"
-              aria-label="Heading text"
+              :aria-label="t('studio.blocks.headingText')"
               @input="updateData(index, { ...(block.data as any), text: ($event.target as HTMLInputElement).value })"
             />
           </div>
@@ -234,13 +236,13 @@ function removeRow(data: unknown, row: number) {
             v-if="block.type === 'callout'"
             :value="(block.data as any).variant ?? 'tip'"
             class="mb-2 h-9 rounded-md border border-line-strong bg-surface px-2 text-sm"
-            aria-label="Callout variant"
+            :aria-label="t('studio.blocks.calloutVariant')"
             @change="updateData(index, { ...(block.data as any), variant: ($event.target as HTMLSelectElement).value })"
           >
-            <option value="info">Info</option>
-            <option value="tip">Tip</option>
-            <option value="warning">Warning</option>
-            <option value="danger">Danger</option>
+            <option value="info">{{ t("studio.blocks.info") }}</option>
+            <option value="tip">{{ t("studio.blocks.tip") }}</option>
+            <option value="warning">{{ t("studio.blocks.warning") }}</option>
+            <option value="danger">{{ t("studio.blocks.danger") }}</option>
           </select>
 
           <RichTextEditor
@@ -252,8 +254,8 @@ function removeRow(data: unknown, row: number) {
             v-if="block.type === 'quote'"
             :value="(block.data as any).attribution ?? ''"
             class="h-9 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
-            placeholder="Attribution (optional)"
-            aria-label="Quote attribution"
+            :placeholder="t('studio.blocks.attributionOptional')"
+            :aria-label="t('studio.blocks.quoteAttribution')"
             @input="updateData(index, { ...(block.data as any), attribution: ($event.target as HTMLInputElement).value })"
           />
         </template>
@@ -264,15 +266,15 @@ function removeRow(data: unknown, row: number) {
             <input
               :value="(block.data as any).language"
               class="h-9 w-32 rounded-md border border-line-strong bg-surface px-3 font-mono text-sm"
-              placeholder="language"
-              aria-label="Code language"
+              :placeholder="t('studio.blocks.languagePlaceholder')"
+              :aria-label="t('studio.blocks.codeLanguage')"
               @input="updateData(index, { ...(block.data as any), language: ($event.target as HTMLInputElement).value })"
             />
             <input
               :value="(block.data as any).filename ?? ''"
               class="h-9 flex-1 rounded-md border border-line-strong bg-surface px-3 font-mono text-sm"
-              placeholder="filename (optional)"
-              aria-label="Code filename"
+              :placeholder="t('studio.blocks.filenamePlaceholder')"
+              :aria-label="t('studio.blocks.codeFilename')"
               @input="updateData(index, { ...(block.data as any), filename: ($event.target as HTMLInputElement).value })"
             />
           </div>
@@ -281,15 +283,15 @@ function removeRow(data: unknown, row: number) {
             rows="6"
             class="w-full rounded-md border border-line-strong bg-surface px-3 py-2 font-mono text-sm"
             placeholder="Code"
-            aria-label="Code"
+            :aria-label="t('studio.blocks.code')"
             @input="updateData(index, { ...(block.data as any), code: ($event.target as HTMLTextAreaElement).value })"
           ></textarea>
           <textarea
             :value="(block.data as any).output ?? ''"
             rows="2"
             class="w-full rounded-md border border-line-strong bg-surface px-3 py-2 font-mono text-sm"
-            placeholder="Output (optional)"
-            aria-label="Code output"
+            :placeholder="t('studio.blocks.outputOptional')"
+            :aria-label="t('studio.blocks.codeOutput')"
             @input="updateData(index, { ...(block.data as any), output: ($event.target as HTMLTextAreaElement).value })"
           ></textarea>
         </template>
@@ -300,8 +302,8 @@ function removeRow(data: unknown, row: number) {
             :value="(block.data as any).latex"
             rows="3"
             class="w-full rounded-md border border-line-strong bg-surface px-3 py-2 font-mono text-sm"
-            placeholder="LaTeX, e.g. E = mc^2"
-            aria-label="LaTeX"
+            :placeholder="t('studio.blocks.latexPlaceholder')"
+            :aria-label="t('studio.blocks.latex')"
             @input="updateData(index, { latex: ($event.target as HTMLTextAreaElement).value })"
           ></textarea>
         </template>
@@ -315,15 +317,15 @@ function removeRow(data: unknown, row: number) {
           <input
             :value="(block.data as any).alt"
             class="h-9 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
-            placeholder="Alt text (required — describes the image)"
-            aria-label="Alt text"
+            :placeholder="t('studio.blocks.altRequired')"
+            :aria-label="t('studio.blocks.altText')"
             @input="updateData(index, { ...(block.data as any), alt: ($event.target as HTMLInputElement).value })"
           />
           <!-- Per-block, not per-asset, on purpose: the same image can carry different meaning in
                different articles, and the renderer prefers this over the asset's stored text. -->
           <p class="text-xs text-ink-subtle">
-            Alt text describes the image in <em>this</em> article. Leave empty only if the image is
-            purely decorative.
+            {{ t("studio.blocks.altHintBefore") }} <em>{{ t("studio.blocks.altHintThis") }}</em>
+            {{ t("studio.blocks.altHintAfter") }}
           </p>
         </template>
 
@@ -332,12 +334,12 @@ function removeRow(data: unknown, row: number) {
           <input
             :value="(block.data as any).url"
             class="h-9 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
-            placeholder="https://… (YouTube, Vimeo or CodePen)"
-            aria-label="Embed URL"
+            :placeholder="t('studio.blocks.embedPlaceholder')"
+            :aria-label="t('studio.blocks.embedUrl')"
             @input="updateData(index, { ...(block.data as any), url: ($event.target as HTMLInputElement).value })"
           />
           <p class="text-xs text-ink-subtle">
-            Only allowlisted providers are framed; anything else renders as a plain link.
+            {{ t("studio.blocks.embedHint") }}
           </p>
         </template>
 
@@ -349,7 +351,7 @@ function removeRow(data: unknown, row: number) {
               :checked="(block.data as any).ordered"
               @change="updateData(index, { ...(block.data as any), ordered: ($event.target as HTMLInputElement).checked })"
             />
-            Numbered
+            {{ t("studio.blocks.numbered") }}
           </label>
 
           <div v-for="(item, i) in (block.data as any).items ?? []" :key="i" class="flex gap-2">
@@ -368,7 +370,7 @@ function removeRow(data: unknown, row: number) {
             <button
               type="button"
               class="h-9 shrink-0 self-start rounded border border-line px-2 text-xs text-danger hover:bg-danger-subtle"
-              :aria-label="`Remove item ${i + 1}`"
+              :aria-label="t('studio.blocks.removeItem', { n: i + 1 })"
               @click="updateData(index, { ...(block.data as any), items: (block.data as any).items.filter((_: any, j: number) => j !== i) })"
             >
               ✕
@@ -380,7 +382,7 @@ function removeRow(data: unknown, row: number) {
             variant="soft"
             @click="updateData(index, { ...(block.data as any), items: [...((block.data as any).items ?? []), { content: [] }] })"
           >
-            Add item
+            {{ t("studio.blocks.addItem") }}
           </DbButton>
         </template>
 
@@ -406,7 +408,7 @@ function removeRow(data: unknown, row: number) {
                     <button
                       type="button"
                       class="h-8 w-8 rounded border border-line text-xs text-ink-muted hover:bg-surface-sunken"
-                      aria-label="Add column"
+                      :aria-label="t('studio.blocks.addColumn')"
                       title="Add column"
                       @click="updateData(index, addColumn(block.data))"
                     >
@@ -431,7 +433,7 @@ function removeRow(data: unknown, row: number) {
                     <button
                       type="button"
                       class="h-8 w-8 rounded border border-line text-xs text-danger hover:bg-danger-subtle"
-                      :aria-label="`Remove row ${r + 1}`"
+                      :aria-label="t('studio.blocks.removeRow', { n: r + 1 })"
                       title="Remove row"
                       @click="updateData(index, removeRow(block.data, r))"
                     >
@@ -445,7 +447,7 @@ function removeRow(data: unknown, row: number) {
 
           <div class="flex flex-wrap gap-2">
             <DbButton size="sm" variant="soft" @click="updateData(index, addRow(block.data))">
-              Add row
+              {{ t("studio.blocks.addRow") }}
             </DbButton>
             <DbButton
               size="sm"
@@ -453,32 +455,33 @@ function removeRow(data: unknown, row: number) {
               :disabled="tableColumnCount(block.data) <= 1"
               @click="updateData(index, removeColumn(block.data))"
             >
-              Remove last column
+              {{ t("studio.blocks.removeLastColumn") }}
             </DbButton>
           </div>
 
           <p class="text-xs text-ink-subtle">
-            Cells take inline formatting — bold, links and
-            <code class="font-mono">inline code</code> — because comparison tables lean on it. The
-            header row is what makes the table readable to a screen reader, so leave it filled in.
+            {{ t("studio.blocks.tableHint") }}
+            <code class="font-mono">{{ t("studio.blocks.inlineCode") }}</code>
+            {{ t("studio.blocks.tableHintTail") }}
           </p>
         </template>
 
         <!-- divider has no data -->
         <template v-else-if="block.type === 'divider'">
-          <p class="text-sm text-ink-subtle">No settings.</p>
+          <p class="text-sm text-ink-subtle">{{ t("studio.blocks.noSettings") }}</p>
         </template>
 
         <template v-else>
           <p class="text-sm text-ink-subtle">
-            No form for <code class="font-mono">{{ block.type }}</code> yet — it still renders.
+            {{ t("studio.blocks.noFormBefore") }} <code class="font-mono">{{ block.type }}</code>
+            {{ t("studio.blocks.noFormAfter") }}
           </p>
         </template>
       </div>
     </div>
 
     <div class="flex flex-wrap gap-2 rounded-card border border-line bg-surface-sunken p-3">
-      <span class="w-full text-xs font-medium uppercase tracking-wide text-ink-subtle">Add block</span>
+      <span class="w-full text-xs font-medium uppercase tracking-wide text-ink-subtle">{{ t("studio.blocks.addBlock") }}</span>
       <DbButton
         v-for="type in SUPPORTED_BLOCK_TYPES"
         :key="type"

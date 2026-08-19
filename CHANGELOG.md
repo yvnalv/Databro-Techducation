@@ -1,5 +1,32 @@
 # DataBro Changelog
 
+## [2026-08-19 15:52:10 UTC]
+
+CHG-0058 — Translate the CMS: article editor and BlockEditor (S-5, complete)
+
+Closes S-5. **All 16 studio files are translated**, 347 keys, both locales at parity. The rule-19 gap
+ADR-0015 opened is shut.
+
+- **The article editor** — details, SEO, scheduling and version history, including the confirm
+  prompt on restore.
+- **`BlockEditor`** — the largest and last file. Eleven block types with their own controls, given
+  their **own `studio.blocks` sub-namespace** rather than folded into `studio.common`: "language",
+  "variant" and "caption" mean different things in a code block, a callout and an image, and one
+  shared key would be a translation that reads correctly in one place and wrongly in two.
+- **Markup stays out of the translations.** Three strings wrap an `<em>` or a `<code>` mid-sentence
+  — the alt-text hint, the table hint, the unknown-block notice. Each is split into
+  before/after keys with the tag left in the template, rather than shipping HTML inside a string
+  where a translator can break the markup and no test would catch it.
+- Verified live in both locales on the article editor with `BlockEditor` embedded.
+  `Schedule` and `Publish at` render in neither, which was checked rather than assumed: the section
+  is `v-if="!isNew && !isPublished"` and the test article is published.
+
+**Totals across CHG-0054 … CHG-0058:** 16 files, 347 keys, four passes. The recurring bug was worth
+the four splits — three separate instances of *a value evaluated once cannot hold a translated
+string*: `useHead({ title })` object literals, a `computed` nested inside one, and a module-scope
+`TOOLS` array. Each looked correct and each would have frozen its text in whichever language loaded
+first.
+
 ## [2026-08-19 15:30:44 UTC]
 
 CHG-0057 — Clear every warning
