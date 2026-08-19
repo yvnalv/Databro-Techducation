@@ -7,6 +7,8 @@ definePageMeta({ layout: "studio" });
 import { DbButton, DbChip } from "@databro/ui";
 import type { ArticleSummary, Paged } from "@databro/types";
 
+const { t } = useI18n();
+
 // Resolved once: DbButton takes the component so `@databro/ui` need not import NuxtLink.
 const NuxtLink = resolveComponent("NuxtLink");
 
@@ -53,28 +55,28 @@ const STATUS_TONE = {
 const formatDate = (value?: string) =>
   value ? new Date(value).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" }) : "—";
 
-useHead({ title: "Articles" });
+useHead(() => ({ title: t("studio.articles.navTitle") }));
 </script>
 
 <template>
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Articles</h1>
-        <p class="mt-1 text-sm text-ink-muted">Every article, across all statuses.</p>
+        <h1 class="font-display text-2xl font-bold tracking-tight text-ink">{{ t("studio.articles.navTitle") }}</h1>
+        <p class="mt-1 text-sm text-ink-muted">{{ t("studio.articles.subtitle") }}</p>
       </div>
 
-      <DbButton :as="NuxtLink" to="/studio/articles/new">New article</DbButton>
+      <DbButton :as="NuxtLink" to="/studio/articles/new">{{ t("studio.articles.new") }}</DbButton>
     </div>
 
     <!-- Stat cards, per the reference dashboard. Scoped to the current page (see `counts`). -->
     <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <div
         v-for="stat in [
-          { label: 'Total articles', value: counts.total, hint: 'all pages' },
-          { label: 'Published', value: counts.published, hint: 'this page' },
-          { label: 'Drafts', value: counts.drafts, hint: 'this page' },
-          { label: 'Scheduled', value: counts.scheduled, hint: 'this page' },
+          { label: t('studio.articles.statTotal'), value: counts.total, hint: t('studio.articles.hintAllPages') },
+          { label: t('studio.articles.statPublished'), value: counts.published, hint: t('studio.articles.hintThisPage') },
+          { label: t('studio.articles.statDrafts'), value: counts.drafts, hint: t('studio.articles.hintThisPage') },
+          { label: t('studio.articles.statScheduled'), value: counts.scheduled, hint: t('studio.articles.hintThisPage') },
         ]"
         :key="stat.label"
         class="rounded-card border border-line bg-surface p-5"
@@ -92,8 +94,8 @@ useHead({ title: "Articles" });
       role="alert"
       class="mt-6 rounded-card border border-danger/30 bg-danger-subtle px-4 py-3 text-sm text-danger"
     >
-      Could not load articles.
-      <button type="button" class="font-semibold underline" @click="refresh()">Retry</button>
+      {{ t("studio.articles.loadFailed") }}
+      <button type="button" class="font-semibold underline" @click="refresh()">{{ t("studio.common.retry") }}</button>
     </p>
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line bg-surface">
@@ -103,18 +105,18 @@ useHead({ title: "Articles" });
                sanctioned use (DESIGN_SYSTEM §5.7). -->
           <thead class="bg-accent-deep text-white">
             <tr>
-              <th scope="col" class="px-4 py-3 font-semibold">Title</th>
-              <th scope="col" class="px-4 py-3 font-semibold">Status</th>
-              <th scope="col" class="hidden px-4 py-3 font-semibold md:table-cell">Category</th>
-              <th scope="col" class="hidden px-4 py-3 font-semibold lg:table-cell">Author</th>
-              <th scope="col" class="hidden px-4 py-3 font-semibold lg:table-cell">Published</th>
+              <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.title") }}</th>
+              <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.status") }}</th>
+              <th scope="col" class="hidden px-4 py-3 font-semibold md:table-cell">{{ t("studio.articles.colCategory") }}</th>
+              <th scope="col" class="hidden px-4 py-3 font-semibold lg:table-cell">{{ t("studio.articles.colAuthor") }}</th>
+              <th scope="col" class="hidden px-4 py-3 font-semibold lg:table-cell">{{ t("studio.common.published") }}</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-if="!articles.length">
               <td colspan="5" class="px-4 py-10 text-center text-ink-muted">
-                No articles yet.
+                {{ t("studio.articles.empty") }}
               </td>
             </tr>
 
@@ -164,14 +166,14 @@ useHead({ title: "Articles" });
             :to="{ query: { page: meta.page - 1 } }"
             class="rounded-md px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
           >
-            Previous
+            {{ t("studio.common.previous") }}
           </NuxtLink>
           <NuxtLink
             v-if="meta.page < meta.totalPages"
             :to="{ query: { page: meta.page + 1 } }"
             class="rounded-md px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
           >
-            Next
+            {{ t("studio.common.next") }}
           </NuxtLink>
         </span>
       </div>

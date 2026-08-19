@@ -83,5 +83,71 @@
     "noLink": "This page needs the link from your reset email.",
     "requestNew": "Request a new link",
     "failed": "That did not work. Please try again."
+  },
+  "studio": {
+    "common": {
+      "title": "Title",
+      "status": "Status",
+      "difficulty": "Difficulty",
+      "published": "Published",
+      "retry": "Retry",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages} · {total} {noun}"
+    },
+    "articles": {
+      "navTitle": "Articles",
+      "subtitle": "Every article, across all statuses.",
+      "new": "New article",
+      "empty": "No articles yet.",
+      "loadFailed": "Could not load articles.",
+      "colAuthor": "Author",
+      "colCategory": "Category",
+      "statTotal": "Total articles",
+      "statPublished": "Published",
+      "statDrafts": "Drafts",
+      "statScheduled": "Scheduled",
+      "hintAllPages": "all pages",
+      "hintThisPage": "this page",
+      "noun": "articles"
+    },
+    "courses": {
+      "navTitle": "Courses",
+      "subtitle": "Curricula built from lesson bodies. A course can go live before every lesson is written.",
+      "new": "New course",
+      "empty": "No courses yet. Create one, then add modules and attach lesson bodies to it.",
+      "colLessons": "Lessons",
+      "colDuration": "Duration",
+      "noun": "courses"
+    },
+    "lessons": {
+      "navTitle": "Lessons",
+      "new": "New lesson",
+      "empty": "No lesson bodies yet. Write one, publish it, then attach it to a course.",
+      "colReadingTime": "Reading time",
+      "noun": "lessons",
+      "subtitleFull": "Lesson bodies. Write one here, then attach it to a course — the same body can appear in more than one."
+    },
+    "paths": {
+      "navTitle": "Learning paths",
+      "subtitle": "Curated sequences of courses. A path can be assembled before the courses in it are live.",
+      "new": "New path",
+      "empty": "No learning paths yet. Create one, then add courses to it in the order you would teach them.",
+      "colCourses": "Courses",
+      "noun": "paths"
+    },
+    "quizzes": {
+      "navTitle": "Quizzes",
+      "subtitle": "One quiz per lesson. Create a quiz from its lesson, then write the questions here.",
+      "empty": "No quizzes yet. Open a lesson and add one.",
+      "colQuestions": "Questions",
+      "colPoints": "Points",
+      "colPassMark": "Pass mark",
+      "noun": "quizzes"
+    },
+    "attempts": {
+      "empty": "No one has submitted this quiz yet.",
+      "navTitle": "Attempts"
+    }
   }
 }

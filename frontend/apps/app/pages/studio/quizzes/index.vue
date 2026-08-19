@@ -5,6 +5,8 @@ definePageMeta({ layout: "studio" });
 import { DbChip } from "@databro/ui";
 import type { AuthoringQuiz, Paged } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Quiz list.
  *
@@ -31,15 +33,15 @@ const STATUS_TONE = {
   unpublished: "warning",
 } as const;
 
-useHead({ title: "Quizzes" });
+useHead(() => ({ title: t("studio.quizzes.navTitle") }));
 </script>
 
 <template>
   <div>
     <div>
-      <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Quizzes</h1>
+      <h1 class="font-display text-2xl font-bold tracking-tight text-ink">{{ t("studio.quizzes.navTitle") }}</h1>
       <p class="mt-1 text-sm text-ink-muted">
-        One quiz per lesson. Create a quiz from its lesson, then write the questions here.
+        {{ t("studio.quizzes.subtitle") }}
       </p>
     </div>
 
@@ -47,18 +49,18 @@ useHead({ title: "Quizzes" });
       v-if="quizzes.length === 0"
       class="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-sm text-ink-muted"
     >
-      No quizzes yet. Open a lesson and add one.
+      {{ t("studio.quizzes.empty") }}
     </p>
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line">
       <table class="w-full text-left text-sm">
         <thead class="bg-accent-deep text-white">
           <tr>
-            <th scope="col" class="px-4 py-3 font-semibold">Title</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Status</th>
-            <th scope="col" class="px-4 py-3 text-right font-semibold">Questions</th>
-            <th scope="col" class="px-4 py-3 text-right font-semibold">Points</th>
-            <th scope="col" class="px-4 py-3 text-right font-semibold">Pass mark</th>
+            <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.title") }}</th>
+            <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.status") }}</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.quizzes.colQuestions") }}</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.quizzes.colPoints") }}</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.quizzes.colPassMark") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-line bg-surface">
@@ -78,7 +80,7 @@ useHead({ title: "Quizzes" });
     </div>
 
     <p v-if="meta && meta.totalPages > 1" class="mt-4 text-sm text-ink-muted">
-      Page {{ meta.page }} of {{ meta.totalPages }} · {{ meta.total }} quizzes
+      {{ t("studio.common.pageOf", { page: meta.page, pages: meta.totalPages, total: meta.total, noun: t("studio.quizzes.noun") }) }}
     </p>
   </div>
 </template>

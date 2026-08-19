@@ -1,5 +1,28 @@
 # DataBro Changelog
 
+## [2026-08-19 14:43:55 UTC]
+
+CHG-0054 — Translate the CMS: list screens (S-5, part 1 of 2)
+
+First half of the rule-19 gap ADR-0015 opened. i18n was wired into `apps/app` then, and the learner
+side was covered; `/studio` has been hardcoded English since.
+
+- **All six list screens translated**: articles, courses, lessons, learning paths, quizzes, and the
+  quiz-attempts roll-up. 52 new keys under a `studio.*` namespace, both locales, parity checked.
+- **Shared strings are shared.** `studio.common` holds the column headers and pagination that every
+  table repeats — `Title`, `Status`, `Difficulty`, `Published`, `Previous`/`Next`. Six copies of
+  "Title" would have been six chances to translate it six ways.
+- Pagination became one interpolated string, `pageOf`, taking the noun as a parameter. The English
+  reads "Page 1 of 3 · 47 courses"; a per-page sentence would have hardcoded English word order into
+  five files.
+- `useHead({ title })` became `useHead(() => ({ title }))` on every translated page. The object form
+  is evaluated once, so a tab title set from `t()` would have kept the language it was first rendered
+  in — the switcher would change the page and not the tab.
+- **Deliberately partial, and the boundary is not arbitrary.** List screens are done; the six editors
+  and three editor components (~2,500 lines) are not. Splitting there keeps each half coherent —
+  a reader either sees a translated screen or an untranslated one, never a half-translated form.
+- Verified live in both locales on all five studio list routes.
+
 ## [2026-08-19 14:24:15 UTC]
 
 CHG-0053 — Fix CI: pnpm setup could never find its version

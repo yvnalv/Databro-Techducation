@@ -55,7 +55,7 @@ the record, so the next module is built with its surface rather than owing one.
 | S-2 | **`PATCH /me`** — profile editing | 1 | Same. Returns 405 today. |
 | S-3 | **Bookmarks** | 2 | Untouched. |
 | S-4 | **Streaks** | 2 | Untouched. |
-| S-5 | **`/studio` Indonesian strings** | — | i18n is wired ([ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)); the CMS's own labels are still hardcoded English, against rule 19. Mechanical now. |
+| S-5 | **`/studio` Indonesian strings** | — | **Half done (CHG-0054).** All six list screens are translated; the six editors and three editor components are not. Mechanical, but ~2,500 lines. |
 | ~~S-6~~ | ~~Gate lesson completion on a passing quiz~~ | 2 | **Done — CHG-0052.** A lesson with a published quiz cannot be completed until passed, via a synchronous `IQuizGate` query (not the submit event, which would refuse a just-passed learner). Draft quizzes do not gate; a quiz added after completion does not revoke it. Learner sees a message pointing at the quiz, both locales. 5 Learning tests. |
 
 ---

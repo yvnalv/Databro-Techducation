@@ -83,5 +83,71 @@
     "noLink": "Halaman ini memerlukan tautan dari email pemulihan Anda.",
     "requestNew": "Minta tautan baru",
     "failed": "Gagal. Silakan coba lagi."
+  },
+  "studio": {
+    "common": {
+      "title": "Judul",
+      "status": "Status",
+      "difficulty": "Tingkat",
+      "published": "Terbit",
+      "retry": "Coba lagi",
+      "previous": "Sebelumnya",
+      "next": "Berikutnya",
+      "pageOf": "Halaman {page} dari {pages} · {total} {noun}"
+    },
+    "articles": {
+      "navTitle": "Artikel",
+      "subtitle": "Semua artikel, di seluruh status.",
+      "new": "Artikel baru",
+      "empty": "Belum ada artikel.",
+      "loadFailed": "Artikel tidak dapat dimuat.",
+      "colAuthor": "Penulis",
+      "colCategory": "Kategori",
+      "statTotal": "Total artikel",
+      "statPublished": "Terbit",
+      "statDrafts": "Draf",
+      "statScheduled": "Terjadwal",
+      "hintAllPages": "semua halaman",
+      "hintThisPage": "halaman ini",
+      "noun": "artikel"
+    },
+    "courses": {
+      "navTitle": "Kursus",
+      "subtitle": "Kurikulum yang dibangun dari materi pelajaran. Kursus dapat terbit sebelum semua pelajaran selesai ditulis.",
+      "new": "Kursus baru",
+      "empty": "Belum ada kursus. Buat satu, lalu tambahkan modul dan lampirkan materi pelajaran.",
+      "colLessons": "Pelajaran",
+      "colDuration": "Durasi",
+      "noun": "kursus"
+    },
+    "lessons": {
+      "navTitle": "Pelajaran",
+      "new": "Pelajaran baru",
+      "empty": "Belum ada materi pelajaran. Tulis satu, terbitkan, lalu lampirkan ke kursus.",
+      "colReadingTime": "Waktu baca",
+      "noun": "pelajaran",
+      "subtitleFull": "Materi pelajaran. Tulis di sini, lalu lampirkan ke kursus — materi yang sama dapat dipakai di beberapa kursus."
+    },
+    "paths": {
+      "navTitle": "Jalur pembelajaran",
+      "subtitle": "Rangkaian kursus terkurasi. Jalur dapat disusun sebelum kursus di dalamnya terbit.",
+      "new": "Jalur baru",
+      "empty": "Belum ada jalur pembelajaran. Buat satu, lalu tambahkan kursus sesuai urutan pengajaran.",
+      "colCourses": "Kursus",
+      "noun": "jalur"
+    },
+    "quizzes": {
+      "navTitle": "Kuis",
+      "subtitle": "Satu kuis per pelajaran. Buat kuis dari pelajarannya, lalu tulis pertanyaannya di sini.",
+      "empty": "Belum ada kuis. Buka sebuah pelajaran dan tambahkan satu.",
+      "colQuestions": "Pertanyaan",
+      "colPoints": "Poin",
+      "colPassMark": "Nilai lulus",
+      "noun": "kuis"
+    },
+    "attempts": {
+      "empty": "Belum ada yang mengerjakan kuis ini.",
+      "navTitle": "Pengerjaan"
+    }
   }
 }

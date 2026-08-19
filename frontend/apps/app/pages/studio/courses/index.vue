@@ -7,6 +7,8 @@ definePageMeta({ layout: "studio" });
 import { DbButton, DbChip } from "@databro/ui";
 import type { CourseSummary, Paged } from "@databro/types";
 
+const { t } = useI18n();
+
 const NuxtLink = resolveComponent("NuxtLink");
 
 /**
@@ -43,37 +45,37 @@ function duration(minutes: number) {
   return rest === 0 ? `${hours} hr` : `${hours} hr ${rest} min`;
 }
 
-useHead({ title: "Courses" });
+useHead(() => ({ title: t("studio.courses.navTitle") }));
 </script>
 
 <template>
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Courses</h1>
+        <h1 class="font-display text-2xl font-bold tracking-tight text-ink">{{ t("studio.courses.navTitle") }}</h1>
         <p class="mt-1 text-sm text-ink-muted">
-          Curricula built from lesson bodies. A course can go live before every lesson is written.
+          {{ t("studio.courses.subtitle") }}
         </p>
       </div>
-      <DbButton :as="NuxtLink" to="/studio/courses/new">New course</DbButton>
+      <DbButton :as="NuxtLink" to="/studio/courses/new">{{ t("studio.courses.new") }}</DbButton>
     </div>
 
     <p
       v-if="courses.length === 0"
       class="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-sm text-ink-muted"
     >
-      No courses yet. Create one, then add modules and attach lesson bodies to it.
+      {{ t("studio.courses.empty") }}
     </p>
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line">
       <table class="w-full text-left text-sm">
         <thead class="bg-accent-deep text-white">
           <tr>
-            <th scope="col" class="px-4 py-3 font-semibold">Title</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Status</th>
-            <th scope="col" class="px-4 py-3 font-semibold">Difficulty</th>
-            <th scope="col" class="px-4 py-3 text-right font-semibold">Lessons</th>
-            <th scope="col" class="px-4 py-3 text-right font-semibold">Duration</th>
+            <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.title") }}</th>
+            <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.status") }}</th>
+            <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.difficulty") }}</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.courses.colLessons") }}</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.courses.colDuration") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-line bg-surface">
@@ -98,7 +100,7 @@ useHead({ title: "Courses" });
     </div>
 
     <p v-if="meta && meta.totalPages > 1" class="mt-4 text-sm text-ink-muted">
-      Page {{ meta.page }} of {{ meta.totalPages }} · {{ meta.total }} courses
+      {{ t("studio.common.pageOf", { page: meta.page, pages: meta.totalPages, total: meta.total, noun: t("studio.courses.noun") }) }}
     </p>
   </div>
 </template>

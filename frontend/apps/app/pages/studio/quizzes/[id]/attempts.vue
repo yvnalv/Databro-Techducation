@@ -5,6 +5,8 @@ definePageMeta({ layout: "studio" });
 import { DbChip } from "@databro/ui";
 import type { AuthoringQuiz, QuizAttemptSummary } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Quiz attempt review (U-1).
  *
@@ -68,7 +70,7 @@ useHead(() => ({ title: quiz.value ? `Attempts — ${quiz.value.title}` : "Attem
       v-if="rows.length === 0"
       class="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-sm text-ink-muted"
     >
-      No one has submitted this quiz yet.
+      {{ t("studio.attempts.empty") }}
     </p>
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line">
