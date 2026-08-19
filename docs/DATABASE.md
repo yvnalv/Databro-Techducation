@@ -208,6 +208,16 @@ structural change.
 `search_vector` on `courses` is a stored generated column (title A, summary B), the same pattern as
 articles but with no locale `CASE` — a course has no locale column (ADR-0014).
 
+**bookmarks** (id, user_id, kind, target_id, saved_at) — `kind` is a discriminator (`Course` /
+`Lesson`) rather than one table per kind, because a saved list is read as one list ordered by
+`saved_at` and a UNION across tables to render one page is the worse trade.
+
+Unique on `(user_id, kind, target_id)`, filtered on `is_deleted = false` — removal is a soft delete
+(XC-1), so without the filter a tombstone would stop the same thing ever being saved again.
+
+Neither id carries a foreign key: `user_id` crosses a module boundary, and `target_id` is
+polymorphic, so there is no single table for a constraint to point at.
+
 #### Progress
 
 **enrollments** (id, user_id, course_id, enrolled_at, completed_at null, last_lesson_id null,

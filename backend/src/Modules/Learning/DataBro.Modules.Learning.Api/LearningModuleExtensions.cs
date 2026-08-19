@@ -27,6 +27,7 @@ public static class LearningModuleExtensions
     {
         MapPublicEndpoints(endpoints);
         MapLearnerEndpoints(endpoints);
+        MapBookmarkEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
         return endpoints;
     }
@@ -80,6 +81,36 @@ public static class LearningModuleExtensions
             string courseSlug, Guid lessonId, ICurrentUser user, EnrollmentService service, CancellationToken ct) =>
             RequireUser(user, async id =>
                 ApiEnvelope.From(await service.ReopenLessonAsync(id, courseSlug, lessonId, ct))));
+    }
+
+    // ---- Saved items. Same posture as progress: authenticated, no permission, addressed as /me
+    // so no request shape can reach another learner's list (LN-8). ----
+    private static void MapBookmarkEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints
+            .MapGroup("/api/v1/me/bookmarks")
+            .WithTags("Learning.Bookmarks")
+            .RequireAuthorization();
+
+        group.MapGet("", (
+            ICurrentUser user, BookmarkService service, int? page, int? pageSize, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.OkPaged(await service.ListAsync(id, new PageRequest(page, pageSize), ct))));
+
+        // The ids a learner has saved, for rendering a filled-in bookmark control on a list of cards
+        // without one request per card.
+        group.MapGet("/ids", (
+            ICurrentUser user, BookmarkService service, CancellationToken ct) =>
+            RequireUser(user, async id => ApiEnvelope.Ok(await service.SavedTargetsAsync(id, ct))));
+
+        group.MapPost("", (
+            CreateBookmarkRequest request, ICurrentUser user, BookmarkService service, CancellationToken ct) =>
+            RequireUser(user, async id => ApiEnvelope.From(await service.SaveAsync(id, request, ct))));
+
+        group.MapDelete("/{kind}/{targetId:guid}", (
+            string kind, Guid targetId, ICurrentUser user, BookmarkService service, CancellationToken ct) =>
+            RequireUser(user, async id =>
+                ApiEnvelope.FromEmpty(await service.RemoveAsync(id, kind, targetId, ct))));
     }
 
     /// <summary>

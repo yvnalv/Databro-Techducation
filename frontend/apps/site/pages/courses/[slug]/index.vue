@@ -117,6 +117,12 @@ useHead({
     </PageHeader>
 
     <div class="db-shell py-14 sm:py-20">
+      <!-- Save-for-later. Client-only and secondary: a signed-out reader sees nothing rather than a
+           prompt to sign in halfway through browsing. -->
+      <div class="mb-8 flex justify-end">
+        <SaveButton kind="course" :target-id="published.id" />
+      </div>
+
       <div class="mx-auto max-w-3xl">
         <h2 class="font-display text-2xl font-bold tracking-tight text-ink">
           {{ t("courses.curriculum") }}

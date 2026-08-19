@@ -526,6 +526,25 @@ export interface QuizAttemptSummary {
   submittedAt: string;
 }
 
+// ---- Bookmarks ----
+
+export type BookmarkKind = "course" | "lesson";
+
+/**
+ * A saved item, resolved for display.
+ *
+ * `title` is read live from the target and `path` is null when it is no longer reachable — an
+ * unpublished course keeps its title and loses its link, rather than disappearing from the list.
+ */
+export interface Bookmark {
+  id: string;
+  kind: BookmarkKind;
+  targetId: string;
+  title: string;
+  path?: string | null;
+  savedAt: string;
+}
+
 // ---- Enrollment & progress (LN-6 … LN-11) ----
 
 /**

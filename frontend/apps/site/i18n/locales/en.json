@@ -158,5 +158,10 @@
     "sequence": "The sequence",
     "sequenceHint": "Take these in order. Each builds on the one before it.",
     "noCoursesYet": "The courses in this path are not published yet."
+  },
+  "bookmarks": {
+    "save": "Save",
+    "saved": "Saved",
+    "remove": "Remove from saved"
   }
 }

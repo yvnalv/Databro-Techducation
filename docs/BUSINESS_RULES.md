@@ -105,6 +105,16 @@ Domain layer. Rules are grouped by area and will grow per phase.
 * LN-11: Percent complete is derived at read time from published lessons, never stored, and capped at
   100 — a learner who completed a course before it grew is not shown above 100%.
 
+## Learning — saved items
+
+* LN-12: A bookmark stores a user, a kind and a target id, and **nothing copied from the target**.
+  Title and path are resolved at read time, so a saved list can never disagree with the thing it
+  points at.
+* LN-13: A target that is no longer reachable **keeps its row**, with a null path. Dropping it would
+  make a saved list shrink without explanation the moment an author unpublished something.
+* LN-14: Saving is idempotent and removing succeeds even when nothing was saved — the same reasoning
+  as LN-9 and logout: a control that can fail leaves the UI lying about its own state.
+
 ## Assessment
 
 * AS-1: **A learner-facing response never carries the answer key.** Enforced by having separate DTO

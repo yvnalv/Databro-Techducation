@@ -385,5 +385,13 @@
       "noFormBefore": "Belum ada formulir untuk",
       "noFormAfter": "— blok ini tetap tampil."
     }
+  },
+  "saved": {
+    "title": "Tersimpan",
+    "subtitle": "Hal yang Anda simpan untuk nanti.",
+    "empty": "Belum ada yang disimpan.",
+    "unavailable": "Tidak lagi tersedia",
+    "course": "Kursus",
+    "lesson": "Pelajaran"
   }
 }

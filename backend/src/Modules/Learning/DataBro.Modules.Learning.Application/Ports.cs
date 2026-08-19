@@ -49,6 +49,21 @@ public interface IEnrollmentRepository
     Task SaveChangesAsync(CancellationToken ct = default);
 }
 
+/// <summary>Persistence port for the <see cref="Bookmark"/> aggregate.</summary>
+public interface IBookmarkRepository
+{
+    Task AddAsync(Bookmark bookmark, CancellationToken ct = default);
+
+    /// <summary>The learner's saved list, most recently saved first.</summary>
+    Task<PagedResult<Bookmark>> ListForUserAsync(Guid userId, PageRequest page, CancellationToken ct = default);
+
+    Task<Bookmark?> FindAsync(Guid userId, BookmarkKind kind, Guid targetId, CancellationToken ct = default);
+
+    void Remove(Bookmark bookmark);
+
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
+
 /// <summary>Persistence port for the <see cref="LearningPath"/> aggregate.</summary>
 public interface ILearningPathRepository
 {

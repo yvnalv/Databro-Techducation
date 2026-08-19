@@ -22,6 +22,14 @@ const { data, error } = await useAsyncData<Paged<Enrollment>>(
 
 const enrollments = computed(() => data.value?.items ?? []);
 
+// Fetched separately rather than folded into the enrollments call: a saved item is not a course a
+// learner joined, and merging the two would make one list that means two different things.
+const { data: savedData } = await useAsyncData("me:bookmarks", () =>
+  withAuth((api) => api.listBookmarks({ pageSize: 20 })),
+);
+
+const saved = computed(() => savedData.value?.items ?? []);
+
 const stats = computed(() => ({
   enrolled: data.value?.meta.total ?? 0,
   completed: enrollments.value.filter((e) => e.completedAt).length,
@@ -172,6 +180,33 @@ const courseHref = (e: Enrollment) => {
         </li>
       </ul>
     </template>
+
+    <!-- Saved items. Its own section under the courses, because "joined" and "kept for later" are
+         different commitments and a single list would blur them. -->
+    <section v-if="saved.length" class="mt-10">
+      <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("saved.title") }}</h2>
+      <p class="mt-1 text-sm text-ink-muted">{{ t("saved.subtitle") }}</p>
+
+      <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-surface">
+        <li v-for="item in saved" :key="item.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
+          <span class="text-xs uppercase tracking-wide text-ink-subtle">
+            {{ item.kind === "course" ? t("saved.course") : t("saved.lesson") }}
+          </span>
+
+          <a
+            v-if="item.path"
+            :href="`${publicSiteUrl}${item.path}`"
+            class="min-w-0 flex-1 truncate font-medium text-accent hover:underline"
+          >
+            {{ item.title }}
+          </a>
+          <span v-else class="min-w-0 flex-1 truncate text-ink-muted">
+            {{ item.title }}
+            <span class="ms-1 text-xs text-ink-subtle">({{ t("saved.unavailable") }})</span>
+          </span>
+        </li>
+      </ul>
+    </section>
 
     <div v-else class="rounded-card border border-line bg-surface p-10 text-center">
       <p class="text-ink-muted">{{ t("dashboard.empty") }}</p>

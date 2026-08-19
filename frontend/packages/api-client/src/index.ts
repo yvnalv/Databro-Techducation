@@ -21,6 +21,8 @@ import type {
   LessonPage,
   LearningPath,
   AuthoringQuiz,
+  Bookmark,
+  BookmarkKind,
   Quiz,
   QuizAttempt,
   QuizAttemptSummary,
@@ -648,6 +650,47 @@ export class ApiClient {
   listQuizAttempts(id: string): Promise<QuizAttemptSummary[]> {
     return this.request<QuizAttemptSummary[]>(
       `/api/v1/authoring/quizzes/${encodeURIComponent(id)}/attempts`);
+  }
+
+  // ---- Bookmarks ----
+  //
+  // Addressed as `/me`, so no call shape here can reach another learner's list.
+
+  async listBookmarks(params?: { page?: number; pageSize?: number }): Promise<Paged<Bookmark>> {
+    const query = new URLSearchParams();
+    if (params?.page != null) query.set("page", String(params.page));
+    if (params?.pageSize != null) query.set("pageSize", String(params.pageSize));
+
+    const suffix = query.size > 0 ? `?${query}` : "";
+    const { data, meta } = await this.envelope<Bookmark[]>(`/api/v1/me/bookmarks${suffix}`);
+
+    return {
+      items: data,
+      meta: (meta as unknown as PageMeta) ?? {
+        page: 1,
+        pageSize: data.length,
+        total: data.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  /** Just the saved ids — lets a page of cards render its save controls without one call per card. */
+  savedBookmarkIds(): Promise<string[]> {
+    return this.request<string[]>("/api/v1/me/bookmarks/ids");
+  }
+
+  /** Idempotent: saving twice returns the existing bookmark rather than a conflict. */
+  saveBookmark(kind: BookmarkKind, targetId: string): Promise<Bookmark> {
+    return this.json<Bookmark>("/api/v1/me/bookmarks", "POST", { kind, targetId });
+  }
+
+  /** Succeeds even when it was not saved — un-saving must never fail. */
+  removeBookmark(kind: BookmarkKind, targetId: string): Promise<Record<string, never>> {
+    return this.json<Record<string, never>>(
+      `/api/v1/me/bookmarks/${encodeURIComponent(kind)}/${encodeURIComponent(targetId)}`,
+      "DELETE",
+    );
   }
 
   // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----

@@ -158,5 +158,10 @@
     "sequence": "Urutannya",
     "sequenceHint": "Ikuti secara berurutan. Masing-masing dibangun dari yang sebelumnya.",
     "noCoursesYet": "Kursus dalam jalur ini belum diterbitkan."
+  },
+  "bookmarks": {
+    "save": "Simpan",
+    "saved": "Tersimpan",
+    "remove": "Hapus dari simpanan"
   }
 }

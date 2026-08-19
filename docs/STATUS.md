@@ -194,7 +194,8 @@ on the record rather than being tidied away.
    locales.
 4. ~~**Finish the CMS's Indonesian strings (S-5).**~~ **Done (CHG-0054 … CHG-0058).** All 16 studio
    files translated, 347 keys, both locales at parity. Rule 19 now holds across both apps.
-5. Then close Phase 2: **bookmarks** and **streaks**, plus **social login** carried over from Phase 1.
+5. Then close Phase 2: ~~bookmarks~~ **done (CHG-0059)**, **streaks**, plus **social login** carried
+   over from Phase 1.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented

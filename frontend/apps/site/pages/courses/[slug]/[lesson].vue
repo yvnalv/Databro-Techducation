@@ -117,6 +117,7 @@ useHead(() => ({
       </p>
 
       <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-ink-subtle">
+        <SaveButton kind="lesson" :target-id="lesson.id" />
         <DbChip tone="neutral">{{ t(`courses.difficulty.${lesson.difficulty}`) }}</DbChip>
         <span v-if="lesson.estimatedMinutes > 0">
           {{ t("courses.minutes", { count: lesson.estimatedMinutes }) }}

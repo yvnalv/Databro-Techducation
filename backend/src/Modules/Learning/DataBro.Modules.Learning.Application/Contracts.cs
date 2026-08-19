@@ -151,6 +151,28 @@ public sealed record EnrollmentDto(
     int PercentComplete,
     IReadOnlyList<Guid> CompletedLessonIds);
 
+/// <summary>
+/// A saved item, resolved for display.
+/// </summary>
+/// <param name="Title">
+/// Read live from the course or lesson, never stored on the bookmark — a saved list that disagreed
+/// with the thing it points at would defeat the point of saving it.
+/// </param>
+/// <param name="Path">
+/// Where it lives on the public site, or null when the target has been unpublished or removed. A
+/// null path is an ordinary state and the UI shows the row as unavailable rather than linking into a
+/// 404.
+/// </param>
+public sealed record BookmarkDto(
+    Guid Id,
+    string Kind,
+    Guid TargetId,
+    string Title,
+    string? Path,
+    DateTimeOffset SavedAt);
+
+public sealed record CreateBookmarkRequest(string Kind, Guid TargetId);
+
 internal static class LearningMapping
 {
     public static string ToWire<TEnum>(this TEnum value) where TEnum : struct, Enum =>

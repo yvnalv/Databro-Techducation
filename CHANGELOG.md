@@ -1,5 +1,42 @@
 # DataBro Changelog
 
+## [2026-08-19 16:07:12 UTC]
+
+CHG-0059 — Bookmarks (LN-12 … LN-14)
+
+A learner can save a course or a lesson for later. Second-to-last item in Phase 2.
+
+- **In Learning, not a new module**, following what `DATABASE.md` had recorded since Phase 1 rather
+  than inventing a home for it. Its own aggregate root beside `Enrollment`, for the same reason:
+  learner-owned, written at a rate unrelated to how often a course is edited.
+- **The row stores a user, a kind and a target id — and nothing copied from the target** (LN-12).
+  Title and path are resolved at read time. Denormalising them would make a saved list that quietly
+  disagrees with the thing it points at the moment an author renames anything, and a bookmark's whole
+  value is that it still resolves.
+- **A target that stops being reachable keeps its row, with a null path** (LN-13). Dropping it would
+  make a learner's list shrink with no explanation the moment an author unpublished something; the UI
+  shows the title greyed with "no longer available" instead. An unpublished course keeps its title
+  and loses its link — they saved something real, and it may come back.
+- **A `kind` discriminator rather than a table per kind.** A saved list is read as one list ordered by
+  when things were saved, and a UNION across tables to render one page is the worse trade. Articles
+  are deliberately absent: they belong to Content, which holds no learner-owned data at all today, so
+  saving one is a bigger change than this slice. The discriminator means adding it later is a new
+  value and a resolver, not a migration.
+- **Saving is idempotent and removing always succeeds** (LN-14) — the same reasoning as enrolling
+  (LN-9) and logout. A control that can fail leaves the UI lying about its own state.
+- Removal is a soft delete (XC-1), so the unique index is filtered on `is_deleted` — without that,
+  a tombstone would stop the same thing ever being saved again. A test pins the save-remove-save
+  cycle, because that is exactly the bug an unfiltered index would cause.
+- `SaveButton` on the course and lesson pages is client-only and secondary, like the progress bar and
+  the quiz: a signed-out reader sees nothing rather than a prompt to sign in mid-browse. State is
+  optimistic and reverted on failure. It renders only once the saved state is known, so the icon
+  never flips under the reader a moment after the page settles.
+- A **Saved** section on the learner dashboard, fetched separately from enrollments on purpose:
+  "joined" and "kept for later" are different commitments and one list would blur them.
+- 10 new tests, all passing first run (backend 322 → **332**). Verified live: save, save again,
+  save a ghost (404), a bad kind (400), the resolved list with real paths, remove, remove again,
+  re-save.
+
 ## [2026-08-19 15:52:10 UTC]
 
 CHG-0058 — Translate the CMS: article editor and BlockEditor (S-5, complete)
