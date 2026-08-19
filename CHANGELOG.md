@@ -1,5 +1,30 @@
 # DataBro Changelog
 
+## [2026-08-19 14:24:15 UTC]
+
+CHG-0053 — Fix CI: pnpm setup could never find its version
+
+Every CI run has been red since the workflow was written. The frontend job failed at `Set up pnpm`
+with *"No pnpm version is specified"*, and because the `images` job `needs: [backend, frontend]`, it
+was skipped — so the whole workflow reported failure even though the backend job passed.
+
+- **The cause is not a missing version — it is a missing path.** `packageManager: "pnpm@11.17.0"` has
+  always been declared in `frontend/package.json`. The action never read it because
+  `defaults.run.working-directory: frontend` applies to **`run:` steps only, never to `uses:`
+  steps**. `pnpm/action-setup@v4` therefore executed at the repository root, where a monorepo whose
+  Node workspace lives under `frontend/` has no `package.json` at all.
+- Fixed with `package_json_file: frontend/package.json` rather than by adding a `version:` input. The
+  version input would also have worked and would have put the pnpm version in two places — which is
+  exactly what the existing comment said it was avoiding. The comment's intent was right; only its
+  assumption about `working-directory` was wrong, and that assumption is now written down beside the
+  fix so it is not made again.
+- The error message is worth remembering: *"No pnpm version is specified"* reads like a missing
+  input and is emitted just as readily when the action is simply looking in the wrong directory.
+- Verified before pushing: the declared `pnpm@11.17.0` resolves on the registry and matches the local
+  toolchain, so the fix does not merely move the failure to the next step; the workflow YAML parses
+  and the input lands on the right step; and the `backend` and `images` jobs use repo-root-relative
+  paths, so neither had the same latent bug.
+
 ## [2026-08-19 11:41:36 UTC]
 
 CHG-0052 — Gate lesson completion on a passing quiz (AS-9 / D-1, S-6)

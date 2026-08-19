@@ -78,8 +78,16 @@ jobs:
 
       # No version pinned here on purpose: the action reads `packageManager` from package.json, so
       # the version lives in exactly one place.
+      #
+      # `package_json_file` is required and not optional polish. The `defaults.run.working-directory`
+      # above applies to `run:` steps only — never to `uses:` steps — so this action executes at the
+      # repository root, where there is no package.json at all in a monorepo whose Node workspace
+      # lives under `frontend/`. Without it the action fails with "No pnpm version is specified",
+      # which reads like a missing `version:` input and is actually a missing path.
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
 
       - name: Set up Node
         uses: actions/setup-node@v4
