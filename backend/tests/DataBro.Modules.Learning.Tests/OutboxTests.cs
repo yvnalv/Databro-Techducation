@@ -103,10 +103,9 @@ public class OutboxTests(LearningApiFactory factory) : IClassFixture<LearningApi
         var learner = await factory.CreateAuthenticatedClientAsync(Roles.Reader);
         (await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null)).EnsureSuccessStatusCode();
 
-        using (var before = factory.Services.CreateScope())
-        {
-            await DrainAsync(); // clear anything an earlier test left pending
-        }
+        // Clear anything an earlier test left pending, so the assertion below is about this
+        // completion and not about test ordering. DrainAsync makes its own scope.
+        await DrainAsync();
 
         (await learner.PostAsync($"/api/v1/me/enrollments/{slug}/lessons/{lessonId}/complete", null))
             .EnsureSuccessStatusCode();
@@ -131,14 +130,14 @@ public class OutboxTests(LearningApiFactory factory) : IClassFixture<LearningApi
 
         using (var before = factory.Services.CreateScope())
         {
-            Assert.Empty((await MessagesAsync(before)).Where(m => m.ProcessedAt is null));
+            Assert.DoesNotContain(await MessagesAsync(before), m => m.ProcessedAt is null);
         }
 
         var learner = await factory.CreateAuthenticatedClientAsync(Roles.Reader);
         (await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null)).EnsureSuccessStatusCode();
 
         using var after = factory.Services.CreateScope();
-        Assert.Empty((await MessagesAsync(after)).Where(m => m.ProcessedAt is null));
+        Assert.DoesNotContain(await MessagesAsync(after), m => m.ProcessedAt is null);
     }
 
     [Fact]

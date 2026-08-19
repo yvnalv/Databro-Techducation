@@ -25,10 +25,10 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           # From global.json, so CI and a developer's machine cannot drift onto different SDKs.
           global-json-file: backend/global.json
@@ -57,9 +57,12 @@ jobs:
           --logger trx
           --results-directory artifacts/test-results
 
+      # v6 rather than v5: v5 still runs on Node 20, which GitHub now warns about on every run.
+      # The first upload-artifact release on Node 24 is v6, so v5 would have been a version bump
+      # that fixed nothing.
       - name: Upload test results
         if: always() # The failing run is the one whose results are worth reading.
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: backend-test-results
           path: artifacts/test-results
@@ -74,7 +77,7 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # No version pinned here on purpose: the action reads `packageManager` from package.json, so
       # the version lives in exactly one place.
@@ -85,12 +88,12 @@ jobs:
       # lives under `frontend/`. Without it the action fails with "No pnpm version is specified",
       # which reads like a missing `version:` input and is actually a missing path.
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           package_json_file: frontend/package.json
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
@@ -137,7 +140,7 @@ jobs:
     needs: [backend, frontend]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-buildx-action@v3
 

@@ -122,7 +122,7 @@ public class SearchApiTests(LearningApiFactory factory) : IClassFixture<Learning
         var root = await ReadAsync(await factory.CreateClient().GetAsync("/api/v1/search?q=anything"));
 
         var kinds = root.GetProperty("data").GetProperty("segments").EnumerateArray()
-            .Select(s => s.GetProperty("kind").GetString())
+            .Select(s => s.GetProperty("kind").GetString()!)
             .ToArray();
 
         Assert.Equal(["courses", "articles"], kinds);

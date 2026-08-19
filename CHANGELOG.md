@@ -1,5 +1,36 @@
 # DataBro Changelog
 
+## [2026-08-19 15:30:44 UTC]
+
+CHG-0057 — Clear every warning
+
+The build was green but not quiet. Three compiler warnings and a deprecation notice on every CI run,
+all of them mine, all of them the kind that gets scrolled past until something real hides behind one.
+
+- **xUnit2029 × 2** — `Assert.Empty(collection.Where(pred))` in the outbox tests. The analyzer is
+  right and the fix is better than the warning suggests: `Assert.DoesNotContain(collection, pred)`
+  reports *which* item it found when it fails, where `Assert.Empty` on a filtered sequence can only
+  say the count was not zero.
+- **CS8631** — `Assert.Equal(["courses", "articles"], kinds)` where `kinds` was `string?[]`.
+  `GetString()` is nullable and the collection overload needs `IEquatable<T>`. Fixed with `!` on the
+  projection, which states a real invariant: a search segment always carries a kind.
+- **Dead code found while fixing those**: a `using (var before = factory.Services.CreateScope())`
+  block that created a scope, never used it, and only called `DrainAsync()` — which makes its own.
+  It read as though the scope mattered.
+- **The Node 20 deprecation notice on every run.** `actions/checkout`, `setup-node`, `setup-dotnet`,
+  `upload-artifact` and `pnpm/action-setup` were all on majors that GitHub now forces onto Node 24
+  with a warning.
+
+  Bumped only what was actually warning — the `docker/*` pair was not, and bumping something that is
+  not complaining is churn with a chance of breakage.
+
+  **`upload-artifact` needed v6, not v5.** v5 still runs on Node 20, so the obvious one-major bump
+  would have been a version change that fixed nothing; each tag was checked against its `action.yml`
+  rather than assumed. `pnpm/action-setup@v5` was likewise verified to still accept
+  `package_json_file` before bumping, since CHG-0053 had just made CI depend on that input.
+
+Backend: **0 warnings**. 322 tests, frontend 90, lint and typecheck clean, compose config clean.
+
 ## [2026-08-19 15:03:26 UTC]
 
 CHG-0056 — Translate the CMS: taxonomy, lesson editor, course builder (S-5, part 3 of 4)
