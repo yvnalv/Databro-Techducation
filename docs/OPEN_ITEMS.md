@@ -31,6 +31,8 @@ because defaulting them silently is how a product acquires rules nobody chose.
 | M-1 | **Dev learner accounts cannot sign in** | CHG-0048 enforced ID-2; 21 accounts are unconfirmed. Per account: sign in → **"Send it again"** → confirm via <http://localhost:8025>. `admin@databro.local` was confirmed at seed time and is unaffected. |
 | ~~M-2~~ | ~~Click through the quiz UI~~ | **Done (2026-08-19)** — driven by hand in a headless browser against the running stack, on a real published lesson page. Confirmed: the answer control is a radio on single-choice and enforces single selection; publish blockers fire inline; submitting from the lesson page scores and reveals the key only afterwards. One adjacent, non-quiz observation: `POST …/enrollments/{course}/lessons/{id}/visit` returns **422** for a signed-in but unenrolled reader (the progress bar degrades correctly to "Join course"), see O-7. |
 
+| M-3 | **Register the Google and GitHub OAuth apps** | Social login cannot authenticate anyone until four values exist in `.env`. Full steps in [LOCAL_DEVELOPMENT.md → Social login setup](LOCAL_DEVELOPMENT.md#social-login-setup-google-and-github). ~10 minutes, both free. Only the project owner can do it. |
+
 ---
 
 ## 3. Built but unreachable

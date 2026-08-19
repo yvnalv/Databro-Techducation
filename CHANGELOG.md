@@ -1,5 +1,31 @@
 # DataBro Changelog
 
+## [2026-08-19 16:24:31 UTC]
+
+CHG-0060 — Document the OAuth app registration (M-3)
+
+Social login is the last Phase 2 item, and it has a prerequisite no amount of code can satisfy: two
+OAuth app registrations only the project owner can create. Written down now so the work can happen
+independently of the build.
+
+- **Steps for both providers** in `LOCAL_DEVELOPMENT.md`, beside the Mailpit section — same shape of
+  thing, a local dependency with an external setup.
+- **The callback URLs are fixed in the doc**, so the registration and the implementation cannot
+  disagree about them later. Both providers permit plain `http` for localhost, so local development
+  needs no TLS.
+- **Two constraints recorded because both bite after the fact.** A GitHub OAuth App accepts exactly
+  one callback URL, so deploying needs a *second* app rather than an edit — repointing the existing
+  one at a VPS breaks local sign-in the moment it is saved. Google is the opposite: one client, many
+  redirect URIs.
+- **Why GitHub needs `user:email`.** ID-3 links accounts by *verified* email, and GitHub's `/user`
+  returns `null` for email whenever the user keeps it private — common enough that relying on it
+  would silently create duplicate accounts instead of linking. The implementation will call
+  `/user/emails` and take the primary verified address. Google returns `email_verified` directly.
+- Values go in `.env` (gitignored) against the template in `.env.example`, matching how the JWT key
+  and MinIO credentials are already handled. The four key names will be added to `.env.example` empty
+  when the feature lands, so there is a labelled slot rather than a name to guess.
+- Registered as **M-3** in `OPEN_ITEMS.md`.
+
 ## [2026-08-19 16:07:12 UTC]
 
 CHG-0059 — Bookmarks (LN-12 … LN-14)

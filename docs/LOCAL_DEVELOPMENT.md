@@ -206,6 +206,80 @@ Nothing relays outward. `MP_SMTP_AUTH_ACCEPT_ANY` means Mailpit accepts anything
 nothing, which is precisely the accident it is there to prevent.
 
 
+## Social login setup (Google and GitHub)
+
+Social login needs two OAuth app registrations that only the project owner can create. The code can
+be written and tested without them, but nobody can actually sign in until the four values below exist
+in `.env`. Roughly ten minutes, both free.
+
+### The callback URLs
+
+Register these exactly — they are compared character for character, and a trailing slash is a
+different URL:
+
+```
+http://localhost:5158/api/v1/auth/oauth/google/callback
+http://localhost:5158/api/v1/auth/oauth/github/callback
+```
+
+Both providers allow plain `http` **for localhost only**, so local development needs no TLS.
+
+### 1. Google
+
+At <https://console.cloud.google.com>:
+
+1. Create or select a project — project dropdown, top left → **New Project** → `DataBro`.
+2. **APIs & Services → OAuth consent screen.** Do this *before* creating credentials; the credential
+   option stays greyed out until a consent screen exists.
+   * User type **External**
+   * App name `DataBro`; your address for support and developer contact
+   * **Scopes** → add `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`
+   * **Test users** → add your own Google address. While the app is unpublished only listed test
+     users can sign in. That is expected, not a misconfiguration.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**
+   * Application type **Web application**
+   * Authorised redirect URI: the Google callback above
+4. Copy the **Client ID** and **Client secret**.
+
+### 2. GitHub
+
+At <https://github.com/settings/developers> → **OAuth Apps** → **New OAuth App**:
+
+* Application name `DataBro (local)`
+* Homepage URL `http://localhost:3000`
+* Authorization callback URL: the GitHub callback above
+
+Then **Generate a new client secret** and copy it — GitHub shows a secret once and never again.
+
+> **A GitHub OAuth App accepts exactly one callback URL.** Deploying therefore needs a *second* app
+> (`DataBro (production)`) rather than an edit to this one — repointing the existing app at the VPS
+> breaks local sign-in the moment you save. Google is the opposite: one client, many redirect URIs,
+> so the deployed callback is simply added to the same client.
+
+### 3. Where the values go
+
+`.env` is gitignored and `.env.example` is the tracked template (see §2). Add to **`.env`**:
+
+```bash
+GOOGLE_CLIENT_ID=…apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=…
+GITHUB_CLIENT_ID=…
+GITHUB_CLIENT_SECRET=…
+```
+
+**Never put a real value in `.env.example`, in any `appsettings*.json`, or in anything else git
+tracks.** The four key names will appear empty in `.env.example` when the feature is built, so there
+is a labelled slot to fill rather than a name to guess.
+
+### A note on why GitHub needs an extra scope
+
+`ID-3` links a social account to an existing one by **verified email**. Google returns `email` and
+`email_verified` in its userinfo response, so one call is enough. GitHub's `/user` endpoint returns
+`null` for email whenever the user has kept it private — which is common — so the implementation
+requests `read:user user:email` and calls `/user/emails` to find the primary address that is marked
+verified. Without that second call a GitHub sign-in would silently create a duplicate account instead
+of linking to the existing one.
+
 ## 6. Troubleshooting
 
 | Symptom | Cause and fix |
