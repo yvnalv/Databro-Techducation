@@ -93,7 +93,25 @@
       "retry": "Coba lagi",
       "previous": "Sebelumnya",
       "next": "Berikutnya",
-      "pageOf": "Halaman {page} dari {pages} · {total} {noun}"
+      "pageOf": "Halaman {page} dari {pages} · {total} {noun}",
+      "save": "Simpan",
+      "cancel": "Batal",
+      "remove": "Hapus",
+      "add": "Tambah",
+      "close": "Tutup",
+      "publish": "Terbitkan",
+      "unpublish": "Tarik terbit",
+      "publishing": "Penerbitan",
+      "summary": "Ringkasan",
+      "slug": "Slug",
+      "slugHint": "Dikosongkan, dibuat dari judul",
+      "genericError": "Terjadi kesalahan. Silakan coba lagi.",
+      "savedAt": "Tersimpan {time}",
+      "viewPublic": "Lihat halaman publik",
+      "loading": "Memuat…",
+      "beginner": "pemula",
+      "intermediate": "menengah",
+      "advanced": "lanjutan"
     },
     "articles": {
       "navTitle": "Artikel",
@@ -126,7 +144,14 @@
       "empty": "Belum ada materi pelajaran. Tulis satu, terbitkan, lalu lampirkan ke kursus.",
       "colReadingTime": "Waktu baca",
       "noun": "pelajaran",
-      "subtitleFull": "Materi pelajaran. Tulis di sini, lalu lampirkan ke kursus — materi yang sama dapat dipakai di beberapa kursus."
+      "subtitleFull": "Materi pelajaran. Tulis di sini, lalu lampirkan ke kursus — materi yang sama dapat dipakai di beberapa kursus.",
+      "editTitle": "Ubah pelajaran",
+      "newTitle": "Pelajaran baru",
+      "details": "Detail",
+      "content": "Konten",
+      "preview": "Pratinjau",
+      "versionHistory": "Riwayat versi",
+      "noVersions": "Belum ada versi — riwayat dimulai saat pertama kali terbit."
     },
     "paths": {
       "navTitle": "Jalur pembelajaran",
@@ -134,7 +159,25 @@
       "new": "Jalur baru",
       "empty": "Belum ada jalur pembelajaran. Buat satu, lalu tambahkan kursus sesuai urutan pengajaran.",
       "colCourses": "Kursus",
-      "noun": "jalur"
+      "noun": "jalur",
+      "editTitle": "Detail jalur",
+      "newTitle": "Jalur pembelajaran baru",
+      "docTitle": "Jalur pembelajaran",
+      "create": "Buat jalur",
+      "saveDetails": "Simpan detail",
+      "back": "Jalur pembelajaran",
+      "sequence": "Urutannya",
+      "sequenceHint": "Urutan adalah inti sebuah jalur. Kursus yang belum terbit tetap tampil di sini — hanya saja belum terlihat oleh pelajar sampai diterbitkan.",
+      "noCourses": "Belum ada kursus dalam jalur ini.",
+      "courseToAdd": "Kursus yang ditambahkan",
+      "chooseCourse": "Pilih kursus…",
+      "allAdded": "Semua kursus sudah ada dalam jalur ini",
+      "addCourse": "Tambah kursus",
+      "publishHint": "Jalur memerlukan minimal satu kursus untuk terbit. Kursus tersebut tidak harus sudah terbit — pelajar melihat yang sudah terbit saja.",
+      "moveUp": "Naikkan {title}",
+      "moveDown": "Turunkan {title}",
+      "removeFrom": "Hapus {title} dari jalur ini",
+      "lessonsCount": "{count} pelajaran"
     },
     "quizzes": {
       "navTitle": "Kuis",
@@ -143,11 +186,52 @@
       "colQuestions": "Pertanyaan",
       "colPoints": "Poin",
       "colPassMark": "Nilai lulus",
-      "noun": "kuis"
+      "noun": "kuis",
+      "docTitle": "Kuis",
+      "details": "Detail kuis",
+      "saveDetails": "Simpan detail",
+      "passMark": "Nilai lulus (%)",
+      "questions": "Pertanyaan",
+      "attempts": "Pengerjaan",
+      "newQuestion": "Pertanyaan baru…",
+      "addQuestion": "Tambah pertanyaan",
+      "questionType": "Jenis pertanyaan",
+      "noQuestions": "Belum ada pertanyaan.",
+      "addChoice": "Tambah pilihan…",
+      "typeSingle": "pilihan tunggal",
+      "typeMultiple": "pilihan ganda",
+      "typeTrueFalse": "benar / salah",
+      "needsCorrect": "Kunci jawaban belum diatur.",
+      "needsTwoChoices": "Perlu minimal dua pilihan.",
+      "atLeastOneCorrect": "Pertanyaan memerlukan minimal satu jawaban benar.",
+      "publishHint": "Setiap pertanyaan memerlukan minimal dua pilihan dan satu kunci jawaban sebelum kuis dapat terbit.",
+      "blockersRemain": "{count} pertanyaan masih perlu diperbaiki.",
+      "choiceCorrect": "{choice} adalah jawaban benar",
+      "removeChoice": "Hapus pilihan {choice}"
     },
     "attempts": {
       "empty": "Belum ada yang mengerjakan kuis ini.",
       "navTitle": "Pengerjaan"
+    },
+    "media": {
+      "library": "Pustaka media",
+      "chooseFromLibrary": "Pilih dari pustaka",
+      "nothingUploaded": "Belum ada unggahan.",
+      "loadFailed": "Pustaka media tidak dapat dimuat.",
+      "uploadFailed": "Unggahan gagal.",
+      "referenced": "Gambar terpakai",
+      "generating": "Membuat ukuran responsif…",
+      "variantsFailed": "Ukuran responsif gagal dibuat — gambar ukuran penuh tetap berfungsi.",
+      "couldNotLoad": "tidak dapat dimuat."
+    },
+    "richText": {
+      "formatting": "Format teks",
+      "bold": "Tebal",
+      "italic": "Miring",
+      "code": "Kode sebaris",
+      "strike": "Coret",
+      "link": "Tautan",
+      "linkPrompt": "URL tautan (http atau https)"
     }
   }
 }

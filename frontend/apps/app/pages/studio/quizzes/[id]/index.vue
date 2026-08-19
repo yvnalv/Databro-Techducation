@@ -6,6 +6,8 @@ import { DbButton, DbChip, DbInput } from "@databro/ui";
 import { ApiClientError, type ApiClient } from "@databro/api-client";
 import type { AuthoringQuiz, AuthoringQuizQuestion } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Quiz builder.
  *
@@ -46,7 +48,7 @@ const isPublished = computed(() => quiz.value?.status === "published");
 
 function describe(error: unknown) {
   if (error instanceof ApiClientError) return error.message;
-  return "Something went wrong. Please try again.";
+  return t("studio.common.genericError");
 }
 
 async function run(action: (api: ApiClient) => Promise<AuthoringQuiz>) {
@@ -96,7 +98,7 @@ function toggleAnswer(question: AuthoringQuizQuestion, choiceId: string) {
   // The API refuses an empty key, so a last-answer untick is stopped here rather than round-tripped
   // into an error the author cannot act on.
   if (next.length === 0) {
-    formError.value = "A question needs at least one correct answer.";
+    formError.value = t("studio.quizzes.atLeastOneCorrect");
     return;
   }
 
@@ -105,14 +107,14 @@ function toggleAnswer(question: AuthoringQuizQuestion, choiceId: string) {
 
 /** Whether a question would block publishing, shown inline so the author sees it before trying. */
 function problemWith(question: AuthoringQuizQuestion) {
-  if (question.choices.length < 2) return "Needs at least two choices.";
-  if (!question.choices.some((c) => c.isCorrect)) return "No correct answer set.";
+  if (question.choices.length < 2) return t("studio.quizzes.needsTwoChoices");
+  if (!question.choices.some((c) => c.isCorrect)) return t("studio.quizzes.needsCorrect");
   return null;
 }
 
 const blockers = computed(() => questions.value.filter((q) => problemWith(q) !== null).length);
 
-useHead(() => ({ title: title.value || "Quiz" }));
+useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
 </script>
 
 <template>
@@ -123,12 +125,12 @@ useHead(() => ({ title: title.value || "Quiz" }));
       </NuxtLink>
 
       <div class="flex items-center gap-3">
-        <span v-if="savedAt" class="text-xs text-ink-subtle">Saved {{ savedAt }}</span>
+        <span v-if="savedAt" class="text-xs text-ink-subtle">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         <NuxtLink
           :to="`/studio/quizzes/${quizId}/attempts`"
           class="text-sm font-medium text-accent hover:underline"
         >
-          Attempts
+          {{ t("studio.quizzes.attempts") }}
         </NuxtLink>
         <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ quiz.status }}</DbChip>
       </div>
@@ -143,12 +145,12 @@ useHead(() => ({ title: title.value || "Quiz" }));
     </p>
 
     <section class="mt-6 rounded-card border border-line bg-surface p-6">
-      <h1 class="font-display text-xl font-bold tracking-tight text-ink">Quiz details</h1>
+      <h1 class="font-display text-xl font-bold tracking-tight text-ink">{{ t("studio.quizzes.details") }}</h1>
 
       <div class="mt-5 space-y-4">
-        <DbInput v-model="title" label="Title" required :disabled="busy" />
+        <DbInput v-model="title" :label="t('studio.common.title')" required :disabled="busy" />
         <label class="block">
-          <span class="mb-1.5 block text-sm font-medium text-ink">Pass mark (%)</span>
+          <span class="mb-1.5 block text-sm font-medium text-ink">{{ t("studio.quizzes.passMark") }}</span>
           <input
             v-model.number="passingScore"
             type="number"
@@ -165,13 +167,13 @@ useHead(() => ({ title: title.value || "Quiz" }));
         :disabled="busy || !title"
         @click="run((api) => api.updateQuiz(quizId, { title, passingScore }))"
       >
-        Save details
+        {{ t("studio.quizzes.saveDetails") }}
       </DbButton>
     </section>
 
     <section class="mt-6 rounded-card border border-line bg-surface p-6">
       <div class="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 class="font-display text-lg font-bold tracking-tight text-ink">Questions</h2>
+        <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.quizzes.questions") }}</h2>
         <span class="text-sm text-ink-subtle">{{ quiz.totalPoints }} points total</span>
       </div>
 
@@ -195,7 +197,7 @@ useHead(() => ({ title: title.value || "Quiz" }));
               class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               @click="run((api) => api.removeQuestion(quizId, question.id))"
             >
-              Remove
+              {{ t("studio.common.remove") }}
             </button>
           </div>
 
@@ -212,7 +214,7 @@ useHead(() => ({ title: title.value || "Quiz" }));
                 type="checkbox"
                 :checked="choice.isCorrect"
                 :disabled="busy"
-                :aria-label="`${choice.text} is correct`"
+                :aria-label="t('studio.quizzes.choiceCorrect', { choice: choice.text })"
                 class="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent"
                 @change="toggleAnswer(question, choice.id)"
               />
@@ -222,7 +224,7 @@ useHead(() => ({ title: title.value || "Quiz" }));
                 :name="`answer-${question.id}`"
                 :checked="choice.isCorrect"
                 :disabled="busy"
-                :aria-label="`${choice.text} is correct`"
+                :aria-label="t('studio.quizzes.choiceCorrect', { choice: choice.text })"
                 class="h-4 w-4 border-line-strong text-accent focus:ring-accent"
                 @change="setSingleAnswer(question, choice.id)"
               />
@@ -236,7 +238,7 @@ useHead(() => ({ title: title.value || "Quiz" }));
                 v-if="question.type !== 'truefalse'"
                 type="button"
                 :disabled="busy"
-                :aria-label="`Remove choice ${choice.text}`"
+                :aria-label="t('studio.quizzes.removeChoice', { choice: choice.text })"
                 class="rounded px-2 py-0.5 text-xs text-ink-subtle hover:bg-surface-sunken hover:text-danger disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 @click="run((api) => api.removeChoice(quizId, question.id, choice.id))"
               >
@@ -249,7 +251,7 @@ useHead(() => ({ title: title.value || "Quiz" }));
             <input
               v-model="newChoiceText[question.id]"
               type="text"
-              placeholder="Add a choice…"
+              :placeholder="t('studio.quizzes.addChoice')"
               :disabled="busy"
               class="h-9 min-w-48 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               @keyup.enter="addChoice(question.id)"
@@ -267,14 +269,14 @@ useHead(() => ({ title: title.value || "Quiz" }));
       </ol>
 
       <p v-else class="mt-5 rounded-md border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted">
-        No questions yet.
+        {{ t("studio.quizzes.noQuestions") }}
       </p>
 
       <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-5">
         <input
           v-model="newPrompt"
           type="text"
-          placeholder="New question…"
+          :placeholder="t('studio.quizzes.newQuestion')"
           :disabled="busy"
           class="h-10 min-w-56 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
           @keyup.enter="addQuestion"
@@ -282,26 +284,25 @@ useHead(() => ({ title: title.value || "Quiz" }));
         <select
           v-model="newType"
           :disabled="busy"
-          aria-label="Question type"
+          :aria-label="t('studio.quizzes.questionType')"
           class="h-10 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
         >
-          <option value="singlechoice">single choice</option>
-          <option value="multiplechoice">multiple choice</option>
-          <option value="truefalse">true / false</option>
+          <option value="singlechoice">{{ t("studio.quizzes.typeSingle") }}</option>
+          <option value="multiplechoice">{{ t("studio.quizzes.typeMultiple") }}</option>
+          <option value="truefalse">{{ t("studio.quizzes.typeTrueFalse") }}</option>
         </select>
-        <DbButton :disabled="busy || !newPrompt" @click="addQuestion">Add question</DbButton>
+        <DbButton :disabled="busy || !newPrompt" @click="addQuestion">{{ t("studio.quizzes.addQuestion") }}</DbButton>
       </div>
     </section>
 
     <section class="mt-6 rounded-card border border-line bg-surface p-6">
-      <h2 class="font-display text-lg font-bold tracking-tight text-ink">Publishing</h2>
+      <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.common.publishing") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
-        Every question needs at least two choices and a correct answer (AS-5). An unanswerable
-        question is a trap, not an unfinished one.
+        {{ t("studio.quizzes.publishHint") }}
       </p>
 
       <p v-if="blockers > 0" class="mt-3 text-sm text-warning">
-        {{ blockers }} question{{ blockers === 1 ? "" : "s" }} still need attention.
+        {{ t("studio.quizzes.blockersRemain", { count: blockers }) }}
       </p>
 
       <div class="mt-4 flex flex-wrap gap-3">
@@ -309,14 +310,14 @@ useHead(() => ({ title: title.value || "Quiz" }));
           :disabled="busy || isPublished || questions.length === 0 || blockers > 0"
           @click="run((api) => api.publishQuiz(quizId))"
         >
-          Publish
+          {{ t("studio.common.publish") }}
         </DbButton>
         <DbButton
           variant="outline"
           :disabled="busy || !isPublished"
           @click="run((api) => api.unpublishQuiz(quizId))"
         >
-          Unpublish
+          {{ t("studio.common.unpublish") }}
         </DbButton>
       </div>
     </section>

@@ -1,5 +1,27 @@
 # DataBro Changelog
 
+## [2026-08-19 14:53:47 UTC]
+
+CHG-0055 — Translate the CMS: builders and editor components (S-5, part 2 of 3)
+
+Continues CHG-0054. Four more surfaces translated; 199 keys total, parity checked.
+
+- **The learning-path builder and the quiz builder**, plus **MediaPicker** and **RichTextEditor** —
+  the two components every editor embeds, so translating them moves several screens at once.
+- **A module-scope constant was the one real trap.** `RichTextEditor`'s `TOOLS` array held its button
+  titles and was evaluated **once at import**, so `t()` there would have frozen whichever language
+  the chunk first loaded in — the toolbar would keep its original language after a switch while the
+  page around it changed. It is now a `computed`. This is the same class of bug as the `useHead`
+  fix in CHG-0054: anything evaluated once cannot hold a translated string.
+- Interpolation carries values rather than concatenating: `"{count} question(s) still need
+  attention"`, `"Move {title} up"`, `"Remove choice {choice}"`. String-building in the template bakes
+  English word order into markup, which is the failure that survives a translation pass looking
+  finished.
+- Verified live in both locales on both builders.
+- **Still English (part 3):** `taxonomy.vue`, the article editor, the course builder, the lesson
+  editor, and `BlockEditor` — the five largest files, ~2,100 lines. Split here because these four
+  were verifiable as a set.
+
 ## [2026-08-19 14:43:55 UTC]
 
 CHG-0054 — Translate the CMS: list screens (S-5, part 1 of 2)

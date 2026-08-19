@@ -4,6 +4,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import type { RichText } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Inline rich-text editing for a block's `content` (ADR-0009).
  *
@@ -78,23 +80,25 @@ function toggleLink() {
     return;
   }
 
-  const href = window.prompt("Link URL (http or https)");
+  const href = window.prompt(t("studio.richText.linkPrompt"));
   if (!href) return;
 
   editor.value.chain().focus().setLink({ href }).run();
 }
 
-const TOOLS = [
-  { name: "bold", label: "B", title: "Bold", cls: "font-bold" },
-  { name: "italic", label: "I", title: "Italic", cls: "italic" },
-  { name: "code", label: "<>", title: "Inline code", cls: "font-mono text-xs" },
-  { name: "strike", label: "S", title: "Strikethrough", cls: "line-through" },
-] as const;
+// Computed, not a module constant: a module-scope array is evaluated once at import, so its
+// titles would keep whichever language was active when the chunk first loaded.
+const TOOLS = computed(() => [
+  { name: "bold", label: "B", title: t("studio.richText.bold"), cls: "font-bold" },
+  { name: "italic", label: "I", title: t("studio.richText.italic"), cls: "italic" },
+  { name: "code", label: "<>", title: t("studio.richText.code"), cls: "font-mono text-xs" },
+  { name: "strike", label: "S", title: t("studio.richText.strike"), cls: "line-through" },
+]);
 </script>
 
 <template>
   <div>
-    <div class="mb-1.5 flex flex-wrap gap-1" role="toolbar" aria-label="Text formatting">
+    <div class="mb-1.5 flex flex-wrap gap-1" role="toolbar" :aria-label="t('studio.richText.formatting')">
       <button
         v-for="tool in TOOLS"
         :key="tool.name"
@@ -116,8 +120,8 @@ const TOOLS = [
 
       <button
         type="button"
-        title="Link"
-        aria-label="Link"
+        :title="t('studio.richText.link')"
+        :aria-label="t('studio.richText.link')"
         :aria-pressed="isActive('link')"
         class="h-7 rounded border px-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         :class="
@@ -127,7 +131,7 @@ const TOOLS = [
         "
         @click="toggleLink"
       >
-        Link
+        {{ t("studio.richText.link") }}
       </button>
     </div>
 

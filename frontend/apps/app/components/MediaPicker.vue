@@ -2,6 +2,8 @@
 import { DbButton } from "@databro/ui";
 import type { MediaAsset } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Image chooser for the block editor (ADR-0011).
  *
@@ -58,7 +60,7 @@ async function openLibrary() {
     const page = await withAuth((api) => api.listMedia({ pageSize: 40 }));
     library.value = page.items;
   } catch (e) {
-    error.value = e instanceof Error ? e.message : "Could not load the media library.";
+    error.value = e instanceof Error ? e.message : t("studio.media.loadFailed");
   } finally {
     loading.value = false;
   }
@@ -95,7 +97,7 @@ async function upload(event: Event) {
       setTimeout(() => void loadSelected(), 2000);
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : "Upload failed.";
+    error.value = e instanceof Error ? e.message : t("studio.media.uploadFailed");
   } finally {
     uploading.value = false;
     // Reset so re-selecting the same file fires `change` again.
@@ -118,10 +120,10 @@ async function upload(event: Event) {
         {{ uploading ? "Uploading…" : "Upload image" }}
       </DbButton>
       <DbButton type="button" size="sm" variant="secondary" @click="openLibrary">
-        Choose from library
+        {{ t("studio.media.chooseFromLibrary") }}
       </DbButton>
       <DbButton v-if="modelValue" type="button" size="sm" variant="ghost" @click="clear">
-        Remove
+        {{ t("studio.common.remove") }}
       </DbButton>
     </div>
 
@@ -138,31 +140,32 @@ async function upload(event: Event) {
         <p class="truncate font-medium text-ink">{{ selected.fileName }}</p>
         <p class="text-ink-muted">{{ selected.width }}×{{ selected.height }}</p>
         <p v-if="selected.processingStatus === 'pending'" class="text-ink-subtle">
-          Generating responsive sizes…
+          {{ t("studio.media.generating") }}
         </p>
         <p v-else-if="selected.processingStatus === 'failed'" class="text-danger">
-          Responsive sizes failed — the full-size image still works.
+          {{ t("studio.media.variantsFailed") }}
         </p>
         <p v-else class="text-ink-subtle">{{ selected.variants.length }} responsive sizes</p>
       </div>
     </div>
 
     <p v-else-if="modelValue" class="text-sm text-ink-subtle">
-      Referenced image <code class="font-mono">{{ modelValue }}</code> could not be loaded.
+      {{ t("studio.media.referenced") }} <code class="font-mono">{{ modelValue }}</code>
+      {{ t("studio.media.couldNotLoad") }}
     </p>
 
     <!-- Library -->
     <div v-if="open" class="rounded-md border border-line p-3">
       <div class="mb-3 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-ink">Media library</h3>
+        <h3 class="text-sm font-semibold text-ink">{{ t("studio.media.library") }}</h3>
         <button type="button" class="text-sm text-ink-muted hover:text-ink" @click="open = false">
-          Close
+          {{ t("studio.common.close") }}
         </button>
       </div>
 
-      <p v-if="loading" class="text-sm text-ink-muted">Loading…</p>
+      <p v-if="loading" class="text-sm text-ink-muted">{{ t("studio.common.loading") }}</p>
       <p v-else-if="library.length === 0" class="text-sm text-ink-muted">
-        Nothing uploaded yet.
+        {{ t("studio.media.nothingUploaded") }}
       </p>
       <div v-else class="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-5">
         <button

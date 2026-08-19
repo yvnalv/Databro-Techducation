@@ -8,6 +8,8 @@ import { DbButton, DbChip, DbInput } from "@databro/ui";
 import { ApiClientError, type ApiClient } from "@databro/api-client";
 import type { CourseSummary, Difficulty, LearningPath } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Learning-path builder: the curated sequence.
  *
@@ -64,7 +66,7 @@ const available = computed<CourseSummary[]>(() => {
 
 function describe(error: unknown) {
   if (error instanceof ApiClientError) return error.message;
-  return "Something went wrong. Please try again.";
+  return t("studio.common.genericError");
 }
 
 async function run(action: (api: ApiClient) => Promise<LearningPath>) {
@@ -145,18 +147,18 @@ function move(index: number, delta: number) {
   return run((api) => api.reorderPathCourses(pathId.value, ids));
 }
 
-useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Learning path" }));
+useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value || t("studio.paths.docTitle") }));
 </script>
 
 <template>
   <div class="mx-auto max-w-3xl">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <NuxtLink to="/studio/learning-paths" class="text-sm font-medium text-accent hover:underline">
-        ← Learning paths
+        ← {{ t("studio.paths.back") }}
       </NuxtLink>
 
       <div class="flex items-center gap-3">
-        <span v-if="savedAt" class="text-xs text-ink-subtle">Saved {{ savedAt }}</span>
+        <span v-if="savedAt" class="text-xs text-ink-subtle">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         <DbChip v-if="!isNew" :tone="isPublished ? 'success' : 'neutral'">{{ status }}</DbChip>
       </div>
     </div>
@@ -171,37 +173,37 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
 
     <section class="mt-6 rounded-card border border-line bg-surface p-6">
       <h1 class="font-display text-xl font-bold tracking-tight text-ink">
-        {{ isNew ? "New learning path" : "Path details" }}
+        {{ isNew ? t("studio.paths.newTitle") : t("studio.paths.editTitle") }}
       </h1>
 
       <div class="mt-5 space-y-4">
-        <DbInput v-model="title" label="Title" required :disabled="busy" />
-        <DbInput v-model="summary" label="Summary" :disabled="busy" />
+        <DbInput v-model="title" :label="t('studio.common.title')" required :disabled="busy" />
+        <DbInput v-model="summary" :label="t('studio.common.summary')" :disabled="busy" />
         <DbInput
           v-if="isNew"
           v-model="slug"
-          label="Slug"
-          placeholder="Left blank, generated from the title"
+          :label="t('studio.common.slug')"
+          :placeholder="t('studio.common.slugHint')"
           :disabled="busy"
         />
 
         <label class="block">
-          <span class="mb-1.5 block text-sm font-medium text-ink">Difficulty</span>
+          <span class="mb-1.5 block text-sm font-medium text-ink">{{ t("studio.common.difficulty") }}</span>
           <select
             v-model="difficulty"
             :disabled="busy"
             class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
           >
-            <option value="beginner">beginner</option>
-            <option value="intermediate">intermediate</option>
-            <option value="advanced">advanced</option>
+            <option value="beginner">{{ t("studio.common.beginner") }}</option>
+            <option value="intermediate">{{ t("studio.common.intermediate") }}</option>
+            <option value="advanced">{{ t("studio.common.advanced") }}</option>
           </select>
         </label>
       </div>
 
       <div class="mt-5 flex flex-wrap items-center gap-3">
         <DbButton :disabled="busy || !title" @click="saveDetails">
-          {{ isNew ? "Create path" : "Save details" }}
+          {{ isNew ? t("studio.paths.create") : t("studio.paths.saveDetails") }}
         </DbButton>
         <a
           v-if="isPublished"
@@ -210,7 +212,7 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
           rel="noopener"
           class="text-sm font-medium text-accent hover:underline"
         >
-          View public page ↗
+          {{ t("studio.common.viewPublic") }} ↗
         </a>
       </div>
     </section>
@@ -218,10 +220,9 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
     <!-- The sequence only exists once the path does: a course cannot be attached to something with
          no id yet, and showing a disabled picker would just be a puzzle. -->
     <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface p-6">
-      <h2 class="font-display text-lg font-bold tracking-tight text-ink">The sequence</h2>
+      <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.paths.sequence") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
-        Order is what a path is. Courses that are not published still sit here — they are simply
-        absent from the learner's view until they go live.
+        {{ t("studio.paths.sequenceHint") }}
       </p>
 
       <ol v-if="courses.length" class="mt-5 space-y-3">
@@ -245,7 +246,7 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
               {{ course.title }}
             </NuxtLink>
             <span class="text-xs text-ink-subtle">
-              {{ course.lessonCount }} lessons · {{ course.difficulty }}
+              {{ t("studio.paths.lessonsCount", { count: course.lessonCount }) }} · {{ course.difficulty }}
             </span>
           </span>
 
@@ -255,7 +256,7 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
             <button
               type="button"
               :disabled="busy || index === 0"
-              :aria-label="`Move ${course.title} up`"
+              :aria-label="t('studio.paths.moveUp', { title: course.title })"
               class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               @click="move(index, -1)"
             >
@@ -264,7 +265,7 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
             <button
               type="button"
               :disabled="busy || index === courses.length - 1"
-              :aria-label="`Move ${course.title} down`"
+              :aria-label="t('studio.paths.moveDown', { title: course.title })"
               class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               @click="move(index, 1)"
             >
@@ -273,11 +274,11 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
             <button
               type="button"
               :disabled="busy"
-              :aria-label="`Remove ${course.title} from this path`"
+              :aria-label="t('studio.paths.removeFrom', { title: course.title })"
               class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               @click="run((api) => api.removeCourseFromPath(pathId, course.id))"
             >
-              Remove
+              {{ t("studio.common.remove") }}
             </button>
           </span>
         </li>
@@ -287,34 +288,33 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
         v-else
         class="mt-5 rounded-md border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted"
       >
-        No courses in this path yet.
+        {{ t("studio.paths.noCourses") }}
       </p>
 
       <div class="mt-5 flex flex-wrap items-center gap-3">
         <select
           v-model="picked"
           :disabled="busy || available.length === 0"
-          aria-label="Course to add"
+          :aria-label="t('studio.paths.courseToAdd')"
           class="h-10 min-w-56 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
         >
           <option value="">
-            {{ available.length ? "Choose a course…" : "Every course is already in this path" }}
+            {{ available.length ? t("studio.paths.chooseCourse") : t("studio.paths.allAdded") }}
           </option>
           <option v-for="course in available" :key="course.id" :value="course.id">
             {{ course.title }}{{ course.status === "published" ? "" : ` (${course.status})` }}
           </option>
         </select>
         <DbButton variant="outline" :disabled="busy || !picked" @click="addPicked">
-          Add course
+          {{ t("studio.paths.addCourse") }}
         </DbButton>
       </div>
     </section>
 
     <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface p-6">
-      <h2 class="font-display text-lg font-bold tracking-tight text-ink">Publishing</h2>
+      <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.common.publishing") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
-        A path needs at least one course to go live. Those courses do not have to be published — the
-        learner sees the ones that are.
+        {{ t("studio.paths.publishHint") }}
       </p>
 
       <div class="mt-4 flex flex-wrap gap-3">
@@ -322,14 +322,14 @@ useHead(() => ({ title: isNew.value ? "New learning path" : title.value || "Lear
           :disabled="busy || isPublished || courses.length === 0"
           @click="run((api) => api.publishLearningPath(pathId))"
         >
-          Publish
+          {{ t("studio.common.publish") }}
         </DbButton>
         <DbButton
           variant="outline"
           :disabled="busy || !isPublished"
           @click="run((api) => api.unpublishLearningPath(pathId))"
         >
-          Unpublish
+          {{ t("studio.common.unpublish") }}
         </DbButton>
       </div>
     </section>

@@ -93,7 +93,25 @@
       "retry": "Retry",
       "previous": "Previous",
       "next": "Next",
-      "pageOf": "Page {page} of {pages} · {total} {noun}"
+      "pageOf": "Page {page} of {pages} · {total} {noun}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "add": "Add",
+      "close": "Close",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publishing": "Publishing",
+      "summary": "Summary",
+      "slug": "Slug",
+      "slugHint": "Left blank, generated from the title",
+      "genericError": "Something went wrong. Please try again.",
+      "savedAt": "Saved {time}",
+      "viewPublic": "View public page",
+      "loading": "Loading…",
+      "beginner": "beginner",
+      "intermediate": "intermediate",
+      "advanced": "advanced"
     },
     "articles": {
       "navTitle": "Articles",
@@ -126,7 +144,14 @@
       "empty": "No lesson bodies yet. Write one, publish it, then attach it to a course.",
       "colReadingTime": "Reading time",
       "noun": "lessons",
-      "subtitleFull": "Lesson bodies. Write one here, then attach it to a course — the same body can appear in more than one."
+      "subtitleFull": "Lesson bodies. Write one here, then attach it to a course — the same body can appear in more than one.",
+      "editTitle": "Edit lesson",
+      "newTitle": "New lesson",
+      "details": "Details",
+      "content": "Content",
+      "preview": "Preview",
+      "versionHistory": "Version history",
+      "noVersions": "No versions yet — history starts at the first publish."
     },
     "paths": {
       "navTitle": "Learning paths",
@@ -134,7 +159,25 @@
       "new": "New path",
       "empty": "No learning paths yet. Create one, then add courses to it in the order you would teach them.",
       "colCourses": "Courses",
-      "noun": "paths"
+      "noun": "paths",
+      "editTitle": "Path details",
+      "newTitle": "New learning path",
+      "docTitle": "Learning path",
+      "create": "Create path",
+      "saveDetails": "Save details",
+      "back": "Learning paths",
+      "sequence": "The sequence",
+      "sequenceHint": "Order is what a path is. Courses that are not published still sit here — they are simply absent from the learner's view until they go live.",
+      "noCourses": "No courses in this path yet.",
+      "courseToAdd": "Course to add",
+      "chooseCourse": "Choose a course…",
+      "allAdded": "Every course is already in this path",
+      "addCourse": "Add course",
+      "publishHint": "A path needs at least one course to go live. Those courses do not have to be published — the learner sees the ones that are.",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "removeFrom": "Remove {title} from this path",
+      "lessonsCount": "{count} lessons"
     },
     "quizzes": {
       "navTitle": "Quizzes",
@@ -143,11 +186,52 @@
       "colQuestions": "Questions",
       "colPoints": "Points",
       "colPassMark": "Pass mark",
-      "noun": "quizzes"
+      "noun": "quizzes",
+      "docTitle": "Quiz",
+      "details": "Quiz details",
+      "saveDetails": "Save details",
+      "passMark": "Pass mark (%)",
+      "questions": "Questions",
+      "attempts": "Attempts",
+      "newQuestion": "New question…",
+      "addQuestion": "Add question",
+      "questionType": "Question type",
+      "noQuestions": "No questions yet.",
+      "addChoice": "Add a choice…",
+      "typeSingle": "single choice",
+      "typeMultiple": "multiple choice",
+      "typeTrueFalse": "true / false",
+      "needsCorrect": "No correct answer set.",
+      "needsTwoChoices": "Needs at least two choices.",
+      "atLeastOneCorrect": "A question needs at least one correct answer.",
+      "publishHint": "Every question needs at least two choices and a correct answer before the quiz can go live.",
+      "blockersRemain": "{count} question(s) still need attention.",
+      "choiceCorrect": "{choice} is correct",
+      "removeChoice": "Remove choice {choice}"
     },
     "attempts": {
       "empty": "No one has submitted this quiz yet.",
       "navTitle": "Attempts"
+    },
+    "media": {
+      "library": "Media library",
+      "chooseFromLibrary": "Choose from library",
+      "nothingUploaded": "Nothing uploaded yet.",
+      "loadFailed": "Could not load the media library.",
+      "uploadFailed": "Upload failed.",
+      "referenced": "Referenced image",
+      "generating": "Generating responsive sizes…",
+      "variantsFailed": "Responsive sizes failed — the full-size image still works.",
+      "couldNotLoad": "could not be loaded."
+    },
+    "richText": {
+      "formatting": "Text formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "code": "Inline code",
+      "strike": "Strikethrough",
+      "link": "Link",
+      "linkPrompt": "Link URL (http or https)"
     }
   }
 }
