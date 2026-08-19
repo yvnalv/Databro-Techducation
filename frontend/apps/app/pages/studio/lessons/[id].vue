@@ -8,6 +8,8 @@ import { ContentRenderer, DbButton, DbChip, DbInput, mediaResolverFor } from "@d
 import { ApiClientError } from "@databro/api-client";
 import type { ArticleVersionSummary, ContentDocument, LessonContent } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Lesson body editor.
  *
@@ -51,7 +53,7 @@ const resolveMedia = computed(() => mediaResolverFor(merged(undefined)));
 
 function describe(error: unknown) {
   if (error instanceof ApiClientError) return error.message;
-  return "Something went wrong. Please try again.";
+  return t("studio.common.genericError");
 }
 
 async function save() {
@@ -134,7 +136,7 @@ async function restore(version: number) {
   const id = lesson.value?.id;
   if (!id) return;
 
-  if (!confirm(`Restore version ${version}? This replaces the current draft. Nothing published changes.`))
+  if (!confirm(t("studio.lessons.restoreConfirm", { version })))
     return;
 
   restoring.value = version;
@@ -156,26 +158,26 @@ watch(() => lesson.value?.currentVersion, () => {
   if (versionsOpen.value) versions.value = [];
 });
 
-useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Edit lesson")) });
+useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value || t("studio.lessons.editTitle") }));
 </script>
 
 <template>
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/studio/lessons" class="text-sm font-medium text-accent hover:underline">← Lessons</NuxtLink>
+        <NuxtLink to="/studio/lessons" class="text-sm font-medium text-accent hover:underline">← {{ t("studio.lessons.back") }}</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
-          {{ isNew ? "New lesson" : title || "Untitled" }}
+          {{ isNew ? t("studio.lessons.newTitle") : title || t("studio.common.untitled") }}
         </h1>
         <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ status }}</DbChip>
-          <span v-if="savedAt">Saved {{ savedAt }}</span>
+          <span v-if="savedAt">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         </p>
       </div>
 
       <div class="flex flex-wrap gap-2">
         <DbButton variant="outline" :disabled="busy" @click="save">
-          {{ busy ? "Working…" : isNew ? "Create lesson" : "Save draft" }}
+          {{ busy ? t("studio.common.working") : isNew ? t("studio.lessons.create") : t("studio.common.saveDraft") }}
         </DbButton>
         <DbButton
           v-if="!isNew"
@@ -183,7 +185,7 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
           :disabled="busy"
           @click="togglePublish"
         >
-          {{ isPublished ? "Unpublish" : "Publish" }}
+          {{ isPublished ? t("studio.common.unpublish") : t("studio.common.publish") }}
         </DbButton>
       </div>
     </div>
@@ -200,39 +202,37 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
       v-if="isPublished"
       class="mt-4 rounded-card border border-line bg-surface-sunken px-4 py-3 text-sm text-ink-muted"
     >
-      Unpublishing removes this lesson from every course that uses it, without warning the courses.
-      Content has no way to ask which curricula depend on a body — that is the module boundary, not
-      an oversight.
+      {{ t("studio.lessons.unpublishWarning") }}
     </p>
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div class="space-y-6">
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Details</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.details") }}</h2>
 
-          <DbInput v-model="title" label="Title" required />
-          <DbInput v-model="summary" label="Summary" hint="Shown in the course outline." />
+          <DbInput v-model="title" :label="t('studio.common.title')" required />
+          <DbInput v-model="summary" :label="t('studio.common.summary')" :hint="t('studio.lessons.summaryHint')" />
           <DbInput
             v-if="isNew"
             v-model="slug"
-            label="Slug"
-            hint="Leave blank to derive from the title. Must be unique across articles and lessons alike."
+            :label="t('studio.common.slug')"
+            :hint="t('studio.lessons.slugHint')"
           />
           <p v-else class="text-sm text-ink-muted">
-            Slug: <code class="font-mono">{{ lesson?.slug }}</code>
-            <span v-if="slugLocked" class="text-ink-subtle"> — locked once published.</span>
+            {{ t("studio.lessons.slugLabel") }} <code class="font-mono">{{ lesson?.slug }}</code>
+            <span v-if="slugLocked" class="text-ink-subtle">{{ t("studio.lessons.slugLocked") }}</span>
           </p>
         </section>
 
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Content</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.content") }}</h2>
           <BlockEditor v-model="content" />
         </section>
 
         <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface p-5">
           <div class="flex items-center justify-between">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
-              Version history
+              {{ t("studio.lessons.versionHistory") }}
             </h2>
             <button
               type="button"
@@ -240,20 +240,20 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
               :aria-expanded="versionsOpen"
               @click="toggleVersions"
             >
-              {{ versionsOpen ? "Hide" : "Show" }}
+              {{ versionsOpen ? t("studio.common.hide") : t("studio.common.show") }}
             </button>
           </div>
 
           <template v-if="versionsOpen">
             <p v-if="versions.length === 0" class="text-sm text-ink-muted">
-              No versions yet — history starts at the first publish.
+              {{ t("studio.lessons.noVersions") }}
             </p>
             <ul v-else class="divide-y divide-line">
               <li v-for="v in versions" :key="v.version" class="flex items-start gap-3 py-3">
                 <div class="min-w-0 flex-1">
                   <p class="flex items-center gap-2 text-sm font-medium text-ink">
                     v{{ v.version }}
-                    <DbChip v-if="v.isCurrent" tone="success">live</DbChip>
+                    <DbChip v-if="v.isCurrent" tone="success">{{ t("studio.lessons.live") }}</DbChip>
                   </p>
                   <p class="truncate text-sm text-ink-muted">{{ v.title }}</p>
                   <p class="text-xs text-ink-subtle">{{ new Date(v.createdAt).toLocaleString() }}</p>
@@ -264,7 +264,7 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
                   :disabled="restoring !== null"
                   @click="restore(v.version)"
                 >
-                  {{ restoring === v.version ? "Restoring…" : "Restore" }}
+                  {{ restoring === v.version ? t("studio.lessons.restoring") : t("studio.lessons.restore") }}
                 </DbButton>
               </li>
             </ul>
@@ -275,10 +275,10 @@ useHead({ title: computed(() => (isNew.value ? "New lesson" : title.value || "Ed
       <aside class="xl:sticky xl:top-6 xl:self-start">
         <div class="rounded-card border border-line bg-surface">
           <div class="border-b border-line px-4 py-2">
-            <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Preview</h2>
+            <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.preview") }}</h2>
           </div>
           <div class="max-h-[70vh] overflow-y-auto p-5">
-            <h3 class="font-display text-xl font-bold tracking-tight text-ink">{{ title || "Untitled" }}</h3>
+            <h3 class="font-display text-xl font-bold tracking-tight text-ink">{{ title || t("studio.common.untitled") }}</h3>
             <p v-if="summary" class="mt-2 text-sm text-ink-muted">{{ summary }}</p>
             <hr class="my-4 border-line" />
             <!-- The same renderer the public site uses, so preview and production cannot drift. -->

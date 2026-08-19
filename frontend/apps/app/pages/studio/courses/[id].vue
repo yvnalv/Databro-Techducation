@@ -8,6 +8,8 @@ import { DbButton, DbChip, DbInput } from "@databro/ui";
 import { ApiClientError, type ApiClient } from "@databro/api-client";
 import type { Course, Difficulty, LessonContentSummary } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Course builder: the curriculum tree.
  *
@@ -48,7 +50,7 @@ const slugLocked = computed(() => Boolean(course.value?.publishedAt));
 
 function describe(error: unknown) {
   if (error instanceof ApiClientError) return error.message;
-  return "Something went wrong. Please try again.";
+  return t("studio.common.genericError");
 }
 
 /**
@@ -162,7 +164,7 @@ async function moveLesson(moduleId: string, index: number, delta: number) {
 async function removeModule(moduleId: string, lessonCount: number) {
   const warning = lessonCount > 0
     ? `Remove this module and its ${lessonCount} lesson(s) from the course? The lesson bodies themselves are not deleted.`
-    : "Remove this module?";
+    : t("studio.courses.removeModuleConfirm");
 
   if (!confirm(warning)) return;
   await run((api) => api.removeCourseModule(course.value!.id, moduleId));
@@ -200,7 +202,7 @@ async function openQuiz(lessonId: string, lessonTitle: string) {
 async function removeLesson(moduleId: string, lessonId: string) {
   // Worth confirming even though it is cheap to undo: the wording is what tells an author the body
   // survives, which is not obvious from a delete button.
-  if (!confirm("Remove this lesson from the course? The lesson body is not deleted.")) return;
+  if (!confirm(t("studio.courses.removeLessonConfirm"))) return;
   await run((api) => api.removeCourseLesson(course.value!.id, moduleId, lessonId));
 }
 
@@ -251,7 +253,7 @@ const unpublishedLessons = computed(
   () => course.value?.modules.flatMap((m) => m.lessons).filter((l) => !l.isPublished) ?? [],
 );
 
-useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Edit course")) });
+useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t("studio.courses.navTitle") }));
 </script>
 
 <template>
@@ -260,18 +262,18 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
       <div class="min-w-0">
         <NuxtLink to="/studio/courses" class="text-sm font-medium text-accent hover:underline">← Courses</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
-          {{ isNew ? "New course" : title || "Untitled" }}
+          {{ isNew ? t("studio.courses.new") : title || t("studio.common.untitled") }}
         </h1>
         <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <DbChip :tone="isPublished ? 'success' : 'neutral'">{{ status }}</DbChip>
           <span v-if="course">{{ course.lessonCount }} lesson(s)</span>
-          <span v-if="savedAt">Saved {{ savedAt }}</span>
+          <span v-if="savedAt">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         </p>
       </div>
 
       <div class="flex flex-wrap gap-2">
         <DbButton variant="outline" :disabled="busy" @click="saveDetails">
-          {{ busy ? "Working…" : isNew ? "Create course" : "Save details" }}
+          {{ busy ? t("studio.common.working") : isNew ? t("studio.courses.create") : t("studio.courses.saveDetails") }}
         </DbButton>
         <DbButton
           v-if="!isNew"
@@ -279,7 +281,7 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
           :disabled="busy"
           @click="togglePublish"
         >
-          {{ isPublished ? "Unpublish" : "Publish" }}
+          {{ isPublished ? t("studio.common.unpublish") : t("studio.common.publish") }}
         </DbButton>
       </div>
     </div>
@@ -295,9 +297,9 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div class="space-y-6">
         <section class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Details</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.details") }}</h2>
 
-          <DbInput v-model="title" label="Title" required />
+          <DbInput v-model="title" :label="t('studio.common.title')" required />
           <DbInput v-model="summary" label="Summary" hint="Shown on the course card." />
           <DbInput
             v-if="isNew"
@@ -326,7 +328,7 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
 
         <!-- Curriculum -->
         <section v-if="course" class="space-y-4 rounded-card border border-line bg-surface p-5">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Curriculum</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.curriculum") }}</h2>
 
           <p v-if="course.modules.length === 0" class="text-sm text-ink-muted">
             No modules yet. A module is a named section — “Retrieval”, “Evaluation” — holding an
@@ -379,7 +381,7 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
                   {{ lesson.title }}
                 </NuxtLink>
 
-                <DbChip v-if="!lesson.isPublished" tone="warning">body draft</DbChip>
+                <DbChip v-if="!lesson.isPublished" tone="warning">{{ t("studio.courses.bodyDraft") }}</DbChip>
                 <span class="text-xs tabular-nums text-ink-subtle">{{ lesson.estimatedMinutes }} min</span>
 
                 <!-- A quiz binds to the *curriculum* lesson, not to the content body, so this is the
@@ -389,9 +391,9 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
                   type="button"
                   class="rounded border border-line px-2 py-1 text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
                   :disabled="busy"
-                  :aria-label="`Quiz for ${lesson.title}`"
+                  :aria-label="t('studio.courses.quizFor', { title: lesson.title })"
                   @click="openQuiz(lesson.id, lesson.title)"
-                >Quiz</button>
+                >{{ t("studio.courses.quiz") }}</button>
 
                 <button
                   type="button"
@@ -419,7 +421,7 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
 
             <div class="px-3 py-2">
               <DbButton size="sm" variant="soft" :disabled="busy || pickerLoading" @click="openPicker(module.id)">
-                Add lesson
+                {{ t("studio.courses.addLesson") }}
               </DbButton>
             </div>
           </div>
@@ -428,12 +430,12 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
             <input
               v-model="newModuleTitle"
               class="h-9 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm"
-              placeholder="New module title"
-              aria-label="New module title"
+              :placeholder="t('studio.courses.newModuleTitle')"
+              :aria-label="t('studio.courses.newModuleTitle')"
               @keydown.enter.prevent="addModule"
             />
             <DbButton size="sm" variant="outline" :disabled="busy || !newModuleTitle.trim()" @click="addModule">
-              Add module
+              {{ t("studio.courses.addModule") }}
             </DbButton>
           </div>
         </section>
@@ -447,11 +449,10 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
           class="rounded-card border border-warning/30 bg-warning-subtle p-4 text-sm"
         >
           <h2 class="font-semibold text-ink">
-            {{ unpublishedLessons.length }} lesson(s) will not be visible
+            {{ t("studio.courses.hiddenCount", { count: unpublishedLessons.length }) }}
           </h2>
           <p class="mt-1 text-ink-muted">
-            Their bodies are still drafts. The course can be published without them — a learner
-            simply will not see them until each body is published.
+            {{ t("studio.courses.hiddenHint") }}
           </p>
           <ul class="mt-2 space-y-1">
             <li v-for="lesson in unpublishedLessons" :key="lesson.id">
@@ -463,17 +464,17 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
         </section>
 
         <section class="rounded-card border border-line bg-surface p-5 text-sm">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">At a glance</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.atAGlance") }}</h2>
           <dl class="mt-3 grid grid-cols-2 gap-y-2">
-            <dt class="text-ink-muted">Modules</dt>
+            <dt class="text-ink-muted">{{ t("studio.courses.modules") }}</dt>
             <dd class="text-right tabular-nums text-ink">{{ course.modules.length }}</dd>
-            <dt class="text-ink-muted">Lessons</dt>
+            <dt class="text-ink-muted">{{ t("studio.courses.colLessons") }}</dt>
             <dd class="text-right tabular-nums text-ink">{{ course.lessonCount }}</dd>
-            <dt class="text-ink-muted">Duration</dt>
+            <dt class="text-ink-muted">{{ t("studio.courses.duration") }}</dt>
             <dd class="text-right tabular-nums text-ink">{{ course.estimatedMinutes }} min</dd>
           </dl>
           <p class="mt-3 text-xs text-ink-subtle">
-            Duration is summed from the lessons, so it cannot drift from the curriculum.
+            {{ t("studio.courses.durationHint") }}
           </p>
         </section>
       </aside>
@@ -483,15 +484,15 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
     <div v-if="picker" class="fixed inset-0 z-50 flex items-start justify-center bg-ink/40 p-4 pt-20">
       <div class="max-h-[70vh] w-full max-w-2xl overflow-y-auto rounded-card border border-line bg-surface p-5">
         <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-display text-base font-semibold text-ink">Attach a lesson body</h2>
+          <h2 class="font-display text-base font-semibold text-ink">{{ t("studio.courses.attachBody") }}</h2>
           <button type="button" class="text-sm text-ink-muted hover:text-ink" @click="picker = null">
-            Close
+            {{ t("studio.common.close") }}
           </button>
         </div>
 
         <p v-if="picker.bodies.length === 0" class="text-sm text-ink-muted">
-          No lesson bodies yet. <NuxtLink to="/studio/lessons/new" class="text-accent hover:underline">Write one</NuxtLink>
-          first, then attach it here.
+          {{ t("studio.courses.noBodies") }} <NuxtLink to="/studio/lessons/new" class="text-accent hover:underline">{{ t("studio.courses.writeOne") }}</NuxtLink>
+          {{ t("studio.courses.thenAttach") }}
         </p>
 
         <ul v-else class="divide-y divide-line">
@@ -507,7 +508,7 @@ useHead({ title: computed(() => (isNew.value ? "New course" : title.value || "Ed
               :disabled="attachedIds.has(body.id)"
               @click="attach(body.id)"
             >
-              {{ attachedIds.has(body.id) ? "Already in course" : "Attach" }}
+              {{ attachedIds.has(body.id) ? t("studio.courses.alreadyIn") : t("studio.courses.attach") }}
             </DbButton>
           </li>
         </ul>

@@ -1,5 +1,27 @@
 # DataBro Changelog
 
+## [2026-08-19 15:03:26 UTC]
+
+CHG-0056 — Translate the CMS: taxonomy, lesson editor, course builder (S-5, part 3 of 4)
+
+Three more screens, 269 keys total, parity checked. Nine of eleven studio files are now translated.
+
+- **Taxonomy, the lesson editor and the course builder** — the three screens an editor spends most
+  of their day in.
+- The course builder's warnings were the interesting part. `"{count} lesson(s) will not be visible"`
+  and the explanation under it are the messages that stop an author publishing a course whose bodies
+  are still drafts (LN-2); they had to survive translation intact or the affordance goes with them.
+- Confirmations moved too: `confirm("Remove this module?")` and the lesson-removal prompt that
+  distinguishes removing a lesson **from a curriculum** from deleting its body. A destructive prompt
+  in the wrong language is worse than no prompt — it gets dismissed rather than read.
+- `useHead({ title: computed(...) })` became `useHead(() => ({ title }))` in both editors. The inner
+  `computed` re-evaluated but the outer object literal did not, so the tab kept its first language.
+  Same root cause as CHG-0054 and CHG-0055; third and last place it appeared.
+- Verified live in both locales on all three screens.
+- **Remaining (part 4):** `articles/[id].vue` and `BlockEditor.vue` — the two largest files, ~990
+  lines. `BlockEditor` has eleven block types with their own controls and will need its own key
+  sub-namespace rather than being folded into `studio.common`.
+
 ## [2026-08-19 14:53:47 UTC]
 
 CHG-0055 — Translate the CMS: builders and editor components (S-5, part 2 of 3)

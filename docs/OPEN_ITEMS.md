@@ -55,7 +55,7 @@ the record, so the next module is built with its surface rather than owing one.
 | S-2 | **`PATCH /me`** — profile editing | 1 | Same. Returns 405 today. |
 | S-3 | **Bookmarks** | 2 | Untouched. |
 | S-4 | **Streaks** | 2 | Untouched. |
-| S-5 | **`/studio` Indonesian strings** | — | **Two-thirds done (CHG-0054, CHG-0055).** All six list screens, both builders, and the two shared editor components are translated. Remaining: `taxonomy.vue`, the article editor, the course builder, the lesson editor and `BlockEditor` — ~2,100 lines. |
+| S-5 | **`/studio` Indonesian strings** | — | **Nine of eleven files done (CHG-0054 … CHG-0056).** List screens, both builders, the shared editor components, taxonomy, the lesson editor and the course builder are translated. Remaining: `articles/[id].vue` and `BlockEditor.vue` — ~990 lines. |
 | ~~S-6~~ | ~~Gate lesson completion on a passing quiz~~ | 2 | **Done — CHG-0052.** A lesson with a published quiz cannot be completed until passed, via a synchronous `IQuizGate` query (not the submit event, which would refuse a just-passed learner). Draft quizzes do not gate; a quiz added after completion does not revoke it. Learner sees a message pointing at the quiz, both locales. 5 Learning tests. |
 
 ---

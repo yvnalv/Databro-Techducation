@@ -8,6 +8,8 @@ import { DbButton, DbChip, DbInput } from "@databro/ui";
 import { ApiClientError } from "@databro/api-client";
 import type { Category, TaxonomyTerm } from "@databro/types";
 
+const { t } = useI18n();
+
 /**
  * Taxonomy management (docs/BUSINESS_RULES.md TX-1 … TX-3).
  *
@@ -35,7 +37,7 @@ const message = ref<{ tone: "danger" | "success"; text: string } | null>(null);
 const busy = ref(false);
 
 function describe(error: unknown) {
-  return error instanceof ApiClientError ? error.message : "Something went wrong.";
+  return error instanceof ApiClientError ? error.message : t("studio.taxonomy.genericError");
 }
 
 /** Every mutation goes through here so success and failure are reported one way. */
@@ -67,7 +69,7 @@ const addCategory = () =>
           parentId: newCategory.parentId || null,
         }),
       ),
-    "Category created.",
+    t("studio.taxonomy.categoryCreated"),
   ).then(() => {
     if (message.value?.tone === "success") Object.assign(newCategory, { name: "", slug: "", parentId: "" });
   });
@@ -96,7 +98,7 @@ const saveCategory = (id: string) =>
           parentId: categoryDraft.parentId || null,
         }),
       ),
-    "Category updated.",
+    t("studio.taxonomy.categoryUpdated"),
   ).then(() => {
     if (message.value?.tone === "success") editingCategory.value = null;
   });
@@ -119,7 +121,7 @@ const newTag = reactive({ name: "", slug: "" });
 const addTag = () =>
   run(
     () => withAuth((api) => api.createTag({ name: newTag.name, slug: newTag.slug || undefined })),
-    "Tag created.",
+    t("studio.taxonomy.tagCreated"),
   ).then(() => {
     if (message.value?.tone === "success") Object.assign(newTag, { name: "", slug: "" });
   });
@@ -133,22 +135,21 @@ function beginEditTag(tag: TaxonomyTerm) {
 }
 
 const saveTag = (id: string) =>
-  run(() => withAuth((api) => api.updateTag(id, { name: tagDraft.value })), "Tag renamed.").then(() => {
+  run(() => withAuth((api) => api.updateTag(id, { name: tagDraft.value })), t("studio.taxonomy.tagRenamed")).then(() => {
     if (message.value?.tone === "success") editingTag.value = null;
   });
 
 const removeTag = (tag: TaxonomyTerm) =>
   run(() => withAuth((api) => api.deleteTag(tag.id)), `Deleted “${tag.name}”.`);
 
-useHead({ title: "Taxonomy" });
+useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
 </script>
 
 <template>
   <div>
-    <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Taxonomy</h1>
+    <h1 class="font-display text-2xl font-bold tracking-tight text-ink">{{ t("studio.taxonomy.navTitle") }}</h1>
     <p class="mt-1 text-sm text-ink-muted">
-      Categories are hierarchical and an article has at most one. Tags are flat and an article can
-      have any number.
+      {{ t("studio.taxonomy.subtitle") }}
     </p>
 
     <p
@@ -164,45 +165,45 @@ useHead({ title: "Taxonomy" });
       {{ message.text }}
     </p>
 
-    <p v-if="loadError" role="alert" class="mt-4 text-sm text-danger">Could not load taxonomy.</p>
+    <p v-if="loadError" role="alert" class="mt-4 text-sm text-danger">{{ t("studio.taxonomy.loadFailed") }}</p>
 
     <div class="mt-6 grid gap-6 xl:grid-cols-2">
       <!-- Categories -->
       <section class="rounded-card border border-line bg-surface">
         <header class="border-b border-line px-5 py-3">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
-            Categories
+            {{ t("studio.taxonomy.categories") }}
           </h2>
         </header>
 
         <ul class="divide-y divide-line">
           <li v-for="category in categories" :key="category.id" class="px-5 py-3">
             <div v-if="editingCategory === category.id" class="space-y-3">
-              <DbInput v-model="categoryDraft.name" label="Name" />
-              <DbInput v-model="categoryDraft.description" label="Description" />
+              <DbInput v-model="categoryDraft.name" :label="t('studio.common.name')" />
+              <DbInput v-model="categoryDraft.description" :label="t('studio.common.description')" />
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label :for="`parent-${category.id}`" class="mb-1.5 block text-sm font-medium text-ink-muted">
-                    Parent
+                    {{ t("studio.taxonomy.parent") }}
                   </label>
                   <select
                     :id="`parent-${category.id}`"
                     v-model="categoryDraft.parentId"
                     class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
                   >
-                    <option value="">Top level</option>
+                    <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
                     <option v-for="c in parentOptions(category.id)" :key="c.id" :value="c.id">
                       {{ c.name }}
                     </option>
                   </select>
                 </div>
-                <DbInput v-model="categoryDraft.order" label="Order" type="number" />
+                <DbInput v-model="categoryDraft.order" :label="t('studio.common.order')" type="number" />
               </div>
 
               <div class="flex gap-2">
-                <DbButton size="sm" :disabled="busy" @click="saveCategory(category.id)">Save</DbButton>
-                <DbButton size="sm" variant="ghost" @click="editingCategory = null">Cancel</DbButton>
+                <DbButton size="sm" :disabled="busy" @click="saveCategory(category.id)">{{ t("studio.common.save") }}</DbButton>
+                <DbButton size="sm" variant="ghost" @click="editingCategory = null">{{ t("studio.common.cancel") }}</DbButton>
               </div>
             </div>
 
@@ -214,58 +215,58 @@ useHead({ title: "Taxonomy" });
                 </p>
                 <p class="mt-0.5 font-mono text-xs text-ink-subtle">
                   /{{ category.slug }}
-                  <span v-if="category.parentId"> · under {{ categoryName(category.parentId) }}</span>
+                  <span v-if="category.parentId"> · {{ t("studio.taxonomy.under", { parent: categoryName(category.parentId) }) }}</span>
                 </p>
               </div>
 
               <span class="flex gap-2">
-                <DbButton size="sm" variant="outline" @click="beginEditCategory(category)">Edit</DbButton>
+                <DbButton size="sm" variant="outline" @click="beginEditCategory(category)">{{ t("studio.common.edit") }}</DbButton>
                 <DbButton size="sm" variant="ghost" :disabled="busy" @click="removeCategory(category)">
-                  Delete
+                  {{ t("studio.common.delete") }}
                 </DbButton>
               </span>
             </div>
           </li>
 
-          <li v-if="!categories.length" class="px-5 py-6 text-sm text-ink-muted">No categories yet.</li>
+          <li v-if="!categories.length" class="px-5 py-6 text-sm text-ink-muted">{{ t("studio.taxonomy.noCategories") }}</li>
         </ul>
 
         <div class="space-y-3 border-t border-line bg-surface-sunken p-5">
-          <h3 class="text-sm font-medium text-ink">Add category</h3>
-          <DbInput v-model="newCategory.name" label="Name" />
+          <h3 class="text-sm font-medium text-ink">{{ t("studio.taxonomy.addCategory") }}</h3>
+          <DbInput v-model="newCategory.name" :label="t('studio.common.name')" />
           <DbInput
             v-model="newCategory.slug"
-            label="Slug"
-            hint="Leave blank to derive from the name. Immutable afterwards."
+            :label="t('studio.common.slug')"
+            :hint="t('studio.taxonomy.categorySlugHint')"
           />
           <div>
-            <label for="new-parent" class="mb-1.5 block text-sm font-medium text-ink-muted">Parent</label>
+            <label for="new-parent" class="mb-1.5 block text-sm font-medium text-ink-muted">{{ t("studio.taxonomy.parent") }}</label>
             <select
               id="new-parent"
               v-model="newCategory.parentId"
               class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
             >
-              <option value="">Top level</option>
+              <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
           </div>
-          <DbButton :disabled="busy || !newCategory.name" @click="addCategory">Create category</DbButton>
+          <DbButton :disabled="busy || !newCategory.name" @click="addCategory">{{ t("studio.taxonomy.createCategory") }}</DbButton>
         </div>
       </section>
 
       <!-- Tags -->
       <section class="rounded-card border border-line bg-surface">
         <header class="border-b border-line px-5 py-3">
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">Tags</h2>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.taxonomy.tags") }}</h2>
         </header>
 
         <ul class="divide-y divide-line">
           <li v-for="tag in tags" :key="tag.id" class="px-5 py-3">
             <div v-if="editingTag === tag.id" class="space-y-3">
-              <DbInput v-model="tagDraft" label="Name" />
+              <DbInput v-model="tagDraft" :label="t('studio.common.name')" />
               <div class="flex gap-2">
-                <DbButton size="sm" :disabled="busy" @click="saveTag(tag.id)">Save</DbButton>
-                <DbButton size="sm" variant="ghost" @click="editingTag = null">Cancel</DbButton>
+                <DbButton size="sm" :disabled="busy" @click="saveTag(tag.id)">{{ t("studio.common.save") }}</DbButton>
+                <DbButton size="sm" variant="ghost" @click="editingTag = null">{{ t("studio.common.cancel") }}</DbButton>
               </div>
             </div>
 
@@ -275,20 +276,20 @@ useHead({ title: "Taxonomy" });
                 <p class="mt-0.5 font-mono text-xs text-ink-subtle">/{{ tag.slug }}</p>
               </div>
               <span class="flex gap-2">
-                <DbButton size="sm" variant="outline" @click="beginEditTag(tag)">Edit</DbButton>
-                <DbButton size="sm" variant="ghost" :disabled="busy" @click="removeTag(tag)">Delete</DbButton>
+                <DbButton size="sm" variant="outline" @click="beginEditTag(tag)">{{ t("studio.common.edit") }}</DbButton>
+                <DbButton size="sm" variant="ghost" :disabled="busy" @click="removeTag(tag)">{{ t("studio.common.delete") }}</DbButton>
               </span>
             </div>
           </li>
 
-          <li v-if="!tags.length" class="px-5 py-6 text-sm text-ink-muted">No tags yet.</li>
+          <li v-if="!tags.length" class="px-5 py-6 text-sm text-ink-muted">{{ t("studio.taxonomy.noTags") }}</li>
         </ul>
 
         <div class="space-y-3 border-t border-line bg-surface-sunken p-5">
-          <h3 class="text-sm font-medium text-ink">Add tag</h3>
-          <DbInput v-model="newTag.name" label="Name" />
-          <DbInput v-model="newTag.slug" label="Slug" hint="Leave blank to derive from the name." />
-          <DbButton :disabled="busy || !newTag.name" @click="addTag">Create tag</DbButton>
+          <h3 class="text-sm font-medium text-ink">{{ t("studio.taxonomy.addTag") }}</h3>
+          <DbInput v-model="newTag.name" :label="t('studio.common.name')" />
+          <DbInput v-model="newTag.slug" :label="t('studio.common.slug')" :hint="t('studio.taxonomy.tagSlugHint')" />
+          <DbButton :disabled="busy || !newTag.name" @click="addTag">{{ t("studio.taxonomy.createTag") }}</DbButton>
         </div>
       </section>
     </div>
