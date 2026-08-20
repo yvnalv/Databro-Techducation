@@ -67,12 +67,26 @@ POST   /api/v1/auth/confirm-email            { userId, token }
 GET    /api/v1/me                            current user profile
 ```
 
-**Not built** — listed here previously as though they were, which is why they are now called out
-rather than quietly removed:
+#### Social login (OAuth) — Google and GitHub (ADR-0019)
 
 ```
-GET    /api/v1/auth/oauth/{provider}         social login (google|github) - Phase 1 scope, unbuilt
-GET    /api/v1/auth/oauth/{provider}/callback
+GET    /api/v1/auth/oauth/{provider}         start: 302 to the provider (google|github)
+       ?returnTo=<path|site-url>             optional, validated post-login destination
+GET    /api/v1/auth/oauth/{provider}/callback  provider returns here; 302 to the app
+POST   /api/v1/auth/oauth/exchange           { code } -> { accessToken, refreshToken, expiresInSeconds }
+```
+
+The first two are **browser navigations, not API calls**: they answer with a `302`, never the
+envelope. `GET /oauth/{provider}` redirects to the provider carrying a signed `state`. The callback
+verifies state, links or creates the account by **verified email** (ID-3), and redirects the app to
+`/auth/callback` with a **single-use handoff code** — never tokens in the URL. Only
+`POST /oauth/exchange` speaks the envelope: the app trades the code for the token pair, exactly as
+`login` returns them. A callback that cannot be completed (denied consent, bad state, unverified
+GitHub email) redirects to the app's sign-in page with `?error=oauth`.
+
+**Not built:**
+
+```
 PATCH  /api/v1/me                            profile editing - unbuilt
 ```
 

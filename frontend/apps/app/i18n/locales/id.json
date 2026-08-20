@@ -53,7 +53,17 @@
     "failed": "Gagal masuk. Periksa email dan kata sandi Anda.",
     "unconfirmed": "Konfirmasi alamat email Anda sebelum masuk. Periksa kotak masuk untuk tautannya.",
     "resend": "Kirim ulang",
-    "resent": "Terkirim. Periksa kotak masuk Anda."
+    "resent": "Terkirim. Periksa kotak masuk Anda.",
+    "or": "atau",
+    "google": "Lanjutkan dengan Google",
+    "github": "Lanjutkan dengan GitHub",
+    "oauthFailed": "Proses masuk tidak dapat diselesaikan. Silakan coba lagi."
+  },
+  "oauthCallback": {
+    "working": "Menyelesaikan proses masuk Anda…",
+    "failedTitle": "Proses masuk tidak dapat diselesaikan",
+    "failedBody": "Tautan mungkin sudah kedaluwarsa. Kembali dan coba lagi.",
+    "signIn": "Kembali ke halaman masuk"
   },
   "verify": {
     "working": "Mengonfirmasi email Anda…",

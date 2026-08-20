@@ -74,6 +74,17 @@ export function useAuth() {
   }
 
   /**
+   * Completes a social sign-in (ADR-0019) by exchanging the one-time handoff code the OAuth callback
+   * redirected the app with. From here on the session is identical to a password login — same cookies,
+   * same refresh path — because the exchange returned the same token pair.
+   */
+  async function completeExternalLogin(code: string) {
+    const tokens = await anonymousClient().exchangeOAuthCode(code);
+    setSession(tokens);
+    user.value = await client().me();
+  }
+
+  /**
    * Signs out, revoking the refresh token server-side first.
    *
    * Clearing cookies alone is not signing out — the refresh token stays valid for a fortnight, so a
@@ -152,6 +163,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     login,
+    completeExternalLogin,
     logout,
     refresh,
     withAuth,

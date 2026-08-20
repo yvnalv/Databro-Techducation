@@ -24,6 +24,13 @@ public interface IAuthService
     /// <summary>Revokes one refresh token. Always succeeds — signing out must never fail.</summary>
     Task<Result> LogoutAsync(LogoutRequest request, CancellationToken ct = default);
     Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Signs in through an external provider (ADR-0019, ID-3): links the identity to an existing
+    /// account matched by <b>verified</b> email, or creates a confirmed account, then issues tokens.
+    /// Refuses an unverified email — linking on one would be an account-takeover primitive.
+    /// </summary>
+    Task<Result<AuthTokens>> LinkOrCreateExternalAsync(ExternalUserInfo info, CancellationToken ct = default);
 }
 
 /// <summary>

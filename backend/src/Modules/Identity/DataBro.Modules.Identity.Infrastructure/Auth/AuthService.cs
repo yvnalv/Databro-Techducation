@@ -222,6 +222,80 @@ public sealed class AuthService(
             : Result.Success(await BuildProfileAsync(user));
     }
 
+    /// <summary>
+    /// Signs in through an external provider (ADR-0019, ID-3).
+    ///
+    /// <para>
+    /// The order matters. First we look up by the <b>(provider, key)</b> pair: a returning social user
+    /// is already linked and must resolve to their account even if they have since changed the email
+    /// on the provider. Only if that misses do we match by <b>verified</b> email — which links a
+    /// second provider to one account, or adopts a password account the person is now signing into
+    /// socially — and only failing that do we create one.
+    /// </para>
+    /// <para>
+    /// An unverified email never reaches a lookup. The providers already refuse to return one, so this
+    /// is defence in depth: matching an unverified address to an existing account is exactly how an
+    /// attacker who can receive at an unconfirmed provider address would walk into it.
+    /// </para>
+    /// <para>
+    /// A created account is <b>confirmed at birth</b> — the provider has vouched for the address, so a
+    /// second confirmation email would be theatre that blocks a legitimate first sign-in. A password
+    /// account whose owner arrives socially is confirmed in passing for the same reason.
+    /// </para>
+    /// </summary>
+    public async Task<Result<AuthTokens>> LinkOrCreateExternalAsync(
+        ExternalUserInfo info, CancellationToken ct = default)
+    {
+        if (!info.EmailVerified || string.IsNullOrWhiteSpace(info.Email))
+            return Result.Failure<AuthTokens>(
+                new Error("validation_failed", "The provider did not return a verified email address."));
+
+        // Already linked: the provider key is the stable identity, ahead of the email.
+        var linked = await userManager.FindByLoginAsync(info.Provider, info.ProviderKey);
+        if (linked is not null)
+            return Result.Success(await IssueTokensAsync(linked, ct));
+
+        var login = new UserLoginInfo(info.Provider, info.ProviderKey, info.Provider);
+
+        var existing = await userManager.FindByEmailAsync(info.Email);
+        if (existing is not null)
+        {
+            var link = await userManager.AddLoginAsync(existing, login);
+            if (!link.Succeeded)
+                return Result.Failure<AuthTokens>(
+                    new Error("conflict", "That account could not be linked to this provider."));
+
+            if (!existing.EmailConfirmed)
+            {
+                existing.EmailConfirmed = true;
+                await userManager.UpdateAsync(existing);
+            }
+
+            return Result.Success(await IssueTokensAsync(existing, ct));
+        }
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = info.Email,
+            Email = info.Email,
+            DisplayName = string.IsNullOrWhiteSpace(info.DisplayName)
+                ? info.Email.Split('@')[0]
+                : info.DisplayName,
+            EmailConfirmed = true,
+        };
+
+        var created = await userManager.CreateAsync(user);
+        if (!created.Succeeded)
+            return Result.Failure<AuthTokens>(
+                new Error("validation_failed", string.Join(" ", created.Errors.Select(e => e.Description))));
+
+        await userManager.AddToRoleAsync(user, Roles.Default);
+        await userManager.AddLoginAsync(user, login);
+
+        return Result.Success(await IssueTokensAsync(user, ct));
+    }
+
     private async Task<AuthTokens> IssueTokensAsync(ApplicationUser user, CancellationToken ct, RefreshToken? replacing = null)
     {
         var roles = (await userManager.GetRolesAsync(user)).ToList();

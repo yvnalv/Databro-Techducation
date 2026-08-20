@@ -31,7 +31,7 @@ because defaulting them silently is how a product acquires rules nobody chose.
 | M-1 | **Dev learner accounts cannot sign in** | CHG-0048 enforced ID-2; 21 accounts are unconfirmed. Per account: sign in → **"Send it again"** → confirm via <http://localhost:8025>. `admin@databro.local` was confirmed at seed time and is unaffected. |
 | ~~M-2~~ | ~~Click through the quiz UI~~ | **Done (2026-08-19)** — driven by hand in a headless browser against the running stack, on a real published lesson page. Confirmed: the answer control is a radio on single-choice and enforces single selection; publish blockers fire inline; submitting from the lesson page scores and reveals the key only afterwards. One adjacent, non-quiz observation: `POST …/enrollments/{course}/lessons/{id}/visit` returns **422** for a signed-in but unenrolled reader (the progress bar degrades correctly to "Join course"), see O-7. |
 
-| M-3 | **Register the Google and GitHub OAuth apps** | Social login cannot authenticate anyone until four values exist in `.env`. Full steps in [LOCAL_DEVELOPMENT.md → Social login setup](LOCAL_DEVELOPMENT.md#social-login-setup-google-and-github). ~10 minutes, both free. Only the project owner can do it. |
+| ~~M-3~~ | ~~**Register the Google and GitHub OAuth apps**~~ | **Done (2026-08-20).** The owner registered both apps and filled the four `.env` values, so social login (CHG-0061) can authenticate against the running stack. A production deploy still needs a **second GitHub app** (one callback URL per app) — recorded in ADR-0019 and LOCAL_DEVELOPMENT, owed with the first deploy. |
 
 ---
 
@@ -53,7 +53,7 @@ the record, so the next module is built with its surface rather than owing one.
 
 | # | Item | Phase | Note |
 |---|---|---|---|
-| S-1 | **Social login (Google/GitHub)** | 1 | Never built. `API_SPEC.md` now lists it under an explicit "Not built" heading rather than describing it as though it exists. |
+| ~~S-1~~ | ~~**Social login (Google/GitHub)**~~ | 1 | **Done — CHG-0061 (ADR-0019).** Manual OAuth behind `IExternalIdentityProvider`, link-by-verified-email (ID-3), signed state, one-time code handoff. Owner registers the OAuth apps (M-3) before a live sign-in works; the code is verified by 8 unit + 6 integration tests. |
 | S-2 | **`PATCH /me`** — profile editing | 1 | Same. Returns 405 today. |
 | ~~S-3~~ | ~~**Bookmarks**~~ | 2 | **Done (CHG-0059).** Courses and lessons; articles deliberately deferred. |
 | S-4 | **Streaks** | 2 | Untouched. |
@@ -69,7 +69,7 @@ the record, so the next module is built with its surface rather than owing one.
 | O-1 | **Outbox retention** | Processed rows are kept as an audit and accumulate without bound. Negligible now; a sweep is owed before it is not ([ADR-0017](adr/0017-transactional-outbox.md)). |
 | O-2 | **Dead-lettered messages have no operational surface** | A parked message is only visible via SQL. |
 | O-3 | **Cross-subdomain session cookie** | Works locally only because cookies ignore port. Production needs an explicit parent `domain`, and it cannot be verified from here. |
-| O-4 | **Redis is provisioned and unused** | Nothing caches. Either wire it or drop it from compose — an unused dependency reads as if something depends on it. |
+| ~~O-4~~ | ~~**Redis is provisioned and unused**~~ | **Addressed — CHG-0061.** Redis now backs the single-use OAuth handoff code (ADR-0019) via `IDistributedCache`. It is a real dependency of a live social sign-in; a Redis-less run falls back to an in-memory cache (tests do this). General response/read caching is still unbuilt, but the dependency is no longer inert. |
 | O-5 | **No analyzer ruleset for C#** | ESLint covers the frontend; the backend has no equivalent gate. |
 | O-6 | **Premium gating is reserved, not enforced** | Badge, preview and JSON-LD paywall declaration exist; the full body still renders. Correct until Billing (Phase 3), but it is a gate that looks real and is not. |
 | O-7 | **Lesson-visit call 422s for an unenrolled reader** | `LessonProgressBar` fires `POST …/enrollments/{course}/lessons/{id}/visit` on every lesson view; for a signed-in but unenrolled learner it returns 422. The UI degrades correctly to "Join course", so it is console-only noise — but decide whether the component should withhold the call until enrolled, or whether 422 is the right status for "not enrolled". Found while verifying M-2; not a quiz-surface defect. |
@@ -78,7 +78,7 @@ the record, so the next module is built with its surface rather than owing one.
 
 ## 6. Verification status
 
-Everything committed to date is built, linted, typechecked and tested — 322 backend, 90 frontend.
+Everything committed to date is built, linted, typechecked and tested — 346 backend, 90 frontend.
 
 CHG-0050 (the quiz surfaces) was written while the build tooling was unavailable and **held
 uncommitted until it returned**, then verified before committing. That caught one real defect (an
@@ -88,6 +88,13 @@ The interactive client-side behaviour automated checks could not reach — radio
 the answer key, the inline publish blockers, and submitting a quiz from the lesson page — was driven
 by hand in a headless browser on 2026-08-19 and holds (M-2, now done). The browser step is not yet a
 committed test; a Playwright harness against the running stack is the way to keep it from regressing.
+
+Social login (CHG-0061) was driven **live** on 2026-08-20: a real Google sign-in through the consent
+screen returned to the app authenticated. It surfaced one non-code snag — a containerised API keeps
+the environment it was created with, so the OAuth secrets have to be applied by recreating the
+container, not by the hot-reload (now documented in LOCAL_DEVELOPMENT §"Applying the values"). The
+faked-provider path is covered by 6 committed integration tests; the live consent screen, like the
+quiz UI, is not yet a committed test and is the same argument for a Playwright harness.
 
 ---
 

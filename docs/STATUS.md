@@ -194,8 +194,8 @@ on the record rather than being tidied away.
    locales.
 4. ~~**Finish the CMS's Indonesian strings (S-5).**~~ **Done (CHG-0054 … CHG-0058).** All 16 studio
    files translated, 347 keys, both locales at parity. Rule 19 now holds across both apps.
-5. Then close Phase 2: ~~bookmarks~~ **done (CHG-0059)**, **streaks**, plus **social login** carried
-   over from Phase 1.
+5. Then close Phase 2: ~~bookmarks~~ **done (CHG-0059)**, ~~social login~~ **done (CHG-0061,
+   ADR-0019)**, plus **streaks** — the last Phase 2 learner feature still unbuilt.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
@@ -215,9 +215,10 @@ Independent of Phase 2:
   ([ADR-0017](adr/0017-transactional-outbox.md)).
 * **Dead-lettered outbox messages are only visible in the database.** A parked row has no operational
   surface.
-* **Social login (Google/GitHub) and `PATCH /me` are still unbuilt** — Phase 1 scope. API_SPEC now
-  lists them under an explicit "Not built" heading rather than describing them as though they exist;
-  the other three phantom endpoints were built in CHG-0047.
+* **Social login (Google/GitHub) is built and verified live** (CHG-0061, ADR-0019) — a real Google
+  sign-in through the consent screen returned to the app authenticated on 2026-08-20. **`PATCH /me` is
+  still unbuilt** — the last Phase 1 phantom endpoint, still under an explicit "Not built" heading in
+  API_SPEC.
 
 * **The CMS is still English-only.** [ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)
   registered `@nuxtjs/i18n` in `apps/app` — it had been a dependency that was never wired — and
@@ -231,7 +232,8 @@ Independent of Phase 2:
 * **Existing dev accounts are unconfirmed** and cannot sign in since CHG-0048 enforced ID-2. Use the
   "send it again" link on the sign-in form and confirm through Mailpit; the seeded
   `admin@databro.local` was confirmed at seed time and is unaffected.
-* Social login (Google/GitHub) not yet implemented.
+* Social login (Google/GitHub) implemented (CHG-0061, ADR-0019); a production deploy still needs a
+  second GitHub OAuth app and a Redis instance the API can reach.
 * **Design pass complete for what exists**, matching the reference: sampled blue palette,
   pink→violet page-header gradient, navy footer. **Light mode only** — the earlier
   `prefers-color-scheme` switch made dark-OS visitors see a dark site and has been removed. The
@@ -273,8 +275,9 @@ Independent of Phase 2:
   index. Noted rather than pre-built.
 * **One RSS feed, English only.** A channel declares a single `language`; `/id` gets its own feed
   when it has content to justify one.
-* **Hangfire** now runs the scheduled-publish sweep (PostgreSQL storage). Redis is still provisioned
-  but unused. The scheduled-publish failure "alert" is a logged error for now — it becomes a real
+* **Hangfire** now runs the scheduled-publish sweep (PostgreSQL storage). Redis is now used — it backs
+  the single-use OAuth handoff code (CHG-0061, ADR-0019) — though general response/read caching is
+  still unbuilt. The scheduled-publish failure "alert" is a logged error for now — it becomes a real
   notification when the Notification module lands. The sweep assumes a single job server; a
   multi-server deploy needs `DisableConcurrentExecution` before it is safe.
 * Media module is still a scaffold, so image blocks render an accessible placeholder.
@@ -285,13 +288,15 @@ Independent of Phase 2:
 
 ## Testing status
 
-* `dotnet test` — **322 passing**: Content & Identity (188), Learning (82), Media (29),
+* `dotnet test` — **346 passing**: Content & Identity (202), Learning (92), Media (29),
   Assessment (19),
   architecture-fitness (4). Covers slug-change/redirect, scheduled publishing, the CT-6 draft-leak
   regressions, curriculum invariants, segmented search, the LN-6 completion rule from both
   directions, quiz attempt review (the roll-up carries no answer key, excludes in-progress attempts,
-  and is refused to a learner), and the AS-9 completion gate (blocked until passed, a draft does not
-  gate, a quiz added after completion does not revoke it).
+  and is refused to a learner), the AS-9 completion gate (blocked until passed, a draft does not
+  gate, a quiz added after completion does not revoke it), and social login (ADR-0019: signed-state
+  round-trip/tamper/stale, single-use handoff, GitHub verified-primary selection, and the end-to-end
+  flow — new-user creation, link-not-duplicate, unverified refused — with a faked provider).
 * `pnpm test` — **90 passing** across the frontend workspaces: block renderer, embed allowlist,
   inline rich text (marks, unsafe hrefs, XSS), math, code output, nested-block depth capping, the
   primitives' accessibility contracts, and the API client (Vitest).

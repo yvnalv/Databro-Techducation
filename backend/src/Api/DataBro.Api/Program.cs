@@ -9,7 +9,24 @@ using DataBro.Platform.Email;
 using Hangfire;
 using Hangfire.PostgreSql;
 
+// Load `.env` into the process environment before configuration is built, so the host-run dev loop
+// (`dotnet run` with infra in Docker) picks up the OAuth secrets the developer manages by hand
+// (ADR-0019). Existing process variables win, so docker-compose's injected values stay authoritative;
+// deployed environments ship no `.env`, so this finds nothing and does nothing.
+var dotenv = DataBro.Api.DotEnvLoader.Find(AppContext.BaseDirectory);
+if (dotenv is not null)
+    DotNetEnv.Env.Load(dotenv, new DotNetEnv.LoadOptions(setEnvVars: true, clobberExistingVars: false));
+
 var builder = WebApplication.CreateBuilder(args);
+
+// One-time OAuth handoff code store (ADR-0019). Redis when a connection string is configured — which
+// finally gives the provisioned-but-unused Redis a job (O-4) — and an in-memory cache otherwise, so
+// tests and a Redis-less run still work. The store abstraction (IAuthCodeStore) does not care which.
+var redisConnection = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnection))
+    builder.Services.AddStackExchangeRedisCache(o => o.Configuration = redisConnection);
+else
+    builder.Services.AddDistributedMemoryCache();
 
 // One transactional email transport for the whole host, selected by configuration (rule 14). The
 // modules compose their own messages; only this line knows how they travel.

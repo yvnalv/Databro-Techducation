@@ -268,8 +268,19 @@ GITHUB_CLIENT_SECRET=…
 ```
 
 **Never put a real value in `.env.example`, in any `appsettings*.json`, or in anything else git
-tracks.** The four key names will appear empty in `.env.example` when the feature is built, so there
-is a labelled slot to fill rather than a name to guess.
+tracks.** The four key names appear empty in `.env.example` as labelled slots to fill rather than
+names to guess.
+
+### 4. Applying the values
+
+* **Host-run API** (`dotnet run`): `.env` is loaded into the process at startup by `DotNetEnv`, so a
+  restart is enough.
+* **Containerised API** (`docker compose --profile apps up`): environment variables are fixed when a
+  container is **created**, not when its code hot-reloads. After adding or changing any value in
+  `.env`, recreate the container with `docker compose --profile apps up -d` — otherwise the API keeps
+  the environment it started with, and Google answers `Error 400: invalid_request — Missing required
+  parameter: client_id` because it received an empty `client_id`. The hot-reload volume refreshes code,
+  never environment.
 
 ### A note on why GitHub needs an extra scope
 

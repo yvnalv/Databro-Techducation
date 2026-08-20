@@ -130,6 +130,16 @@ services:
       # The confirmation link is clicked by a person in a browser, so it points at the app on the
       # host, not at the container network.
       Identity__Emails__AppBaseUrl: "http://localhost:${APP_PORT:-3001}"
+      # Social login (ADR-0019). The callback and receiver URLs must be the ones a browser reaches on
+      # the host — the container's internal 8080 would never match what the OAuth apps registered.
+      ExternalAuth__ApiBaseUrl: "http://localhost:${API_PORT:-5158}"
+      ExternalAuth__AppBaseUrl: "http://localhost:${APP_PORT:-3001}"
+      ExternalAuth__SiteBaseUrl: "http://localhost:${SITE_PORT:-3000}"
+      # Provider secrets come from .env (unset there → social login is simply unavailable).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
     ports:
       - "${API_PORT:-5158}:8080"
     volumes:

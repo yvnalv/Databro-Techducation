@@ -212,6 +212,21 @@ export class ApiClient {
   }
 
   /**
+   * Exchanges the single-use handoff code from a social-login redirect for the token pair (ADR-0019).
+   *
+   * The code — never the tokens — is what the OAuth callback puts in the receiver URL, so this is how
+   * the app turns that one-time value into a session. Unauthenticated by nature: it is the moment a
+   * session is obtained, so like {@link login} it must work without one.
+   */
+  exchangeOAuthCode(code: string): Promise<AuthTokens> {
+    return this.request<AuthTokens>("/api/v1/auth/oauth/exchange", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  /**
    * Confirms an email address from the link in a verification message.
    *
    * Deliberately unauthenticated: the token in the link *is* the proof, and requiring a session

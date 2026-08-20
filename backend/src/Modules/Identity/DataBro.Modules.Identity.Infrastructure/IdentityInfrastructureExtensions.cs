@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using DataBro.Modules.Identity.Application;
 using DataBro.Modules.Identity.Infrastructure.Auth;
+using DataBro.Modules.Identity.Infrastructure.Auth.External;
 using DataBro.Modules.Identity.Infrastructure.Authorization;
 using DataBro.Modules.Identity.Infrastructure.Directory;
 using DataBro.Modules.Identity.Infrastructure.Persistence;
@@ -86,6 +87,29 @@ public static class IdentityInfrastructureExtensions
 
         services.AddSingleton<JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+
+        // ---- Social login (ADR-0019) ----
+        // Base URLs bind from the ExternalAuth section; the client secrets bind from flat environment
+        // variables (dev: .env via DotNetEnv; deployed: the secret store) so a secret never sits in a
+        // config file. IDistributedCache — the handoff-code store's backing — is registered by the host.
+        services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.SectionName));
+        services.Configure<GoogleOAuthOptions>(o =>
+        {
+            o.ClientId = configuration["GOOGLE_CLIENT_ID"] ?? string.Empty;
+            o.ClientSecret = configuration["GOOGLE_CLIENT_SECRET"] ?? string.Empty;
+        });
+        services.Configure<GitHubOAuthOptions>(o =>
+        {
+            o.ClientId = configuration["GITHUB_CLIENT_ID"] ?? string.Empty;
+            o.ClientSecret = configuration["GITHUB_CLIENT_SECRET"] ?? string.Empty;
+        });
+
+        services.AddHttpClient();
+        services.AddSingleton<OAuthStateProtector>();
+        services.AddScoped<IAuthCodeStore, DistributedCacheAuthCodeStore>();
+        services.AddScoped<IExternalIdentityProvider, GoogleProvider>();
+        services.AddScoped<IExternalIdentityProvider, GitHubProvider>();
+        services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
         // Identity's outward-facing contract for other modules (ADR-0008). Registered against the
         // shared Platform abstraction so consumers never reference this module.

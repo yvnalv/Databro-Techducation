@@ -65,6 +65,40 @@ public static class IdentityModuleExtensions
             LogoutRequest request, IAuthService service, CancellationToken ct) =>
             ApiEnvelope.FromEmpty(await service.LogoutAsync(request, ct)));
 
+        // ---- Social login (ADR-0019).
+        //
+        // Two of these three are browser navigations, not API calls: they must *redirect*, never
+        // return a JSON envelope, or a person mid-sign-in sees a payload instead of a page. Only the
+        // handoff exchange is a real API call the app makes, and it alone speaks the envelope. ----
+
+        // Start: redirect the browser to the provider, carrying signed state.
+        auth.MapGet("/oauth/{provider}", (
+            string provider, string? returnTo, IExternalAuthService service) =>
+        {
+            var challenge = service.BuildChallengeUrl(provider, returnTo);
+            return Results.Redirect(challenge.IsSuccess ? challenge.Value : service.SignInErrorUrl);
+        });
+
+        // Callback: the provider sends the browser here. Whatever happens, we redirect — to the app
+        // with a single-use handoff code on success, or back to sign-in with an error flag otherwise.
+        // A provider that denies consent returns `error` and no code; that too is a redirect home.
+        auth.MapGet("/oauth/{provider}/callback", async (
+            string provider, string? code, string? state, string? error,
+            IExternalAuthService service, CancellationToken ct) =>
+        {
+            if (!string.IsNullOrEmpty(error) || string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+                return Results.Redirect(service.SignInErrorUrl);
+
+            var result = await service.HandleCallbackAsync(provider, code, state, ct);
+            return Results.Redirect(result.IsSuccess ? result.Value : service.SignInErrorUrl);
+        });
+
+        // Exchange: the app POSTs the single-use handoff code and gets the token pair. The one step
+        // that is a genuine API call, so the one that returns the envelope.
+        auth.MapPost("/oauth/exchange", async (
+            ExchangeHandoffRequest request, IExternalAuthService service, CancellationToken ct) =>
+            ApiEnvelope.From(await service.RedeemHandoffAsync(request.Code, ct)));
+
         endpoints.MapGet("/api/v1/me", async (ICurrentUser currentUser, IAuthService service, CancellationToken ct) =>
             {
                 if (currentUser.UserId is not { } userId)

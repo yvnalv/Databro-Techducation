@@ -1,5 +1,54 @@
 # DataBro Changelog
 
+## [2026-08-20 08:27:34 UTC]
+
+CHG-0061 — Social login with Google and GitHub (S-1, ADR-0019)
+
+The last unbuilt Phase 1 item, carried into Phase 2. A learner can sign in with Google or GitHub; a
+returning social identity resolves to their account rather than a duplicate.
+
+- **A manual OAuth 2.0 handler behind `IExternalIdentityProvider`** (`GoogleProvider`, `GitHubProvider`),
+  not ASP.NET's cookie-based remote handlers. The host is bearer-only by design; the built-in handlers
+  need a cookie sign-in scheme whose only job is to survive one redirect, and adding a second auth
+  model for the lifetime of one feature was the worse trade (ADR-0019 §1). Two endpoints, ~sixty lines
+  a provider.
+- **GitHub gets a second call.** `/user` returns `null` for a private email, so the scope is
+  `read:user user:email` and `/user/emails` supplies the primary *verified* address; an account with
+  none is refused, never linked to a guessed one (ID-3). Google returns `email_verified` in one call.
+- **Verified email is the identity, and it confirms the account** (ADR-0019 §3). A created user is
+  born confirmed — the provider vouched for the address — and a password account whose owner arrives
+  socially is confirmed in passing. An unverified provider email is refused: linking on one is an
+  account-takeover primitive.
+- **Linking by verified email through Identity's own login store** (`AddLoginAsync` / `FindByLoginAsync`),
+  not a bespoke `external_logins` table. The store already models `(provider, key, user)` and is wired
+  by `AddEntityFrameworkStores`; renaming it for cosmetic agreement with the doc bought nothing.
+- **Signed, expiring `state` replaces the correlation cookie** (`OAuthStateProtector`): an HMAC over
+  a nonce, timestamp and validated return target, keyed by the JWT secret. A forged or stale callback
+  fails signature or freshness; nothing is stored. The return target rides *inside* the signature, so
+  it cannot be tampered into an open redirect, and it is checked against the same site-origin allowlist
+  the password login uses.
+- **The token handoff is a one-time authorization code, never a URL token** (ADR-0019 §6). The callback
+  parks the issued token pair against a single-use code in `IDistributedCache` and redirects the app
+  with only the code; the app POSTs it once to `/oauth/exchange`. Tokens in a URL — query or fragment —
+  is the discarded implicit flow that leaks into history, `Referer` and logs. This finally gives the
+  provisioned-but-unused **Redis** a job (O-4); tests use an in-memory cache.
+- **Frontend:** "Continue with Google / GitHub" on the sign-in page and a `/auth/callback` receiver
+  that exchanges the code and lands where the sign-in was headed, in both locales. The client
+  re-validates the return target it is handed.
+- **Config:** base URLs bind from `ExternalAuth`; the four client secrets bind from flat environment
+  variables (`GOOGLE_`/`GITHUB_`) so a secret never sits in a tracked file. `DotNetEnv` loads `.env`
+  for the host-run dev loop; deployed environments inject real variables and ship no `.env`.
+- **Tests:** 8 unit (signed state round-trip/tamper/stale, single-use handoff, GitHub verified-primary
+  selection) and 6 integration through the endpoints with a faked provider — new-user creation, link
+  not duplicate, unverified refused, single-use exchange, tampered state, unknown provider. Fixing a
+  shared default provider key that made two integration tests' logins collide was itself a real find.
+- **Verified live:** a real Google sign-in through the consent screen returned to the app
+  authenticated. The one snag was operational, not code — a containerised API keeps the environment it
+  was created with, so the OAuth secrets are applied by recreating the container, now documented in
+  `LOCAL_DEVELOPMENT.md`.
+- Docs: `API_SPEC.md` moves the OAuth endpoints out of "Not built"; `SECURITY.md`, `STATUS.md` and
+  `OPEN_ITEMS.md` (S-1 done, O-4 addressed) updated. ADR-0019 records the decisions.
+
 ## [2026-08-19 16:24:31 UTC]
 
 CHG-0060 — Document the OAuth app registration (M-3)

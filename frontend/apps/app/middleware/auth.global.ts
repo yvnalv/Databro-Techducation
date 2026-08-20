@@ -18,6 +18,10 @@ const PUBLIC_ROUTES = new Set([
   "/verify-email",
   "/forgot-password",
   "/reset-password",
+  // The social-login landing (ADR-0019): the person is not signed in *yet* — they arrive holding a
+  // one-time code this page exchanges for a session. Guarding it would bounce them to /login the
+  // instant before they were about to become authenticated.
+  "/auth/callback",
 ]);
 
 export default defineNuxtRouteMiddleware(async (to) => {

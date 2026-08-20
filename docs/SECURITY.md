@@ -10,8 +10,14 @@ authorization, data protection, and abuse prevention.
   Argon2id acceptable).
 * **Login:** email + password → short-lived **JWT access token** + long-lived **refresh token**.
 * **Refresh tokens:** stored hashed, rotated on use, revocable; reuse detection invalidates the chain.
-* **Social login:** Google and GitHub via OAuth/OIDC. External identities linked in `external_logins`.
-  Email ownership verified via the provider.
+* **Social login:** Google and GitHub via OAuth 2.0 (ADR-0019), through an `IExternalIdentityProvider`
+  abstraction rather than a provider SDK. External identities are linked to an account by **verified
+  email** (ID-3) and stored in ASP.NET Identity's own user-logins table (the conceptual
+  `external_logins`). CSRF on the callback is closed by a **signed, expiring `state`** — no correlation
+  cookie, since the host is bearer-only. The callback hands the app a **single-use code** (in
+  `IDistributedCache`/Redis) that the app exchanges for tokens: no token ever travels in a URL, which
+  keeps this off the discarded implicit-flow path. A provider-verified email confirms the account; an
+  unverified one is refused, never linked.
 * **Password reset:** single-use, time-limited, hashed tokens.
 * Access tokens are signed (asymmetric key preferred) with a short expiry; the signing key is a secret,
   never committed.
