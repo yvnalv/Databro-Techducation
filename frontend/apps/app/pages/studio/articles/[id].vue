@@ -279,7 +279,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/studio" class="text-sm font-medium text-accent hover:underline">← {{ t("studio.articles.back") }}</NuxtLink>
+        <NuxtLink to="/studio" class="text-sm font-medium text-accent-strong hover:underline">← {{ t("studio.articles.back") }}</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
           {{ isNew ? t("studio.articles.new") : title || t("studio.common.untitled") }}
         </h1>
@@ -331,7 +331,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
             <select
               id="category"
               v-model="categoryId"
-              class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
             >
               <option value="">{{ t("studio.articles.noCategory") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -346,10 +346,10 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
                 :key="tag.id"
                 type="button"
                 :aria-pressed="tagIds.includes(tag.id)"
-                class="rounded-sm border px-2 py-0.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                class="rounded-control border px-2 py-0.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 :class="
                   tagIds.includes(tag.id)
-                    ? 'border-accent bg-accent-subtle text-accent'
+                    ? 'border-accent-strong bg-accent-subtle text-accent-strong'
                     : 'border-line text-ink-muted hover:bg-surface-sunken'
                 "
                 @click="toggleTag(tag.id)"
@@ -403,7 +403,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
                 id="schedule-at"
                 v-model="scheduleAt"
                 type="datetime-local"
-                class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+                class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
               />
               <p class="mt-1.5 text-xs text-ink-subtle">
                 {{ t("studio.articles.publishAtHint") }}
@@ -424,7 +424,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
             </h2>
             <button
               type="button"
-              class="text-sm font-medium text-accent hover:underline"
+              class="text-sm font-medium text-accent-strong hover:underline"
               :aria-expanded="versionsOpen"
               @click="toggleVersions"
             >

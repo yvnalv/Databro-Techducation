@@ -190,7 +190,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
                   <select
                     :id="`parent-${category.id}`"
                     v-model="categoryDraft.parentId"
-                    class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+                    class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
                   >
                     <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
                     <option v-for="c in parentOptions(category.id)" :key="c.id" :value="c.id">
@@ -244,7 +244,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
             <select
               id="new-parent"
               v-model="newCategory.parentId"
-              class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
             >
               <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>

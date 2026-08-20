@@ -69,7 +69,7 @@ useHead(() => ({ title: t("studio.courses.navTitle") }));
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line">
       <table class="w-full text-left text-sm">
-        <thead class="bg-accent-deep text-white">
+        <thead class="bg-accent-deep text-ink-on-deep">
           <tr>
             <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.title") }}</th>
             <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.status") }}</th>
@@ -81,7 +81,7 @@ useHead(() => ({ title: t("studio.courses.navTitle") }));
         <tbody class="divide-y divide-line bg-surface">
           <tr v-for="course in courses" :key="course.id" class="hover:bg-surface-sunken">
             <td class="px-4 py-3">
-              <NuxtLink :to="`/studio/courses/${course.id}`" class="font-medium text-accent hover:underline">
+              <NuxtLink :to="`/studio/courses/${course.id}`" class="font-medium text-accent-strong hover:underline">
                 {{ course.title }}
               </NuxtLink>
               <p class="truncate text-xs text-ink-subtle">{{ course.slug }}</p>

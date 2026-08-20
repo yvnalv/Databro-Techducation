@@ -567,4 +567,63 @@ public class EnrollmentApiTests(LearningApiFactory factory) : IClassFixture<Lear
         Assert.False(string.IsNullOrWhiteSpace(visited.GetProperty("lastLessonSlug").GetString()));
         Assert.Equal(lessons[0], visited.GetProperty("lastLessonId").GetGuid());
     }
+
+    // ---- Streaks (LN-15 … LN-19) ----
+
+    [Fact]
+    public async Task Completing_a_lesson_starts_a_streak_and_repeating_it_does_not_extend_one()
+    {
+        // The wiring worth pinning end to end: the streak is a consequence of finishing work, and
+        // nothing a client can assert directly. There is no write endpoint to check instead.
+        var (_, _, _, slug) = await SeedPublishedCourseAsync(
+            await SeedBodyAsync("First"), await SeedBodyAsync("Second"));
+        var lessons = await PublicLessonIdsAsync(slug);
+        var learner = await LearnerAsync();
+
+        var before = (await ReadAsync(await learner.GetAsync("/api/v1/me/streak"))).GetProperty("data");
+        Assert.Equal(0, before.GetProperty("current").GetInt32());
+        Assert.False(before.GetProperty("activeToday").GetBoolean());
+
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+        (await learner.PostAsync($"/api/v1/me/enrollments/{slug}/lessons/{lessons[0]}/complete", null))
+            .EnsureSuccessStatusCode();
+
+        var started = (await ReadAsync(await learner.GetAsync("/api/v1/me/streak"))).GetProperty("data");
+        Assert.Equal(1, started.GetProperty("current").GetInt32());
+        Assert.Equal(1, started.GetProperty("longest").GetInt32());
+        Assert.True(started.GetProperty("activeToday").GetBoolean());
+
+        // A second lesson on the same day is more work, not another day.
+        await learner.PostAsync($"/api/v1/me/enrollments/{slug}/lessons/{lessons[1]}/complete", null);
+
+        var same = (await ReadAsync(await learner.GetAsync("/api/v1/me/streak"))).GetProperty("data");
+        Assert.Equal(1, same.GetProperty("current").GetInt32());
+    }
+
+    [Fact]
+    public async Task A_streak_belongs_to_the_learner_who_earned_it()
+    {
+        // /me is the whole authorization story here — there is no request shape that names another
+        // learner, and one learner's work must not show up on another's dashboard.
+        var (_, _, _, slug) = await SeedPublishedCourseAsync(await SeedBodyAsync("Only"));
+        var lessons = await PublicLessonIdsAsync(slug);
+
+        var worker = await LearnerAsync();
+        await worker.PostAsync($"/api/v1/me/enrollments/{slug}", null);
+        await worker.PostAsync($"/api/v1/me/enrollments/{slug}/lessons/{lessons[0]}/complete", null);
+
+        var bystander = await LearnerAsync();
+        var theirs = (await ReadAsync(await bystander.GetAsync("/api/v1/me/streak"))).GetProperty("data");
+
+        Assert.Equal(0, theirs.GetProperty("current").GetInt32());
+        Assert.Equal(JsonValueKind.Null, theirs.GetProperty("lastActiveOn").ValueKind);
+    }
+
+    [Fact]
+    public async Task The_streak_endpoint_refuses_an_anonymous_caller()
+    {
+        var response = await factory.CreateClient().GetAsync("/api/v1/me/streak");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

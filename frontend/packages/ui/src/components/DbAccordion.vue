@@ -51,7 +51,7 @@ const chevron = computed(() => "h-4 w-4 shrink-0 transition-transform duration-1
           type="button"
           :aria-expanded="isOpen(item.id)"
           :aria-controls="panelId(item.id)"
-          class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-base font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-base font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
           @click="toggle(item.id)"
         >
           {{ item.question }}

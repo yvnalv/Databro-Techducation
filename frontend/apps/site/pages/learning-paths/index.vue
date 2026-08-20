@@ -39,7 +39,7 @@ useListingSeo({
   <div>
     <PageHeader :eyebrow="t('paths.eyebrow')" :title="t('paths.listTitle')">
       <template #meta>
-        <p class="mx-auto mt-4 max-w-2xl text-white/80">{{ t("paths.listDescription") }}</p>
+        <p class="mx-auto mt-4 max-w-2xl text-ink-on-deep/80">{{ t("paths.listDescription") }}</p>
       </template>
     </PageHeader>
 
@@ -50,7 +50,7 @@ useListingSeo({
         <li v-for="path in paths" :key="path.id">
           <NuxtLink
             :to="localePath(`/learning-paths/${path.slug}`)"
-            class="group flex h-full flex-col rounded-card border border-line bg-surface p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            class="group flex h-full flex-col rounded-card border border-line bg-surface p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
           >
             <div class="flex flex-wrap items-center gap-2">
               <DbChip tone="neutral">{{ t(`courses.difficulty.${path.difficulty}`) }}</DbChip>
@@ -59,7 +59,7 @@ useListingSeo({
               </span>
             </div>
 
-            <h2 class="mt-3 font-display text-xl font-bold tracking-tight text-ink group-hover:text-accent">
+            <h2 class="mt-3 font-display text-xl font-bold tracking-tight text-ink group-hover:text-accent-strong">
               {{ path.title }}
             </h2>
             <p v-if="path.summary" class="mt-2 flex-1 text-sm leading-relaxed text-ink-muted">

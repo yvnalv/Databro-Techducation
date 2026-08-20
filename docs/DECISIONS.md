@@ -26,6 +26,8 @@ Individual records live in [adr/](adr/). Template: [adr/0000-template.md](adr/00
 | [0016](adr/0016-transactional-email-transport.md) | Transactional email: SMTP behind a Platform abstraction, provider deferred | Accepted |
 | [0017](adr/0017-transactional-outbox.md) | A transactional outbox, one table per module | Accepted |
 | [0018](adr/0018-assessment-scoring-and-the-answer-key.md) | Assessment: separate learner and authoring shapes, all-or-nothing scoring | Accepted |
+| [0019](adr/0019-social-login.md) | Social login: manual OAuth behind a provider port, linked by verified email | Accepted |
+| [0020](adr/0020-design-language-and-the-contrast-rule.md) | The design language, and the rule that an accent is a fill | Accepted |
 
 ## Decisions deferred (to be ADR'd when their phase begins)
 

@@ -19,8 +19,12 @@ export default defineNuxtConfig({
   css: [
     // Same fonts and tokens as the public site: the CMS is a different surface, not a different
     // product, and a second design language would be a second thing to maintain.
-    "@fontsource-variable/inter",
-    "@fontsource-variable/plus-jakarta-sans",
+    // Poppins is not published as a variable font, so the four weights the system uses are imported
+    // individually (ADR-0020 §3). Importing the whole family would ship nine weights to every page.
+    "@fontsource/poppins/400.css",
+    "@fontsource/poppins/500.css",
+    "@fontsource/poppins/600.css",
+    "@fontsource/poppins/700.css",
     "@fontsource-variable/jetbrains-mono",
     "@databro/ui/tokens.css",
     // The block editor renders live preview through the same ContentRenderer as the site, so it

@@ -49,6 +49,17 @@ public interface IEnrollmentRepository
     Task SaveChangesAsync(CancellationToken ct = default);
 }
 
+/// <summary>Persistence port for the <see cref="LearnerStreak"/> aggregate.</summary>
+public interface ILearnerStreakRepository
+{
+    /// <summary>The learner's streak row, or null before their first ever completion.</summary>
+    Task<LearnerStreak?> GetAsync(Guid userId, CancellationToken ct = default);
+
+    Task AddAsync(LearnerStreak streak, CancellationToken ct = default);
+
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
+
 /// <summary>Persistence port for the <see cref="Bookmark"/> aggregate.</summary>
 public interface IBookmarkRepository
 {

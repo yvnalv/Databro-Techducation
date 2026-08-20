@@ -66,10 +66,10 @@ async function toggle() {
     :aria-pressed="saved"
     :aria-label="saved ? t('bookmarks.remove') : t('bookmarks.save')"
     :title="saved ? t('bookmarks.remove') : t('bookmarks.save')"
-    class="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+    class="inline-flex h-9 items-center gap-1.5 rounded-control border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-50"
     :class="
       saved
-        ? 'border-accent bg-accent-subtle text-accent'
+        ? 'border-accent-strong bg-accent-subtle text-accent-strong'
         : 'border-line-strong text-ink-muted hover:bg-surface-sunken hover:text-ink'
     "
     @click="toggle"

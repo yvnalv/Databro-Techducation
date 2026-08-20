@@ -58,7 +58,7 @@ onBeforeUnmount(() => observer?.disconnect());
           :class="[
             entry.level === 3 ? 'pl-6' : 'pl-4',
             activeId === entry.id
-              ? 'border-accent font-medium text-accent'
+              ? 'border-accent-strong font-medium text-accent-strong'
               : 'border-transparent text-ink-muted hover:border-line-strong hover:text-ink',
           ]"
         >

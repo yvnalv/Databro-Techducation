@@ -43,6 +43,16 @@
     "inProgress": "In progress",
     "completed": "Completed"
   },
+  "streak": {
+    "title": "Study streak",
+    "days": "{count} days in a row",
+    "day": "1 day",
+    "none": "No streak yet",
+    "noneHint": "Finish a lesson to start one.",
+    "longest": "Best: {count}",
+    "today": "Done today",
+    "pending": "Study today to keep it going."
+  },
   "login": {
     "title": "Sign in",
     "subtitle": "Sign in to continue learning.",

@@ -26,10 +26,10 @@ const navigation = computed(() => [
     <div class="db-shell flex h-16 items-center justify-between gap-6">
       <NuxtLink
         :to="localePath('/')"
-        class="text-accent transition-opacity hover:opacity-80"
+        class="text-accent-strong transition-opacity hover:opacity-80"
         :aria-label="t('site.name')"
       >
-        <BrandMark class="text-accent [&>span:last-child]:text-ink" />
+        <BrandMark class="text-accent-strong [&>span:last-child]:text-ink" />
       </NuxtLink>
 
       <nav :aria-label="t('nav.primaryLabel')" class="hidden md:block">
@@ -60,7 +60,7 @@ const navigation = computed(() => [
           <span class="sr-only">{{ t("nav.languageLabel") }}</span>
           <select
             :value="locale"
-            class="h-9 rounded-md border border-line-strong bg-surface px-2 text-sm text-ink-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+            class="h-9 rounded-control border border-line-strong bg-surface px-2 text-sm text-ink-muted focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
             @change="setLocale(($event.target as HTMLSelectElement).value as typeof locale)"
           >
             <option v-for="l in switchableLocales" :key="l.code" :value="l.code">

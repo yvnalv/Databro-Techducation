@@ -76,7 +76,7 @@ useSeoMeta({
         <div class="mx-auto mt-6 max-w-xl">
           <SearchBox :initial-query="query" />
         </div>
-        <p v-if="query && !error" class="mt-4 text-sm text-white/75">
+        <p v-if="query && !error" class="mt-4 text-sm text-ink-on-deep/75">
           {{ t("search.resultCount", totalHits) }}
         </p>
       </template>
@@ -92,7 +92,7 @@ useSeoMeta({
              exact is how a search box quietly stops being trusted. -->
         <p
           v-if="allFuzzy"
-          class="mb-8 rounded-lg border border-line bg-surface-sunken px-4 py-3 text-sm text-ink-muted"
+          class="mb-8 rounded-card border border-line bg-surface-sunken px-4 py-3 text-sm text-ink-muted"
         >
           {{ t("search.fuzzyNotice", { query }) }}
         </p>
@@ -121,9 +121,9 @@ useSeoMeta({
               <li v-for="hit in segment.hits" :key="hit.id">
                 <NuxtLink
                   :to="localePath(hit.path)"
-                  class="group block rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  class="group block rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 >
-                  <h3 class="font-display text-lg font-bold tracking-tight text-ink group-hover:text-accent">
+                  <h3 class="font-display text-lg font-bold tracking-tight text-ink group-hover:text-accent-strong">
                     {{ hit.title }}
                   </h3>
                   <p v-if="hit.summary" class="mt-1.5 text-sm leading-relaxed text-ink-muted">

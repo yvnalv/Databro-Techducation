@@ -103,7 +103,7 @@ useHead(() => ({ title: t("studio.articles.navTitle") }));
         <table class="w-full text-left text-sm">
           <!-- Dark header row: the reference reserves this for dashboards, and this is the one
                sanctioned use (DESIGN_SYSTEM §5.7). -->
-          <thead class="bg-accent-deep text-white">
+          <thead class="bg-accent-deep text-ink-on-deep">
             <tr>
               <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.title") }}</th>
               <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.status") }}</th>
@@ -128,7 +128,7 @@ useHead(() => ({ title: t("studio.articles.navTitle") }));
               <td class="px-4 py-3">
                 <NuxtLink
                   :to="`/studio/articles/${article.id}`"
-                  class="font-medium text-ink transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  class="font-medium text-ink transition-colors hover:text-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 >
                   {{ article.title }}
                 </NuxtLink>
@@ -164,14 +164,14 @@ useHead(() => ({ title: t("studio.articles.navTitle") }));
           <NuxtLink
             v-if="meta.page > 1"
             :to="{ query: { page: meta.page - 1 } }"
-            class="rounded-md px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
+            class="rounded-control px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
           >
             {{ t("studio.common.previous") }}
           </NuxtLink>
           <NuxtLink
             v-if="meta.page < meta.totalPages"
             :to="{ query: { page: meta.page + 1 } }"
-            class="rounded-md px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
+            class="rounded-control px-3 py-1.5 font-medium hover:bg-surface-sunken hover:text-ink"
           >
             {{ t("studio.common.next") }}
           </NuxtLink>

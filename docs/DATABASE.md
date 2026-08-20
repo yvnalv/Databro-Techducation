@@ -218,6 +218,18 @@ Unique on `(user_id, kind, target_id)`, filtered on `is_deleted = false` — rem
 Neither id carries a foreign key: `user_id` crosses a module boundary, and `target_id` is
 polymorphic, so there is no single table for a constraint to point at.
 
+**learner_streaks** (id, user_id, current, longest, last_active_on null) — one row per learner,
+unique on `user_id` filtered on `is_deleted = false`. No foreign key: the learner is Identity's.
+
+`last_active_on` is `date`, not `timestamptz`, on purpose. A streak counts *days*, and storing an
+instant would put back exactly the timezone ambiguity the feature exists to resolve (LN-15) — the
+day is decided in the application, in the configured zone, before it is ever written.
+
+Stored rather than derived. The current streak could be computed from recent `lesson_progress`
+cheaply enough, but the longest-ever run cannot: that is a scan of a learner's entire history on
+every dashboard load. `lesson_progress` remains the source of truth these two counters can be
+rebuilt from if they ever drift.
+
 #### Progress
 
 **enrollments** (id, user_id, course_id, enrolled_at, completed_at null, last_lesson_id null,
@@ -304,8 +316,9 @@ See [CONTENT_MODEL.md](CONTENT_MODEL.md) for block structure.
 ## Future (reference)
 
 * ~~**Learning (P2):** `learning_paths`, `courses`, `course_modules`, `lessons`, `enrollments`,
-  `lesson_progress`~~ — **built**; see the `learning` schema above. `bookmarks` is still to come.
-* **Assessment (P2):** `quizzes`, `questions`, `quiz_attempts`.
+  `lesson_progress`, `bookmarks`, `learner_streaks`~~ — **built**; see the `learning` schema above.
+* ~~**Assessment (P2):** `quizzes`, `questions`, `quiz_attempts`~~ — **built**; see the `assessment`
+  schema above.
 * **Billing (P3):** `plans`, `subscriptions`, `invoices`, `entitlements`.
 * **AI (P3):** `embeddings` (pgvector), `ai_conversations`.
 * **Enterprise (P4):** `organizations`, `org_members`, `seats`, `cohorts` — the only place org-scoping

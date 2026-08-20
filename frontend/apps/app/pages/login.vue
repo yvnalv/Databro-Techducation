@@ -147,7 +147,7 @@ useHead({ title: t("login.title") });
   <div class="flex min-h-screen items-center justify-center bg-surface-sunken px-4 font-sans text-ink antialiased">
     <div class="w-full max-w-sm">
       <div class="text-center">
-        <span class="inline-flex text-accent"><AppBrandMark /></span>
+        <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
         <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">
           {{ t("login.title") }}
         </h1>
@@ -160,14 +160,14 @@ useHead({ title: t("login.title") });
         <div
           v-if="unconfirmed"
           role="alert"
-          class="rounded-md border border-warning/30 bg-warning-subtle px-3 py-3 text-sm text-warning"
+          class="rounded-control border border-warning/30 bg-warning-subtle px-3 py-3 text-sm text-warning"
         >
           <p>{{ t("login.unconfirmed") }}</p>
           <p v-if="resent" class="mt-2 font-medium">{{ t("login.resent") }}</p>
           <button
             v-else
             type="button"
-            class="mt-2 font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            class="mt-2 font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
             @click="resend"
           >
             {{ t("login.resend") }}
@@ -178,7 +178,7 @@ useHead({ title: t("login.title") });
         <p
           v-if="formError"
           role="alert"
-          class="rounded-md border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
+          class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
         >
           {{ formError }}
         </p>
@@ -214,7 +214,7 @@ useHead({ title: t("login.title") });
         <!-- Plain links, not buttons: OAuth is a top-level navigation the browser must follow. -->
         <a
           :href="oauthUrl('google')"
-          class="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          class="flex w-full items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
         >
           <svg class="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z" />
@@ -227,7 +227,7 @@ useHead({ title: t("login.title") });
 
         <a
           :href="oauthUrl('github')"
-          class="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          class="flex w-full items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
         >
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.3-1.8-1.3-1.8-1.1-.7 0-.7 0-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.8 1 .8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
@@ -237,7 +237,7 @@ useHead({ title: t("login.title") });
 
         <!-- Without this the recovery pages exist and nobody can find them. -->
         <p class="text-center text-sm">
-          <a href="/forgot-password" class="font-medium text-accent hover:underline">
+          <a href="/forgot-password" class="font-medium text-accent-strong hover:underline">
             {{ t("forgot.title") }}
           </a>
         </p>

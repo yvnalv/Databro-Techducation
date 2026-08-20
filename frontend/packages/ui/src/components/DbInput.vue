@@ -65,11 +65,11 @@ const describedBy = computed(() => {
         :required="required"
         :aria-invalid="error ? 'true' : undefined"
         :aria-describedby="describedBy"
-        class="h-10 w-full rounded-md border bg-surface px-3 text-sm text-ink transition-colors placeholder:text-ink-subtle focus:outline-none focus:ring-2 disabled:opacity-50"
+        class="h-10 w-full rounded-control border bg-surface-raised px-3.5 text-sm text-ink transition-colors placeholder:text-ink-subtle focus:outline-none focus:ring-2 disabled:opacity-50"
         :class="[
           error
             ? 'border-danger focus:border-danger focus:ring-danger/25'
-            : 'border-line-strong focus:border-accent focus:ring-accent/25',
+            : 'border-line-strong focus:border-accent-strong focus:ring-accent-strong/30',
           $slots.leading ? 'pl-9' : '',
         ]"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"

@@ -58,7 +58,7 @@ useHead({ title: t("oauthCallback.working") });
 <template>
   <div class="flex min-h-screen items-center justify-center bg-surface-sunken px-4 font-sans text-ink antialiased">
     <div class="w-full max-w-sm text-center">
-      <span class="inline-flex text-accent"><AppBrandMark /></span>
+      <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
 
       <template v-if="!failed">
         <p class="mt-6 text-sm text-ink-muted" role="status">{{ t("oauthCallback.working") }}</p>
@@ -69,7 +69,7 @@ useHead({ title: t("oauthCallback.working") });
           {{ t("oauthCallback.failedTitle") }}
         </h1>
         <p class="mt-2 text-sm text-ink-muted">{{ t("oauthCallback.failedBody") }}</p>
-        <a href="/login" class="mt-4 inline-block font-medium text-accent hover:underline">
+        <a href="/login" class="mt-4 inline-block font-medium text-accent-strong hover:underline">
           {{ t("oauthCallback.signIn") }}
         </a>
       </template>

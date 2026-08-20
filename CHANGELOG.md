@@ -1,5 +1,164 @@
 # DataBro Changelog
 
+## [2026-08-20 15:39:27 UTC]
+
+CHG-0064 — A UI defect register, and a button with no padding
+
+Reviewing the new design on screen turned up defects that every automated gate had passed. Recorded
+rather than fixed in bulk, because most of them need judgement; one did not.
+
+- **Fixed: every default-size button had zero horizontal padding (UI-1).** `DbButton`'s `md` size was
+  set to `px-4.5` in CHG-0063. Tailwind's fractional spacing scale stops at `3.5`, so `px-4.5` is not
+  a real class — it emitted no CSS at all and the padding silently became nothing. Now `px-5`. A scan
+  for the same mistake across every template found no other instance.
+- **The reason it shipped is worth more than the fix.** It passed `lint`, `typecheck` and all 454
+  tests, because Tailwind drops an unrecognised class without complaint and no test asserts on
+  styling. There was no detector for it other than a person looking at a button.
+- **Logged: 83 card surfaces now render cream-on-cream (UI-2).** `surface` used to be `#ffffff`, so
+  `bg-surface` and `bg-surface-raised` were the same colour and the distinction never mattered.
+  ADR-0020 made `surface` the cream page ground, and every site that meant "a white card" now means
+  "the page". Not fixed in this commit because it is **not** a blind replace — 10 of the 93 uses are
+  genuinely page-ground or input fills and have to stay.
+- **Logged: the saved-items list does not align (UI-3)** — auto-width kind labels leave the titles
+  with a ragged left edge — and **`ink-subtle` reads faint at `text-xs` on cream (UI-4)**, which is
+  where it is used most.
+
+**`docs/UI_DEFECTS.md` is new.** Visual defects belong somewhere separate from `OPEN_ITEMS.md`: that
+register tracks scope and decisions, this one tracks things that are built, reachable, and wrong on
+screen. It also names the two cheap detectors that would have caught both of today's — a check for
+utility classes that resolve to nothing, and the contrast-pairing audit already logged as O-8.
+
+Both defects above share a shape worth naming: **a rename changed what a token means, and every call
+site relying on the old meaning kept compiling.** UI-1 was a class that stopped existing; UI-2 is a
+class that still exists and now means something else, which is the worse of the two because there is
+nothing at all to notice.
+
+Indexed from `docs/README.md`, and cross-linked from S-8 in `OPEN_ITEMS.md`.
+
+## [2026-08-20 15:18:27 UTC]
+
+CHG-0063 — The DataBro design language (ADR-0020)
+
+Stage A of the UI rework: the palette, typography, shape and depth are DataBro's own rather than
+derived from a reference product. Tokens and primitives only — layout is a separate, larger piece.
+
+- **A new palette from the brand's own presence.** Cream `#f0ece2` page, white cards, `#121212` ink,
+  teal `#03dac6` accent, lime `#c1ff72` secondary, purple `#bb86fc` premium, black `#000000` deep.
+- **The load-bearing rule: an accent is a fill, never a text colour.** All three brand hues are
+  high-luminance — against the cream page they measure **1.5:1** (teal), **1.0:1** (lime) and
+  **2.3:1** (purple). None is legible as type; all three are excellent as fills carrying near-black
+  text (11.9:1, 15.9:1, 7.9:1). So every accent is now a triple: `accent` fills, `accent-on` sits on
+  it, `accent-strong` is the text-safe form for type, borders and focus rings.
+- **That rule caught an accessibility regression before it shipped.** 45 focus rings were drawn in
+  `ring-accent`. In the raw brand teal that is **1.5:1** against the page — below the 3:1 floor for a
+  non-text indicator, and invisible in review because the class name still read `ring-accent`. All 45
+  now use `ring-accent-strong`.
+- **132 call sites renamed across 46 files**, mechanically and with a negative lookahead — a plain
+  `` would have rewritten `text-accent-strong` into `text-accent-strong-strong`, since `-` is a word
+  boundary. `text-accent` ×70, `ring-accent` ×45, `border-accent` ×16, `decoration-accent` ×3, plus 6
+  fills whose text token would have rendered cream-on-teal at 1.8:1.
+- **Two more failures the sweep alone would have missed**, found by a follow-up audit that looks for
+  *any* fill colour used as text, border or ring: both card-tint palettes had `text-secondary` — lime
+  type on a pale fill, 1.0:1. The audit is the check worth keeping; the sweep only fixes what it is
+  told about.
+- **Lime is a dark-surface colour, and now it has somewhere to live.** Confined to `surface-inverse`,
+  the rail and dark mode, plus filled chips with `secondary-on`. It is not a weak colour — on
+  `#121212` it is 15.9:1, the strongest thing on the page.
+- **Gradients removed outright.** The three `--db-gradient-*` stops, the `.db-gradient-band` class and
+  its one call site are gone rather than re-coloured. Since the gradient was the system's only device
+  for emphasis, it needed a replacement and not a deletion: **`surface-inverse`**, a new token that is
+  near-black in light mode and cream in dark. An inverse block carries content where a two-stop band
+  only decorates a strip.
+- **`ink-on-deep`, a token that deliberately does not flip.** `accent-deep` is pure black in *both*
+  themes, so the 35 `text-white` uses sitting on it could not simply become `ink-inverted` — that
+  would render dark-on-black the moment dark mode ships.
+- **Poppins** at 400/500/600/700, replacing Plus Jakarta Sans and Inter. Not a variable font, so the
+  four weights are imported individually rather than shipping all nine to every page. JetBrains Mono
+  stays — unambiguous `0/O` and `1/l/I` matter more on a coding-education platform than anywhere else.
+- **Radius 12/16/24** (`control`/`card`/`panel`) and three diffuse shadows (`card`/`lift`/`panel`).
+  `control` exists because 60 call sites were reaching for Tailwind's own 6px `rounded-md` default and
+  so bypassed the radius token entirely — the one real leak in an otherwise disciplined system.
+- **Dark mode is designed and complete, but not shipped.** It stays behind an explicit
+  `data-theme="dark"` opt-in and is deliberately not wired to `prefers-color-scheme`: turning it on is
+  a visible product change deserving its own decision, and the previous revision of this system was
+  bitten by exactly that.
+- **Two long-standing inconsistencies closed while in the files.** The shell width was defined twice
+  and disagreed by 600px (`.db-shell` 1760px vs an unused `maxWidth.shell` 72rem) — the unused one is
+  deleted. The dead `brand.*` and `violet.*` ramps, 17 steps with zero call sites, are gone.
+
+**`docs/ARTIFACTS.md` is new** — an index of published, hosted pages with a caption and an
+explanation for each, so the interactive design preview and the build ledger can be found again
+without hunting for a link. It records which artifacts stay true and which age.
+
+**Also fixed: ADR-0019 was never added to the decisions index** when social login shipped in
+CHG-0061. The file existed; the table stopped at 0018. Both 0019 and 0020 are listed now.
+
+Verified against the running stack: the served `tokens.css` carries the new values, no old palette
+value survives anywhere, and the app dashboard and a site article page render with zero `rounded-md`,
+zero `text-white` and zero gradient references. Build 0/0, lint and typecheck clean, 364 backend and
+90 frontend tests pass. `DESIGN_SYSTEM.md` §0–§5 rewritten, ADR-0020 written, `docs/README.md`
+indexed.
+
+## [2026-08-20 13:25:11 UTC]
+
+CHG-0062 — Study streaks (S-4, LN-15 … LN-19)
+
+The last unbuilt Phase 2 learner feature. A learner who finishes a lesson starts a streak; finishing
+one the next day extends it; missing two days ends it.
+
+- **A `LearnerStreak` aggregate, stored rather than derived.** The current run could be computed from
+  recent `lesson_progress` cheaply enough, but the longest-ever run cannot — that is a scan of a
+  learner's entire history on every dashboard load. Two integers and a date make the read trivial, and
+  `lesson_progress` stays the source of truth they can be rebuilt from if they ever drift.
+- **A day is a local day, and the platform picks the zone** (`Learning:Streaks:TimeZone`, default
+  `Asia/Jakarta`) — the one decision the whole feature turns on. UTC days are the obvious choice and
+  are wrong here: a WIB learner studying at 23:00 Monday and 01:00 Tuesday has studied on two local
+  days, but both instants land on the same UTC day, so the streak would count one. The error only ever
+  undercounts, and hardest for the learners furthest from UTC, who on this platform are most of them.
+  One configured zone is still a simplification — it is right for the launch audience rather than
+  right for nobody, and per-learner zones are the upgrade path (S-7, downstream of `PATCH /me`).
+- **The domain takes a `DateOnly`, never a timestamp.** Which day an instant belongs to needs a
+  timezone the domain has no business knowing; passing an instant would push a zone lookup into the
+  aggregate and make the arithmetic untestable without one.
+- **The read decays; the write never does** (LN-17). The stored counter is only ever advanced, and
+  `CurrentAsOf(today)` applies the days since. A learner who last studied three days ago has a stored
+  5 and a reported 0, with nothing having written to their row — because they have not been back.
+  Reading it raw would tell them they were on a five-day run while they were not. Yesterday still
+  counts: only a two-day gap breaks it.
+- **It advances on completing a lesson, never on opening one** (LN-16). A streak that rewards visiting
+  rewards the wrong thing. A second lesson the same day is more work, not another day; re-marking a
+  lesson already complete is not work at all. It is recorded *after* the completion is saved and in
+  its own aggregate — a streak is a consequence of the work, not a condition of it, so a failure here
+  can never reject work a learner actually did.
+- **The longest run is never reduced** (LN-18), and a completion dated before the last recorded one —
+  a replay, a backfill, a clock that stepped backwards — is ignored rather than treated as a gap
+  (LN-19). Rewinding would punish a learner for something the system did.
+- **An unrecognised zone id falls back to UTC rather than throwing.** A typo is a configuration
+  mistake, and the right blast radius for it is a slightly wrong streak, not a 500 on the request that
+  records a learner's work. The same fallback would fire silently on a runtime image without tzdata,
+  so that was checked rather than assumed: `mcr.microsoft.com/dotnet/aspnet:9.0` ships it.
+- `GET /api/v1/me/streak`, read-only and addressed as `/me` (LN-8). There is deliberately no endpoint
+  that lets a client assert a streak.
+- Dashboard card in `apps/app`, both locales at structural parity. It says "Done today" when today
+  already counts, rather than nagging someone who has already put the work in, and shows a best-ever
+  figure only once there is a past worth comparing to — "Best: 1 day" beside a current of one day is
+  noise dressed up as an achievement.
+
+**Fixed while in the file: the dashboard's empty state was bound to the wrong condition.** The "you
+have not joined a course yet" panel carried a `v-else` that chained off the *saved items* section
+rather than off the enrollments block, so any learner with courses but no bookmarks was told they had
+joined nothing — directly underneath the list of courses they had joined. Moved into the chain it
+belongs to.
+
+**Also corrected: the CHG-0060 header timestamp**, from `16:24:31` to `16:42:13` — a transposition.
+The commit itself (`c35cf85`, `2026-08-19T23:42:13+07:00`) is the authority. Noted here rather than
+changed quietly, since the changelog is meant to be the record.
+
+18 new tests (12 domain, 3 timezone, 3 API); backend 364, frontend 90, build 0/0, lint and typecheck
+clean. Verified live against the running stack: enrol → complete → `current: 1, activeToday: true`,
+a same-day repeat leaving it at 1, and the card rendering in English and Indonesian. `BUSINESS_RULES`
+(LN-15 … LN-19), `API_SPEC`, `DATABASE`, `STATUS` and `OPEN_ITEMS` (S-4 closed, S-7 opened) updated.
+
 ## [2026-08-20 08:27:34 UTC]
 
 CHG-0061 — Social login with Google and GitHub (S-1, ADR-0019)
@@ -49,7 +208,7 @@ returning social identity resolves to their account rather than a duplicate.
 - Docs: `API_SPEC.md` moves the OAuth endpoints out of "Not built"; `SECURITY.md`, `STATUS.md` and
   `OPEN_ITEMS.md` (S-1 done, O-4 addressed) updated. ADR-0019 records the decisions.
 
-## [2026-08-19 16:24:31 UTC]
+## [2026-08-19 16:42:13 UTC]
 
 CHG-0060 — Document the OAuth app registration (M-3)
 

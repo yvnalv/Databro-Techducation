@@ -61,7 +61,7 @@ useHead({ title: t("reset.title") });
   >
     <div class="w-full max-w-sm">
       <div class="text-center">
-        <span class="inline-flex text-accent"><AppBrandMark /></span>
+        <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
         <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">
           {{ t("reset.title") }}
         </h1>
@@ -94,7 +94,7 @@ useHead({ title: t("reset.title") });
         <p
           v-if="formError"
           role="alert"
-          class="rounded-md border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
+          class="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
         >
           {{ formError }}
         </p>

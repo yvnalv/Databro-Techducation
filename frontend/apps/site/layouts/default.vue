@@ -8,7 +8,7 @@ const { t } = useI18n();
     <!-- Keyboard users land here first; visible only when focused. -->
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-ink-inverted"
+      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-control focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-on"
     >
       {{ t("nav.skipToContent") }}
     </a>

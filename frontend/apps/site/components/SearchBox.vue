@@ -48,7 +48,7 @@ watch(
       name="q"
       autocomplete="off"
       :placeholder="t('search.placeholder')"
-      class="h-9 w-full rounded-md border border-line-strong bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+      class="h-9 w-full rounded-control border border-line-strong bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
     />
     <!-- Visually redundant next to Enter, but a keyboard- or screen-reader user needs a real
          submit control, and it is what makes the form work without JS. -->

@@ -104,7 +104,7 @@ useHead({
   <div>
     <PageHeader :eyebrow="t('courses.eyebrow')" :title="published.title" :subtitle="published.summary">
       <template #meta>
-        <p class="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-white/80">
+        <p class="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-ink-on-deep/80">
           <span>{{ t(`courses.difficulty.${published.difficulty}`) }}</span>
           <span aria-hidden="true">·</span>
           <span>{{ t("courses.lessonCount", published.lessonCount) }}</span>
@@ -154,9 +154,9 @@ useHead({
                      of dead space is a worse hit area than the row the eye is already tracking. -->
                 <NuxtLink
                   :to="localePath(`/courses/${published.slug}/${lesson.slug}`)"
-                  class="group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                  class="group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-strong"
                 >
-                  <span class="min-w-0 flex-1 text-ink group-hover:text-accent">
+                  <span class="min-w-0 flex-1 text-ink group-hover:text-accent-strong">
                     {{ lesson.title }}
                   </span>
                   <DbChip v-if="lesson.difficulty !== published.difficulty" tone="neutral">

@@ -28,6 +28,7 @@ public static class LearningModuleExtensions
         MapPublicEndpoints(endpoints);
         MapLearnerEndpoints(endpoints);
         MapBookmarkEndpoints(endpoints);
+        MapStreakEndpoints(endpoints);
         MapAuthoringEndpoints(endpoints);
         return endpoints;
     }
@@ -111,6 +112,17 @@ public static class LearningModuleExtensions
             string kind, Guid targetId, ICurrentUser user, BookmarkService service, CancellationToken ct) =>
             RequireUser(user, async id =>
                 ApiEnvelope.FromEmpty(await service.RemoveAsync(id, kind, targetId, ct))));
+    }
+
+    // ---- The learner's study streak. Read-only over HTTP: a streak is earned by finishing lessons,
+    // never asserted by a client, so there is no write endpoint to expose (LN-16). ----
+    private static void MapStreakEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/api/v1/me/streak", (
+                ICurrentUser user, StreakService service, CancellationToken ct) =>
+                RequireUser(user, async id => ApiEnvelope.Ok(await service.GetAsync(id, ct))))
+            .WithTags("Learning.Streak")
+            .RequireAuthorization();
     }
 
     /// <summary>

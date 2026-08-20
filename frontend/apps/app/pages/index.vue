@@ -30,6 +30,19 @@ const { data: savedData } = await useAsyncData("me:bookmarks", () =>
 
 const saved = computed(() => savedData.value?.items ?? []);
 
+// Also its own call. A streak is a fact about the learner, not about any one enrollment, and it is
+// the one number here the client must not try to derive: `current` has already had the passage of
+// time applied to it server-side, in the platform's timezone (LN-15, LN-17). Recomputing it from
+// `lastActiveOn` in the browser would use the *visitor's* timezone and disagree with the server for
+// anyone travelling.
+const { data: streakData } = await useAsyncData("me:streak", () => withAuth((api) => api.streak()));
+
+const streak = computed(() => streakData.value);
+
+/** "3 days in a row" / "1 day" - Indonesian has no plural inflection, but English does. */
+const streakLabel = (count: number) =>
+  count === 1 ? t("streak.day") : t("streak.days", { count });
+
 const stats = computed(() => ({
   enrolled: data.value?.meta.total ?? 0,
   completed: enrollments.value.filter((e) => e.completedAt).length,
@@ -90,6 +103,37 @@ const courseHref = (e: Enrollment) => {
     </p>
 
     <template v-else-if="enrollments.length">
+      <!-- Above the counts, because it is a different kind of fact: the tiles say how much a learner
+           has taken on, this says whether they are actually turning up. -->
+      <section
+        v-if="streak"
+        class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border border-line bg-surface p-4"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-2xl leading-none" aria-hidden="true">{{ streak.current > 0 ? "🔥" : "🌱" }}</span>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-wide text-ink-subtle">
+              {{ t("streak.title") }}
+            </p>
+            <p class="font-display text-lg font-bold text-ink">
+              {{ streak.current > 0 ? streakLabel(streak.current) : t("streak.none") }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <!-- Only once there is a past worth comparing to. "Best: 1 day" beside a current of one
+               day is noise dressed up as an achievement. -->
+          <span v-if="streak.longest > 1" class="text-ink-muted">
+            {{ t("streak.longest", { count: streakLabel(streak.longest) }) }}
+          </span>
+          <DbChip v-if="streak.activeToday" tone="success">{{ t("streak.today") }}</DbChip>
+          <span v-else class="text-ink-subtle">
+            {{ streak.current > 0 ? t("streak.pending") : t("streak.noneHint") }}
+          </span>
+        </div>
+      </section>
+
       <dl class="mb-8 grid grid-cols-3 gap-3 sm:gap-4">
         <div
           v-for="stat in [
@@ -181,6 +225,17 @@ const courseHref = (e: Enrollment) => {
       </ul>
     </template>
 
+    <!-- The empty state belongs to the *enrollments* chain. It sat after the saved-items section
+         before, where `v-else` bound to that section instead - so a learner with courses but no
+         bookmarks was told they had not joined anything, underneath a list of the courses they had
+         joined. -->
+    <div v-else class="rounded-card border border-line bg-surface p-10 text-center">
+      <p class="text-ink-muted">{{ t("dashboard.empty") }}</p>
+      <DbButton as="a" :href="`${publicSiteUrl}/courses`" class="mt-4">
+        {{ t("dashboard.emptyCta") }}
+      </DbButton>
+    </div>
+
     <!-- Saved items. Its own section under the courses, because "joined" and "kept for later" are
          different commitments and a single list would blur them. -->
     <section v-if="saved.length" class="mt-10">
@@ -196,7 +251,7 @@ const courseHref = (e: Enrollment) => {
           <a
             v-if="item.path"
             :href="`${publicSiteUrl}${item.path}`"
-            class="min-w-0 flex-1 truncate font-medium text-accent hover:underline"
+            class="min-w-0 flex-1 truncate font-medium text-accent-strong hover:underline"
           >
             {{ item.title }}
           </a>
@@ -207,12 +262,5 @@ const courseHref = (e: Enrollment) => {
         </li>
       </ul>
     </section>
-
-    <div v-else class="rounded-card border border-line bg-surface p-10 text-center">
-      <p class="text-ink-muted">{{ t("dashboard.empty") }}</p>
-      <DbButton as="a" :href="`${publicSiteUrl}/courses`" class="mt-4">
-        {{ t("dashboard.emptyCta") }}
-      </DbButton>
-    </div>
   </div>
 </template>

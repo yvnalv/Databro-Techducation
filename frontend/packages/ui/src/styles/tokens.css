@@ -1,116 +1,153 @@
 /*
- * DataBro semantic design tokens (docs/DESIGN_SYSTEM.md).
+ * DataBro semantic design tokens (docs/DESIGN_SYSTEM.md, ADR-0020).
  *
  * Values are space-separated RGB channels rather than hex, so Tailwind's `<alpha-value>` syntax
  * works through them (`text-ink/70`). The Tailwind preset maps each variable to a semantic colour
  * name; components reference the name, never the value.
  *
- * PALETTE: sampled directly from the LearnUp reference screenshots, not estimated by eye — the
- * primary blue, the pink→violet page-header gradient, the navy footer and the surface tints are the
- * measured values from `UI UX References/`.
+ * ── The rule this palette runs on ────────────────────────────────────────────────────────────
  *
- * THEME: **light only.** An earlier revision switched on `prefers-color-scheme`, which meant anyone
- * whose OS was in dark mode saw a dark site regardless of the design. DataBro is a light-mode
- * product, so the automatic switch is gone. The `[data-theme="dark"]` block below stays as an
- * explicit, opt-in override for a future toggle; nothing turns it on today.
+ * All three brand hues are **high-luminance**. Against the cream page they measure 1.5:1 (teal),
+ * 1.0:1 (lime) and 2.3:1 (purple) — none is usable as text. Against `#121212` they measure 10.6:1,
+ * 15.9:1 and 7.1:1, and black text *on* the teal is 11.9:1.
+ *
+ * So: **an accent is a fill, never a text colour.** Dark text sits on it. Every accent therefore
+ * comes as a pair —
+ *
+ *   `accent`        the fill
+ *   `accent-on`     what goes on top of that fill
+ *   `accent-strong` the text-safe form, for links and accent-coloured type on a light ground
+ *
+ * `-strong` is what `text-*`, `border-*` and `ring-*` must use. A focus ring in the raw brand teal
+ * would be 1.5:1 against the page, which is an accessibility failure and not merely an ugly one.
+ *
+ * ── Lime is a dark-surface colour ────────────────────────────────────────────────────────────
+ *
+ * `secondary` is only legible on `surface-inverse` and in dark mode. In light mode it appears on
+ * the rail, on inverse cards, and as a filled chip with dark text — never as type on the page.
+ *
+ * ── No gradients ─────────────────────────────────────────────────────────────────────────────
+ *
+ * The former pink→violet band and its three stops are gone, not re-coloured. Emphasis comes from
+ * `surface-inverse` instead: a device that carries content rather than decorating a strip.
  */
 
 :root {
-  /* --- Surfaces --- */
-  --db-surface: 255 255 255;
-  --db-surface-raised: 255 255 255;
-  --db-surface-sunken: 246 248 253; /* #f6f8fd - the reference's alternating band */
+  /* --- Surfaces. `inverse` is the emphasis surface: black cards, the rail, inverted bands. --- */
+  --db-surface: 240 236 226; /* #f0ece2 */
+  --db-surface-raised: 255 255 255; /* #ffffff - cards lift off the cream */
+  --db-surface-sunken: 230 225 213; /* #e6e1d5 */
+  --db-surface-inverse: 18 18 18; /* #121212 */
 
-  /* --- Text. Headings are the deep navy that also carries the footer. --- */
-  --db-ink: 19 41 62; /* #13293e */
-  --db-ink-muted: 91 107 127; /* #5b6b7f */
-  --db-ink-subtle: 135 146 163; /* #8792a3 */
-  --db-ink-inverted: 255 255 255;
+  /* --- Text --- */
+  --db-ink: 18 18 18; /* #121212 - 15.9:1 on surface */
+  --db-ink-muted: 92 87 76; /* #5c574c - 6.4:1 */
+  --db-ink-subtle: 138 132 120; /* #8a8478 - 3.3:1; meta and captions only, never body */
+  --db-ink-inverted: 240 236 226; /* #f0ece2 - on surface-inverse */
 
-  /* --- Lines --- */
-  --db-border: 230 235 242;
-  --db-border-strong: 213 221 232;
+  /* Pairs with `accent-deep`, which is pure black in BOTH themes — so this one does not flip. */
+  --db-ink-on-deep: 240 236 226; /* #f0ece2 */
 
-  /* --- Accent: the reference's primary blue #0068d9 --- */
-  --db-accent: 0 104 217;
-  --db-accent-hover: 0 87 184;
-  --db-accent-subtle: 231 241 255; /* #e7f1ff */
-  --db-accent-deep: 19 41 62; /* navy, for the footer and inverted bands */
+  /* --- Lines. Deliberately quiet: the cards are separated by their fill, not by their edge. --- */
+  --db-border: 224 218 205; /* #e0dacd */
+  --db-border-strong: 206 199 183; /* #cec7b7 */
 
-  /* --- Page-header gradient: pink → violet, sampled left-to-right --- */
-  --db-gradient-from: 227 119 177; /* #e377b1 */
-  --db-gradient-via: 146 116 228; /* #9274e4 */
-  --db-gradient-to: 122 115 244; /* #7a73f4 */
+  /* --- Accent: DataBro teal. `accent` fills, `accent-strong` types. --- */
+  --db-accent: 3 218 198; /* #03dac6 */
+  --db-accent-hover: 0 196 177; /* #00c4b1 */
+  --db-accent-on: 18 18 18; /* #121212 - 11.9:1 on the fill */
+  --db-accent-strong: 0 120 106; /* #00786a - 5.6:1 on surface */
+  --db-accent-subtle: 217 246 242; /* #d9f6f2 */
+  --db-accent-deep: 0 0 0; /* #000000 - footer, CTA band, inverted table heads */
 
-  /* --- Secondary: the gradient's violet, for accents that are not the primary --- */
-  --db-secondary: 122 115 244;
-  --db-secondary-hover: 100 92 224;
-  --db-secondary-subtle: 240 238 254;
+  /* --- Secondary: lime. Dark surfaces only; `secondary-strong` covers the rare light case. --- */
+  --db-secondary: 193 255 114; /* #c1ff72 */
+  --db-secondary-on: 18 18 18; /* #121212 - 15.9:1 on the fill */
+  --db-secondary-strong: 63 98 18; /* #3f6212 - 6.0:1 on surface */
+  --db-secondary-subtle: 234 255 208; /* #eaffd0 */
 
-  /* --- Functional, taken from the reference's button set --- */
-  --db-success: 46 158 107; /* text-safe form of #4caf83 */
-  --db-success-subtle: 228 243 238; /* #e4f3ee - also the category chip tint */
-  --db-warning: 194 98 14;
-  --db-warning-subtle: 255 244 230;
-  --db-danger: 209 52 21; /* readable form of #e24814 */
-  --db-danger-subtle: 251 226 219; /* #fbe2db */
-  --db-info: 0 104 217;
-  --db-info-subtle: 231 241 255;
+  /* --- Premium --- */
+  --db-premium: 187 134 252; /* #bb86fc */
+  --db-premium-on: 18 18 18; /* #121212 - 7.9:1 on the fill */
+  --db-premium-strong: 107 33 168; /* #6b21a8 - 7.4:1 on surface */
+  --db-premium-subtle: 240 228 255; /* #f0e4ff */
 
-  /* Premium reuses the reference's orange, so the badge always reads the same way. */
-  --db-premium: 176 74 12;
-  --db-premium-subtle: 253 234 226;
+  /* --- Functional. Conventional hues, in their text-safe forms. --- */
+  --db-success: 21 112 63; /* #15703f */
+  --db-success-subtle: 220 240 228; /* #dcf0e4 */
+  --db-warning: 146 88 10; /* #92580a */
+  --db-warning-subtle: 251 238 218; /* #fbeeda */
+  --db-danger: 191 39 24; /* #bf2718 */
+  --db-danger-subtle: 251 224 220; /* #fbe0dc */
 
-  /* Callout variants map onto the functional hues; `tip` is the brand blue. */
-  --db-note-info: 0 104 217;
-  --db-note-tip: 0 104 217;
-  --db-note-warning: 194 98 14;
-  --db-note-danger: 209 52 21;
+  /* `info` is the accent's text-safe teal rather than a blue: a second cool hue beside the brand
+     teal reads as muddy, and informational *is* the brand's register here. */
+  --db-info: 0 120 106; /* #00786a */
+  --db-info-subtle: 217 246 242; /* #d9f6f2 */
+
+  /* Callout variants map onto the functional hues; `tip` is the brand's teal. */
+  --db-note-info: 0 120 106;
+  --db-note-tip: 0 120 106;
+  --db-note-warning: 146 88 10;
+  --db-note-danger: 191 39 24;
 
   color-scheme: light;
 }
 
 /*
- * Opt-in dark theme. Deliberately NOT tied to `prefers-color-scheme`: DataBro is light-first, and
- * following the OS meant a dark-mode machine saw a dark site the design never intended. Wire a
- * toggle that sets `data-theme="dark"` if a dark mode is ever wanted.
+ * Dark theme (ADR-0020 §4).
+ *
+ * Opt-in via `data-theme="dark"` and deliberately NOT wired to `prefers-color-scheme` yet — the
+ * values below are designed, but no toggle ships them, so a dark-OS visitor still sees the light
+ * design the pages were built against. Wiring the toggle is a separate, visible change.
+ *
+ * This is where the palette is happiest: all three brand hues sit directly on `#121212` at 10.6:1,
+ * 15.9:1 and 7.1:1, so `*-strong` collapses back onto the raw brand colour.
  */
 :root[data-theme="dark"] {
-  --db-surface: 15 20 30;
-  --db-surface-raised: 22 28 40;
-  --db-surface-sunken: 11 15 23;
+  --db-surface: 18 18 18; /* #121212 */
+  --db-surface-raised: 28 28 28; /* #1c1c1c */
+  --db-surface-sunken: 10 10 10; /* #0a0a0a */
+  --db-surface-inverse: 240 236 226; /* #f0ece2 - the flip: cream blocks on a dark page */
 
-  --db-ink: 226 232 240;
-  --db-ink-muted: 156 170 189;
-  --db-ink-subtle: 122 136 156;
-  --db-ink-inverted: 15 20 30;
+  --db-ink: 240 236 226; /* cream, not white - warmer, and it ties back to the brand */
+  --db-ink-muted: 164 158 144; /* #a49e90 */
+  --db-ink-subtle: 139 131 117; /* #8b8375 */
+  --db-ink-inverted: 18 18 18;
 
-  --db-border: 39 48 64;
-  --db-border-strong: 55 67 87;
+  --db-ink-on-deep: 240 236 226; /* unchanged: accent-deep is black in both themes */
 
-  --db-accent: 96 165 250;
-  --db-accent-hover: 147 197 253;
-  --db-accent-subtle: 23 37 62;
-  --db-accent-deep: 8 12 20;
+  --db-border: 43 43 43; /* #2b2b2b */
+  --db-border-strong: 63 63 63; /* #3f3f3f */
 
-  --db-secondary: 167 139 250;
-  --db-secondary-hover: 196 181 253;
-  --db-secondary-subtle: 39 32 62;
+  --db-accent: 3 218 198;
+  --db-accent-hover: 77 232 217; /* #4de8d9 - hover lightens on dark, darkens on light */
+  --db-accent-on: 18 18 18;
+  --db-accent-strong: 3 218 198; /* the raw teal is already 10.6:1 here */
+  --db-accent-subtle: 11 47 43; /* #0b2f2b */
+  --db-accent-deep: 0 0 0;
 
-  --db-success: 52 211 153;
-  --db-success-subtle: 16 44 36;
-  --db-warning: 251 191 36;
-  --db-warning-subtle: 48 35 12;
-  --db-danger: 248 113 113;
-  --db-danger-subtle: 52 22 24;
-  --db-info: 96 165 250;
-  --db-info-subtle: 23 37 62;
+  --db-secondary: 193 255 114;
+  --db-secondary-on: 18 18 18;
+  --db-secondary-strong: 193 255 114; /* lime finally works as type */
+  --db-secondary-subtle: 30 42 16; /* #1e2a10 */
 
-  --db-premium: 251 191 36;
-  --db-premium-subtle: 48 35 12;
+  --db-premium: 187 134 252;
+  --db-premium-on: 18 18 18;
+  --db-premium-strong: 187 134 252;
+  --db-premium-subtle: 37 26 51; /* #251a33 */
 
-  --db-note-info: 96 165 250;
-  --db-note-tip: 96 165 250;
+  --db-success: 74 222 128; /* #4ade80 */
+  --db-success-subtle: 16 40 26; /* #10281a */
+  --db-warning: 251 191 36; /* #fbbf24 */
+  --db-warning-subtle: 46 36 16; /* #2e2410 */
+  --db-danger: 248 113 113; /* #f87171 */
+  --db-danger-subtle: 46 22 20; /* #2e1614 */
+  --db-info: 3 218 198;
+  --db-info-subtle: 11 47 43;
+
+  --db-note-info: 3 218 198;
+  --db-note-tip: 3 218 198;
   --db-note-warning: 251 191 36;
   --db-note-danger: 248 113 113;
 
@@ -120,13 +157,12 @@
 /*
  * The page shell: max width + centring + responsive gutters, in one place.
  *
- * A class rather than a repeated `mx-auto max-w-shell px-4 sm:px-6`, because the container width is
- * the single most-tuned value in a layout and it should not be spread across a dozen templates.
+ * A class rather than a repeated `mx-auto max-w-… px-4 sm:px-6`, because the container width is the
+ * single most-tuned value in a layout and it should not be spread across a dozen templates.
  *
- * Width (docs/DESIGN_SYSTEM.md §3.2): the reference runs 1220px of content in a 1753px viewport
- * (~0.70). DataBro runs wider — 1760px — because the earlier 1200px cap left too much dead margin on
- * a large display. It is still *capped*: unbounded width makes card grids sprawl and looks broken on
- * an ultrawide monitor.
+ * This is the **only** definition of the shell width. There used to be a second one — a
+ * `maxWidth.shell` of 72rem in the Tailwind preset — that disagreed with this by 600px and had no
+ * call sites; it is deleted rather than reconciled.
  *
  * This is the *shell*, for listings, chrome and marketing. It is deliberately NOT the article body,
  * which stays at the ~68ch reading measure no matter how wide the window gets.
@@ -148,19 +184,6 @@
   .db-shell {
     padding-inline: 2.5rem;
   }
-}
-
-/*
- * Page-header gradient band (docs/UI_PATTERNS.md §1.2). A class rather than a Tailwind utility
- * because it is one specific brand gradient, not a composable colour.
- */
-.db-gradient-band {
-  background-image: linear-gradient(
-    100deg,
-    rgb(var(--db-gradient-from)) 0%,
-    rgb(var(--db-gradient-via)) 55%,
-    rgb(var(--db-gradient-to)) 100%
-  );
 }
 
 /*

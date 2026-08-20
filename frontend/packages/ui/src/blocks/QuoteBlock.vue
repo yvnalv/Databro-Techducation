@@ -11,7 +11,7 @@ const content = computed(() => toRichText(props.data?.content, props.data?.text)
 
 <template>
   <figure>
-    <blockquote class="border-l-4 border-accent pl-5">
+    <blockquote class="border-l-4 border-accent-strong pl-5">
       <p class="text-lg italic text-ink sm:text-xl"><RichText :content="content" /></p>
     </blockquote>
     <!-- figcaption/cite rather than a bare paragraph, so the attribution is machine-readable. -->

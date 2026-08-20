@@ -51,7 +51,7 @@ useListingSeo({
   <div>
     <PageHeader :eyebrow="t('tags.eyebrow')" :title="`#${tag.name}`" :subtitle="description">
       <template #meta>
-        <p class="mt-3 text-sm text-white/75">
+        <p class="mt-3 text-sm text-ink-on-deep/75">
           {{ t("tags.articleCount", articles.meta.total) }}
         </p>
       </template>

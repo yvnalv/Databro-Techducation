@@ -29,7 +29,7 @@ const safeLink = computed(() => (isSafeLink(props.data.url) ? props.data.url : n
       :href="safeLink"
       rel="nofollow noopener noreferrer"
       target="_blank"
-      class="font-medium text-accent underline decoration-accent/40 underline-offset-2"
+      class="font-medium text-accent-strong underline decoration-accent-strong/40 underline-offset-2"
       >{{ safeLink }}</a
     >
   </p>

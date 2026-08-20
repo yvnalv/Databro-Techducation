@@ -103,7 +103,7 @@ useHead(() => ({
     </nav>
 
     <header class="mt-6">
-      <p class="text-sm font-medium text-accent">
+      <p class="text-sm font-medium text-accent-strong">
         {{ page.moduleTitle }} ·
         {{ t("lesson.position", { position: page.position, total: page.totalLessons }) }}
       </p>
@@ -163,7 +163,7 @@ useHead(() => ({
         class="group rounded-card border border-line bg-surface p-4 transition-shadow hover:shadow-card"
       >
         <span class="text-sm text-ink-subtle">← {{ t("lesson.previous") }}</span>
-        <span class="mt-1 block font-medium text-ink group-hover:text-accent">
+        <span class="mt-1 block font-medium text-ink group-hover:text-accent-strong">
           {{ page.previous.title }}
         </span>
       </NuxtLink>
@@ -175,7 +175,7 @@ useHead(() => ({
         class="group rounded-card border border-line bg-surface p-4 text-end transition-shadow hover:shadow-card sm:col-start-2"
       >
         <span class="text-sm text-ink-subtle">{{ t("lesson.next") }} →</span>
-        <span class="mt-1 block font-medium text-ink group-hover:text-accent">
+        <span class="mt-1 block font-medium text-ink group-hover:text-accent-strong">
           {{ page.next.title }}
         </span>
       </NuxtLink>

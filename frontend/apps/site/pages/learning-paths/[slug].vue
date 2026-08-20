@@ -90,8 +90,8 @@ useHead(() => ({
   <div>
     <PageHeader :eyebrow="t('paths.eyebrow')" :title="path.title">
       <template #meta>
-        <p v-if="path.summary" class="mx-auto mt-4 max-w-2xl text-white/80">{{ path.summary }}</p>
-        <div class="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/75">
+        <p v-if="path.summary" class="mx-auto mt-4 max-w-2xl text-ink-on-deep/80">{{ path.summary }}</p>
+        <div class="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-ink-on-deep/75">
           <span>{{ t("paths.courseCount", path.courses.length) }}</span>
           <span>{{ t("courses.lessonCount", totalLessons) }}</span>
           <span v-if="duration(totalMinutes)">{{ duration(totalMinutes) }}</span>
@@ -112,17 +112,17 @@ useHead(() => ({
           <li v-for="(course, index) in path.courses" :key="course.id">
             <NuxtLink
               :to="localePath(`/courses/${course.slug}`)"
-              class="group flex gap-4 rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="group flex gap-4 rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
             >
               <span
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-sm font-bold text-accent"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-sm font-bold text-accent-strong"
                 aria-hidden="true"
               >
                 {{ index + 1 }}
               </span>
 
               <span class="min-w-0 flex-1">
-                <span class="block font-display text-lg font-bold tracking-tight text-ink group-hover:text-accent">
+                <span class="block font-display text-lg font-bold tracking-tight text-ink group-hover:text-accent-strong">
                   {{ course.title }}
                 </span>
                 <span v-if="course.summary" class="mt-1 block text-sm leading-relaxed text-ink-muted">

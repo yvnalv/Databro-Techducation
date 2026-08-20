@@ -15,18 +15,19 @@ const localePath = useLocalePath();
 </script>
 
 <template>
-  <!-- Solid brand blue with a navy action, as in the reference's newsletter band. -->
+  <!-- The site's one full-bleed brand moment: a solid teal band with a black action on it.
+       Text is `accent-on` (near-black), never white — white on this teal measures 1.8:1. -->
   <section class="bg-accent">
     <div class="db-shell py-16 text-center sm:py-20">
-      <h2 class="font-display text-3xl font-bold tracking-tight text-white">
+      <h2 class="font-display text-3xl font-bold tracking-tight text-accent-on">
         {{ t("home.ctaTitle") }}
       </h2>
-      <p class="mx-auto mt-3 max-w-xl text-white/80">{{ t("home.ctaSubtitle") }}</p>
+      <p class="mx-auto mt-3 max-w-xl text-accent-on/75">{{ t("home.ctaSubtitle") }}</p>
 
       <div class="mt-8">
         <NuxtLink
           :to="localePath('/')"
-          class="inline-flex h-12 items-center justify-center rounded-full bg-accent-deep px-8 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent"
+          class="inline-flex h-12 items-center justify-center rounded-full bg-accent-deep px-8 text-base font-semibold text-ink-on-deep transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-deep focus-visible:ring-offset-2 focus-visible:ring-offset-accent"
         >
           {{ t("home.ctaButton") }}
         </NuxtLink>

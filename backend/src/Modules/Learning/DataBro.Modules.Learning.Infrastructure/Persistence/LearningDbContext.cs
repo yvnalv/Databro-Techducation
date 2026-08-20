@@ -18,6 +18,7 @@ public sealed class LearningDbContext(DbContextOptions<LearningDbContext> option
     public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
+    public DbSet<LearnerStreak> LearnerStreaks => Set<LearnerStreak>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

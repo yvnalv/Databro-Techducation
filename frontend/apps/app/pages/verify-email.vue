@@ -47,7 +47,7 @@ onMounted(async () => {
     class="flex min-h-screen items-center justify-center bg-surface-sunken px-4 font-sans text-ink antialiased"
   >
     <div class="w-full max-w-sm text-center">
-      <span class="inline-flex text-accent"><AppBrandMark /></span>
+      <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
 
       <div class="mt-8 rounded-card border border-line bg-surface p-6 shadow-card">
         <template v-if="state === 'working'">

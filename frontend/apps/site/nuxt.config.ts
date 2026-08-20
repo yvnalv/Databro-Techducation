@@ -12,8 +12,12 @@ export default defineNuxtConfig({
     // Fonts are self-hosted, not fetched from Google's CDN: a third-party request on every page is
     // both a privacy leak and a render-blocking dependency on the SEO-critical path. Variable fonts
     // so one file covers every weight.
-    "@fontsource-variable/inter",
-    "@fontsource-variable/plus-jakarta-sans",
+    // Poppins is not published as a variable font, so the four weights the system uses are imported
+    // individually (ADR-0020 §3). Importing the whole family would ship nine weights to every page.
+    "@fontsource/poppins/400.css",
+    "@fontsource/poppins/500.css",
+    "@fontsource/poppins/600.css",
+    "@fontsource/poppins/700.css",
     "@fontsource-variable/jetbrains-mono",
     // Semantic design tokens (the CSS custom properties the Tailwind preset maps to) plus the
     // article rhythm. Must load before Tailwind's utilities resolve against them.

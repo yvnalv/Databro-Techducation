@@ -22,7 +22,7 @@ const highlights = computed(() => [
     <div class="db-shell py-16 sm:py-24">
       <div class="max-w-3xl">
         <p
-          class="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent"
+          class="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-strong"
         >
           {{ t("site.name") }}
         </p>
@@ -43,7 +43,7 @@ const highlights = computed(() => [
             :key="highlight"
             class="flex items-center gap-2 text-sm font-medium text-ink-muted"
           >
-            <svg class="h-4 w-4 shrink-0 text-accent" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <svg class="h-4 w-4 shrink-0 text-accent-strong" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.14" />
               <path
                 d="m6 10.5 2.5 2.5L14 7.5"
@@ -60,7 +60,7 @@ const highlights = computed(() => [
         <div class="mt-10 flex flex-wrap gap-3">
           <NuxtLink
             :to="localePath('/')"
-            class="inline-flex h-12 items-center justify-center rounded-md bg-accent px-6 text-base font-medium text-ink-inverted transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            class="inline-flex h-12 items-center justify-center rounded-control bg-accent px-6 text-base font-medium text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2"
           >
             {{ t("home.primaryCta") }}
           </NuxtLink>

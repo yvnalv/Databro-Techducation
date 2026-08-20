@@ -36,8 +36,10 @@ const authorInitial = computed(() => authorName.value.trim().charAt(0).toUpperCa
 // Deterministic tint from the slug, so a card keeps the same colour across pages and deploys
 // rather than flickering between renders (UI_PATTERNS §5 applies the same rule to category tiles).
 const COVER_TINTS = [
-  "bg-accent-subtle text-accent",
-  "bg-secondary-subtle text-secondary",
+  "bg-accent-subtle text-accent-strong",
+  // `-strong`, like every other entry here: `secondary` itself is the lime fill, which on this
+  // pale tint measures 1.0:1 (ADR-0020).
+  "bg-secondary-subtle text-secondary-strong",
   "bg-info-subtle text-info",
   "bg-success-subtle text-success",
 ];
@@ -69,7 +71,7 @@ const coverTint = computed(() => {
              the card's entire text content. -->
         <NuxtLink
           :to="localePath(`/articles/${article.slug}`)"
-          class="transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          class="transition-colors hover:text-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {{ article.title }}
         </NuxtLink>

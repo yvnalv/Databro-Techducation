@@ -32,7 +32,7 @@ const initial = computed(() => props.author.displayName.trim().charAt(0).toUpper
     <!-- Decorative: the author's name is already in the text beside it. -->
     <span
       v-else
-      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-lg font-bold text-accent"
+      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-lg font-bold text-accent-strong"
       aria-hidden="true"
     >
       {{ initial }}

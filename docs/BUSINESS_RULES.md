@@ -115,6 +115,33 @@ Domain layer. Rules are grouped by area and will grow per phase.
 * LN-14: Saving is idempotent and removing succeeds even when nothing was saved — the same reasoning
   as LN-9 and logout: a control that can fail leaves the UI lying about its own state.
 
+## Learning — streaks
+
+* LN-15: **A streak counts local days, and the platform picks the timezone.** `Learning:Streaks:TimeZone`
+  (default `Asia/Jakarta`) decides which day an instant belongs to.
+
+  UTC days are the obvious choice and are wrong here: a WIB learner studying at 23:00 Monday and
+  01:00 Tuesday has studied on two local days, but both instants land on the same UTC day — so the
+  streak would count one. The error only ever undercounts, and it undercounts hardest for the
+  learners furthest from UTC, who on this platform are most of them.
+
+  A single configured zone is still a simplification, and a learner outside it sees their day roll
+  over at an odd hour. It is a simplification that is right for the audience the product is built
+  for, rather than one that is right for nobody. Per-learner timezones are the upgrade path; the
+  domain already takes a day rather than an instant, so nothing below the service changes.
+* LN-16: **A streak advances on completing a lesson, never on opening one.** A streak that rewards
+  visiting rewards the wrong thing. A second lesson finished the same day is more work, not another
+  day, and re-marking a lesson already complete is not work at all.
+* LN-17: **A streak decays with the passage of time, not with writes.** The stored counter is only
+  ever advanced; the *read* applies the days since. Someone who last studied three days ago has a
+  stored count of 5 and a reported streak of 0, and nothing has written to their row — because they
+  have not been back. Yesterday still counts: only a gap of two days or more breaks a run.
+* LN-18: **The longest run is never reduced.** Breaking a streak is a fact about now; it is not a
+  reason to erase what someone already did.
+* LN-19: A completion dated before the last recorded one — a replay, a backfill, a clock that stepped
+  backwards — is ignored rather than treated as a gap. Rewinding a streak would punish a learner for
+  something the system did.
+
 ## Assessment
 
 * AS-1: **A learner-facing response never carries the answer key.** Enforced by having separate DTO

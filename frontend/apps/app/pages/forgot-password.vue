@@ -40,7 +40,7 @@ useHead({ title: t("forgot.title") });
   >
     <div class="w-full max-w-sm">
       <div class="text-center">
-        <span class="inline-flex text-accent"><AppBrandMark /></span>
+        <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
         <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">
           {{ t("forgot.title") }}
         </h1>
@@ -78,7 +78,7 @@ useHead({ title: t("forgot.title") });
         </DbButton>
 
         <p class="text-center text-sm">
-          <a href="/login" class="font-medium text-accent hover:underline">
+          <a href="/login" class="font-medium text-accent-strong hover:underline">
             {{ t("forgot.backToSignIn") }}
           </a>
         </p>

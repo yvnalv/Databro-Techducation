@@ -29,8 +29,8 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
   <div class="flex min-h-screen flex-col bg-surface font-sans text-ink antialiased">
     <header class="border-b border-line">
       <div class="db-shell flex h-16 items-center">
-        <NuxtLink :to="localePath('/')" class="text-accent" :aria-label="t('site.name')">
-          <BrandMark class="text-accent [&>span:last-child]:text-ink" />
+        <NuxtLink :to="localePath('/')" class="text-accent-strong" :aria-label="t('site.name')">
+          <BrandMark class="text-accent-strong [&>span:last-child]:text-ink" />
         </NuxtLink>
       </div>
     </header>
@@ -58,7 +58,7 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
         <p class="mt-8">
           <NuxtLink
             :to="localePath('/')"
-            class="inline-flex h-12 items-center justify-center rounded-md bg-accent px-6 text-base font-medium text-ink-inverted transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            class="inline-flex h-12 items-center justify-center rounded-control bg-accent px-6 text-base font-medium text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2"
             @click="clearError({ redirect: '/' })"
           >
             {{ t("error.backHome") }}

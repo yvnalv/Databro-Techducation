@@ -165,7 +165,7 @@ useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/studio/lessons" class="text-sm font-medium text-accent hover:underline">← {{ t("studio.lessons.back") }}</NuxtLink>
+        <NuxtLink to="/studio/lessons" class="text-sm font-medium text-accent-strong hover:underline">← {{ t("studio.lessons.back") }}</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
           {{ isNew ? t("studio.lessons.newTitle") : title || t("studio.common.untitled") }}
         </h1>
@@ -236,7 +236,7 @@ useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value
             </h2>
             <button
               type="button"
-              class="text-sm font-medium text-accent hover:underline"
+              class="text-sm font-medium text-accent-strong hover:underline"
               :aria-expanded="versionsOpen"
               @click="toggleVersions"
             >

@@ -545,6 +545,26 @@ export interface Bookmark {
   savedAt: string;
 }
 
+// ---- Streaks (LN-15 … LN-19) ----
+
+/**
+ * A learner's study streak.
+ *
+ * `current` is the streak **as of today**, not a stored counter: a streak decays with the passage of
+ * time rather than with writes, so someone who last studied three days ago reads 0 here even though
+ * nothing has changed on the server since (LN-17). Render it as given — there is nothing to recompute on the
+ * client, and a client that tried would need the platform's timezone to do it.
+ *
+ * `activeToday` is what lets a dashboard say "done today" instead of nagging someone who has already
+ * put the work in.
+ */
+export interface Streak {
+  current: number;
+  longest: number;
+  lastActiveOn?: string | null;
+  activeToday: boolean;
+}
+
 // ---- Enrollment & progress (LN-6 … LN-11) ----
 
 /**

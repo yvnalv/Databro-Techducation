@@ -123,7 +123,7 @@ const hasToc = computed(() => toc.value.length >= 2);
           />
           <span
             v-else
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent"
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-accent-subtle text-sm font-semibold text-accent-strong"
             aria-hidden="true"
           >
             {{ authorInitial }}
@@ -175,7 +175,7 @@ const hasToc = computed(() => toc.value.length >= 2);
       </div>
 
       <p class="mt-8 text-sm">
-        <NuxtLink :to="localePath('/')" class="font-medium text-accent hover:underline">
+        <NuxtLink :to="localePath('/')" class="font-medium text-accent-strong hover:underline">
           {{ t("articles.backToArticles") }}
         </NuxtLink>
       </p>

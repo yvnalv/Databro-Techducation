@@ -43,6 +43,16 @@
     "inProgress": "Sedang berjalan",
     "completed": "Selesai"
   },
+  "streak": {
+    "title": "Rentetan belajar",
+    "days": "{count} hari berturut-turut",
+    "day": "1 hari",
+    "none": "Belum ada rentetan",
+    "noneHint": "Selesaikan satu pelajaran untuk memulainya.",
+    "longest": "Terbaik: {count}",
+    "today": "Sudah hari ini",
+    "pending": "Belajar hari ini agar tetap berlanjut."
+  },
   "login": {
     "title": "Masuk",
     "subtitle": "Masuk untuk melanjutkan pembelajaran.",

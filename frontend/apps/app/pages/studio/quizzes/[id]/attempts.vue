@@ -52,7 +52,7 @@ useHead(() => ({ title: quiz.value ? `Attempts — ${quiz.value.title}` : "Attem
   <div class="mx-auto max-w-3xl">
     <NuxtLink
       :to="`/studio/quizzes/${quizId}`"
-      class="text-sm font-medium text-accent hover:underline"
+      class="text-sm font-medium text-accent-strong hover:underline"
     >
       ← Back to quiz
     </NuxtLink>
@@ -75,7 +75,7 @@ useHead(() => ({ title: quiz.value ? `Attempts — ${quiz.value.title}` : "Attem
 
     <div v-else class="mt-6 overflow-hidden rounded-card border border-line">
       <table class="w-full text-left text-sm">
-        <thead class="bg-accent-deep text-white">
+        <thead class="bg-accent-deep text-ink-on-deep">
           <tr>
             <th scope="col" class="px-4 py-3 font-semibold">Learner</th>
             <th scope="col" class="px-4 py-3 font-semibold">Result</th>

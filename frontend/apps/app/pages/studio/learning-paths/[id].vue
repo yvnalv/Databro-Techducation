@@ -153,7 +153,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
 <template>
   <div class="mx-auto max-w-3xl">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <NuxtLink to="/studio/learning-paths" class="text-sm font-medium text-accent hover:underline">
+      <NuxtLink to="/studio/learning-paths" class="text-sm font-medium text-accent-strong hover:underline">
         ← {{ t("studio.paths.back") }}
       </NuxtLink>
 
@@ -166,7 +166,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
     <p
       v-if="formError"
       role="alert"
-      class="mt-4 rounded-md border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
+      class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
     >
       {{ formError }}
     </p>
@@ -192,7 +192,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           <select
             v-model="difficulty"
             :disabled="busy"
-            class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+            class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           >
             <option value="beginner">{{ t("studio.common.beginner") }}</option>
             <option value="intermediate">{{ t("studio.common.intermediate") }}</option>
@@ -210,7 +210,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           :href="publicUrl"
           target="_blank"
           rel="noopener"
-          class="text-sm font-medium text-accent hover:underline"
+          class="text-sm font-medium text-accent-strong hover:underline"
         >
           {{ t("studio.common.viewPublic") }} ↗
         </a>
@@ -229,10 +229,10 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
         <li
           v-for="(course, index) in courses"
           :key="course.id"
-          class="flex items-center gap-3 rounded-md border border-line px-4 py-3"
+          class="flex items-center gap-3 rounded-control border border-line px-4 py-3"
         >
           <span
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent-strong"
             aria-hidden="true"
           >
             {{ index + 1 }}
@@ -241,7 +241,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           <span class="min-w-0 flex-1">
             <NuxtLink
               :to="`/studio/courses/${course.id}`"
-              class="block truncate font-medium text-accent hover:underline"
+              class="block truncate font-medium text-accent-strong hover:underline"
             >
               {{ course.title }}
             </NuxtLink>
@@ -257,7 +257,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy || index === 0"
               :aria-label="t('studio.paths.moveUp', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="move(index, -1)"
             >
               ↑
@@ -266,7 +266,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy || index === courses.length - 1"
               :aria-label="t('studio.paths.moveDown', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="move(index, 1)"
             >
               ↓
@@ -275,7 +275,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy"
               :aria-label="t('studio.paths.removeFrom', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="run((api) => api.removeCourseFromPath(pathId, course.id))"
             >
               {{ t("studio.common.remove") }}
@@ -286,7 +286,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
 
       <p
         v-else
-        class="mt-5 rounded-md border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted"
+        class="mt-5 rounded-control border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted"
       >
         {{ t("studio.paths.noCourses") }}
       </p>
@@ -296,7 +296,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           v-model="picked"
           :disabled="busy || available.length === 0"
           :aria-label="t('studio.paths.courseToAdd')"
-          class="h-10 min-w-56 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
         >
           <option value="">
             {{ available.length ? t("studio.paths.chooseCourse") : t("studio.paths.allAdded") }}

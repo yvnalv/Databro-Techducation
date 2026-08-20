@@ -6,7 +6,7 @@ Snapshot of where the project is and what's next. Update this with every meaning
 decisions awaiting the product owner, manual work, surfaces that were never built, and operational
 debt. This file describes progress; that one describes what is owed.
 
-Last updated: 2026-08-19.
+Last updated: 2026-08-20.
 
 ## Current phase
 
@@ -194,8 +194,13 @@ on the record rather than being tidied away.
    locales.
 4. ~~**Finish the CMS's Indonesian strings (S-5).**~~ **Done (CHG-0054 … CHG-0058).** All 16 studio
    files translated, 347 keys, both locales at parity. Rule 19 now holds across both apps.
-5. Then close Phase 2: ~~bookmarks~~ **done (CHG-0059)**, ~~social login~~ **done (CHG-0061,
-   ADR-0019)**, plus **streaks** — the last Phase 2 learner feature still unbuilt.
+5. ~~Then close Phase 2: bookmarks, social login, streaks.~~ **All three done** — bookmarks
+   (CHG-0059), social login (CHG-0061, ADR-0019), streaks (CHG-0062).
+
+**Phase 2's learner features are complete.** A learner can browse, enrol, read, pass a quiz, mark a
+lesson complete, save things for later, sign in with Google or GitHub, and watch a streak build — in
+either locale. What remains before Phase 3 is not a feature: it is the staging deploy (D-3), which is
+an infrastructure decision rather than code.
 
 Two items that stood here for several revisions are now **done** and are recorded as such rather than
 quietly deleted: the search decision ([ADR-0014](adr/0014-search-across-modules.md), segmented
@@ -210,6 +215,16 @@ Independent of Phase 2:
 
 ## Known gaps / deferred
 
+* **Streaks use one platform-wide timezone**, not a per-learner one (LN-15,
+  `Learning:Streaks:TimeZone`, default `Asia/Jakarta`). UTC days were the alternative and are worse:
+  they would silently undercount every learner east of Greenwich who studies late. A single zone is
+  right for the launch audience and visibly odd for anyone outside it, whose day rolls over at an
+  unfamiliar hour. The fix needs somewhere on the user profile to put a zone, so it is downstream of
+  `PATCH /me` (S-2, S-7). The domain already takes a day rather than an instant, so only
+  `StreakService` changes when that lands. Note also that the fallback for an unrecognised zone id is
+  UTC rather than an exception — a runtime image without tzdata would degrade quietly, which is why
+  the API image is Debian-based and not chiselled.
+
 * **Outbox retention.** Processed rows are kept as an audit of what the system decided to do, which is
   worth having while volume is negligible. A sweep is owed before it is not
   ([ADR-0017](adr/0017-transactional-outbox.md)).
@@ -220,11 +235,10 @@ Independent of Phase 2:
   still unbuilt** — the last Phase 1 phantom endpoint, still under an explicit "Not built" heading in
   API_SPEC.
 
-* **The CMS is still English-only.** [ADR-0015](adr/0015-authenticated-app-hosts-both-audiences.md)
-  registered `@nuxtjs/i18n` in `apps/app` — it had been a dependency that was never wired — and
-  covered the shared chrome, login and every learner string in both locales. The CMS's own body
-  strings (editor labels, table headers, buttons inside `/studio`) are still hardcoded English
-  against rule 19. Now mechanical to finish, since the module is in place and the locale files exist.
+* ~~**The CMS is still English-only.**~~ **Resolved (CHG-0054 … CHG-0058).** All 16 `/studio` files
+  are translated, 347 keys, both locales at structural parity, so rule 19 now holds across both apps.
+  The line stays here rather than being deleted because it stood as a known gap for several
+  revisions.
 * **The session cookie is shared between apps by host, not by configuration.** Cookies ignore port,
   so `localhost:3000` and `localhost:3001` genuinely share one in development. In production the two
   apps are separate subdomains and the cookie needs an explicit parent `domain` — owed with the first
@@ -234,10 +248,17 @@ Independent of Phase 2:
   `admin@databro.local` was confirmed at seed time and is unaffected.
 * Social login (Google/GitHub) implemented (CHG-0061, ADR-0019); a production deploy still needs a
   second GitHub OAuth app and a Redis instance the API can reach.
-* **Design pass complete for what exists**, matching the reference: sampled blue palette,
-  pink→violet page-header gradient, navy footer. **Light mode only** — the earlier
-  `prefers-color-scheme` switch made dark-OS visitors see a dark site and has been removed. The
-  reference's course grid, instructor carousel and pricing table wait for Phase 2 data.
+* **The design language is DataBro's own** as of CHG-0063 / [ADR-0020](adr/0020-design-language-and-the-contrast-rule.md):
+  cream `#f0ece2` page, teal `#03dac6` accent, lime and purple secondaries, Poppins, a 12/16/24 radius
+  family, diffuse shadows, and **no gradients anywhere**. The rule the system runs on is that an
+  accent is a *fill*, never a text colour — all three brand hues are illegible as type on the cream
+  page and excellent as fills carrying near-black text.
+  **Tokens and primitives only.** The icon system, logo, expanded component set and the page-level
+  layout drawn from the references are still owed (S-8). Until they land, pages keep their existing
+  structure in the new skin.
+  **Dark mode is designed and complete but not shipped** — explicit `data-theme="dark"` opt-in, not
+  wired to `prefers-color-scheme` (S-9). The earlier automatic switch made dark-OS visitors see a
+  dark site the design never intended, and that mistake is not being repeated by accident.
 * **Premium bodies are not actually gated yet.** The badge, preview notice, marked region and JSON-LD
   paywall declaration are in place, but the full body still renders: there is no entitlement check to
   gate on until Billing (Phase 3). Reserved, not enforced.

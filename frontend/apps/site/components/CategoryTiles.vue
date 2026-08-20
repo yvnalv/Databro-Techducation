@@ -27,8 +27,10 @@ const { t } = useI18n();
 const localePath = useLocalePath();
 
 const TINTS = [
-  "bg-accent-subtle text-accent",
-  "bg-secondary-subtle text-secondary",
+  "bg-accent-subtle text-accent-strong",
+  // `-strong`, like every other entry here: `secondary` itself is the lime fill, which on this
+  // pale tint measures 1.0:1 (ADR-0020).
+  "bg-secondary-subtle text-secondary-strong",
   "bg-info-subtle text-info",
   "bg-success-subtle text-success",
   "bg-warning-subtle text-warning",
@@ -61,7 +63,7 @@ const populated = computed(() =>
         <li v-for="category in populated" :key="category.id">
           <NuxtLink
             :to="localePath(`/categories/${category.slug}`)"
-            class="group flex h-full items-center gap-4 rounded-card border border-line bg-surface-raised p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            class="group flex h-full items-center gap-4 rounded-card border border-line bg-surface-raised p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2"
           >
             <span
               class="flex h-12 w-12 shrink-0 items-center justify-center rounded-card font-display text-lg font-bold"
@@ -73,7 +75,7 @@ const populated = computed(() =>
 
             <span class="min-w-0">
               <span
-                class="block truncate font-display font-semibold text-ink transition-colors group-hover:text-accent"
+                class="block truncate font-display font-semibold text-ink transition-colors group-hover:text-accent-strong"
               >
                 {{ category.name }}
               </span>

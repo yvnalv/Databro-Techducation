@@ -120,7 +120,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
 <template>
   <div v-if="quiz" class="mx-auto max-w-3xl">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <NuxtLink to="/studio/quizzes" class="text-sm font-medium text-accent hover:underline">
+      <NuxtLink to="/studio/quizzes" class="text-sm font-medium text-accent-strong hover:underline">
         ← Quizzes
       </NuxtLink>
 
@@ -128,7 +128,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
         <span v-if="savedAt" class="text-xs text-ink-subtle">{{ t("studio.common.savedAt", { time: savedAt }) }}</span>
         <NuxtLink
           :to="`/studio/quizzes/${quizId}/attempts`"
-          class="text-sm font-medium text-accent hover:underline"
+          class="text-sm font-medium text-accent-strong hover:underline"
         >
           {{ t("studio.quizzes.attempts") }}
         </NuxtLink>
@@ -139,7 +139,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
     <p
       v-if="formError"
       role="alert"
-      class="mt-4 rounded-md border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
+      class="mt-4 rounded-control border border-danger/30 bg-danger-subtle px-3 py-2 text-sm text-danger"
     >
       {{ formError }}
     </p>
@@ -157,7 +157,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
             min="0"
             max="100"
             :disabled="busy"
-            class="h-10 w-32 rounded-md border border-line-strong bg-surface px-3 text-sm tabular-nums text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+            class="h-10 w-32 rounded-control border border-line-strong bg-surface px-3 text-sm tabular-nums text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           />
         </label>
       </div>
@@ -181,7 +181,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
         <li
           v-for="(question, index) in questions"
           :key="question.id"
-          class="rounded-md border border-line p-4"
+          class="rounded-control border border-line p-4"
         >
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
@@ -194,7 +194,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
             <button
               type="button"
               :disabled="busy"
-              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="run((api) => api.removeQuestion(quizId, question.id))"
             >
               {{ t("studio.common.remove") }}
@@ -215,7 +215,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
                 :checked="choice.isCorrect"
                 :disabled="busy"
                 :aria-label="t('studio.quizzes.choiceCorrect', { choice: choice.text })"
-                class="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent"
+                class="h-4 w-4 rounded border-line-strong text-accent-strong focus:ring-accent-strong"
                 @change="toggleAnswer(question, choice.id)"
               />
               <input
@@ -225,7 +225,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
                 :checked="choice.isCorrect"
                 :disabled="busy"
                 :aria-label="t('studio.quizzes.choiceCorrect', { choice: choice.text })"
-                class="h-4 w-4 border-line-strong text-accent focus:ring-accent"
+                class="h-4 w-4 border-line-strong text-accent-strong focus:ring-accent-strong"
                 @change="setSingleAnswer(question, choice.id)"
               />
 
@@ -239,7 +239,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
                 type="button"
                 :disabled="busy"
                 :aria-label="t('studio.quizzes.removeChoice', { choice: choice.text })"
-                class="rounded px-2 py-0.5 text-xs text-ink-subtle hover:bg-surface-sunken hover:text-danger disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                class="rounded px-2 py-0.5 text-xs text-ink-subtle hover:bg-surface-sunken hover:text-danger disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 @click="run((api) => api.removeChoice(quizId, question.id, choice.id))"
               >
                 ✕
@@ -253,7 +253,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
               type="text"
               :placeholder="t('studio.quizzes.addChoice')"
               :disabled="busy"
-              class="h-9 min-w-48 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+              class="h-9 min-w-48 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
               @keyup.enter="addChoice(question.id)"
             />
             <DbButton
@@ -268,7 +268,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
         </li>
       </ol>
 
-      <p v-else class="mt-5 rounded-md border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted">
+      <p v-else class="mt-5 rounded-control border border-dashed border-line-strong p-6 text-center text-sm text-ink-muted">
         {{ t("studio.quizzes.noQuestions") }}
       </p>
 
@@ -278,14 +278,14 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
           type="text"
           :placeholder="t('studio.quizzes.newQuestion')"
           :disabled="busy"
-          class="h-10 min-w-56 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           @keyup.enter="addQuestion"
         />
         <select
           v-model="newType"
           :disabled="busy"
           :aria-label="t('studio.quizzes.questionType')"
-          class="h-10 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+          class="h-10 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
         >
           <option value="singlechoice">{{ t("studio.quizzes.typeSingle") }}</option>
           <option value="multiplechoice">{{ t("studio.quizzes.typeMultiple") }}</option>

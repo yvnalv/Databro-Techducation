@@ -6,102 +6,119 @@ The token and component vocabulary for both frontend apps. Page-level compositio
 
 ## 0. Provenance and scope
 
-Structure, spacing, component anatomy, page composition **and colour** are derived from the
-**LearnUp** reference set (34 screenshots, `UI UX References/`). What was **not** taken:
+The visual language is DataBro's own, set by [ADR-0020](adr/0020-design-language-and-the-contrast-rule.md).
+The palette comes from the brand's existing presence — the colours already carrying DataBro's social
+output — rather than from a reference product.
 
-* **Assets.** No illustrations, icons, photography or copy from the reference. Layout patterns are
-  not protectable; artwork is.
-* **Code.** The reference is Next.js + React + Bootstrap. Nothing transfers to Nuxt + Tailwind.
+**Structure** (spacing, component anatomy, page composition, §3 onward) still derives from the
+LearnUp reference set. Layout patterns are not protectable; that part of the original derivation
+stands. **Colour and typography no longer do.**
 
-Colour values were **sampled from the screenshot pixels**, not estimated by eye — the primary blue,
-the page-header gradient stops, the navy footer and the surface tints are measured. Spacing and type
-values were read visually and rounded onto a scale.
+> **Palette history.** The first revision used a teal/violet palette, on the reasoning that a blue
+> LMS is hard to tell apart from its competitors. It was overridden to match a reference set, and
+> this file recorded at the time that the teal reasoning was "the argument to revisit if DataBro ever
+> wants visual separation from the category." ADR-0020 is that revisit. The record stays rather than
+> being tidied away — the original instinct was right.
 
-> **Palette history.** An earlier revision used a teal/violet palette, on the reasoning that a blue
-> LMS is hard to tell apart from its competitors. That was overridden: the brief is to match the
-> reference, so the reference's blue is the palette. Recorded here because the teal reasoning is
-> still the argument to revisit if DataBro ever wants visual separation from the category.
-
-**Light mode only.** An earlier revision keyed dark mode off `prefers-color-scheme`, which meant a
-visitor whose OS was dark saw a dark site the design never intended. That automatic switch has been
-removed. `[data-theme="dark"]` remains as an explicit opt-in for a future toggle; nothing enables it
-today.
+**A rendered version of this document exists.** Every token below appears as a swatch with its
+measured contrast ratio, alongside each component in each state, at the design preview linked from
+[ARTIFACTS.md](ARTIFACTS.md). When in doubt about what a token looks like, look at it.
 
 ---
 
 ## 1. Colour
 
-### 1.1 Palette source
+### 1.1 The rule everything follows
 
-All values below are sampled from the reference screenshots. The system is built on **one blue**
-(`#0068d9`), a **pink→violet gradient** used only on page-header bands, and a **deep navy**
-(`#13293e`) that carries both headings and the footer.
+**An accent is a fill, never a text colour.**
 
-### 1.2 Brand ramp — blue (primary)
+All three brand hues are high-luminance. Against the `#f0ece2` page they measure 1.5:1 (teal),
+1.0:1 (lime) and 2.3:1 (purple) — none is legible as type. Against `#121212` they measure 10.6:1,
+15.9:1 and 7.1:1, and near-black text *on* the teal is 11.9:1.
 
-| Step | Hex | Use |
+So each accent is a **triple**, not a value:
+
+| Token | Job |
+|---|---|
+| `accent` | the fill |
+| `accent-on` | what sits on that fill |
+| `accent-strong` | the text-safe form — links, accent-coloured type, borders, **focus rings** |
+
+`text-*`, `border-*` and `ring-*` take `-strong`. A focus ring in the raw brand teal would be 1.5:1
+against the page, failing the 3:1 floor for a non-text indicator. There is deliberately no plain
+`text-accent`: reaching for it is a miss, not a silent 1.5:1 label.
+
+### 1.2 Brand
+
+| Role | Hex | Use |
 |---|---|---|
-| 50 | `#e7f1ff` | Tinted backgrounds, soft buttons, chip fills |
-| 100 | `#cfe3ff` | Hover on tinted surfaces |
-| 200 | `#a5cbff` | Borders on tinted surfaces |
-| 300 | `#6fabff` | Decorative |
-| 400 | `#2f88f5` | Decorative |
-| 500 | `#0d74e6` | Decorative |
-| **600** | **`#0068d9`** | **Primary actions, links, the CTA band** — the reference's brand blue |
-| 700 | `#0057b8` | Hover/pressed |
-| 800 | `#084a95` | Deep fills |
-| 900 | `#13293e` | Navy — footer, headings, inverted bands |
+| `accent` | `#03dac6` | Primary fills: buttons, active nav, chips, progress |
+| `accent-hover` | `#00c4b1` | Hover on a fill (lightens to `#4de8d9` in dark) |
+| `accent-on` | `#121212` | Text and icons on an accent fill — 11.9:1 |
+| `accent-strong` | `#00786a` | Links and accent type on a light ground — 5.6:1 |
+| `accent-subtle` | `#d9f6f2` | Tinted backgrounds, soft buttons, chip fills |
+| `accent-deep` | `#000000` | Footer, CTA band, inverted table heads |
 
-`#0068d9` on white is ~4.6:1, which passes AA for body text.
+`accent-deep` is pure black in **both** themes, so its text partner is `ink-on-deep` — a token that
+deliberately does not flip. Using `ink-inverted` there would go dark-on-black once dark mode ships.
 
-### 1.3 Page-header gradient
+### 1.3 Secondary and premium
 
-Sampled left-to-right across the band: `#e377b1` → `#9274e4` → `#7a73f4`. Applied through the
-`.db-gradient-band` class rather than a Tailwind utility, because it is one specific brand gradient
-rather than a composable colour. **Only page-header bands use it** — it is not a general surface.
-
-### 1.4 Neutrals
-
-Sampled from the reference. The blue cast is deliberate — it is what makes the neutrals sit with the
-brand blue rather than beside it.
-
-| Role | Light | Note |
+| Role | Hex | Use |
 |---|---|---|
-| `surface` | `#ffffff` | Page background |
-| `surface-raised` | `#ffffff` | Cards — separated by border + shadow, not fill |
-| `surface-sunken` | `#f6f8fd` | Alternating section bands, code blocks, table headers |
-| `ink` | `#13293e` | Headings and body |
-| `ink-muted` | `#5b6b7f` | Secondary text, excerpts |
-| `ink-subtle` | `#8792a3` | Meta, timestamps, captions |
-| `line` | `#e6ebf2` | Card and divider borders |
-| `line-strong` | `#d5dde8` | Input borders, emphasis |
+| `secondary` | `#c1ff72` | Lime. **Dark surfaces only** — 1.0:1 on the cream page |
+| `secondary-on` | `#121212` | On a lime fill — 15.9:1 |
+| `secondary-strong` | `#3f6212` | The rare light-mode need — 6.0:1 |
+| `premium` | `#bb86fc` | Premium badge fill |
+| `premium-on` | `#121212` | On it — 7.9:1 |
+| `premium-strong` | `#6b21a8` | Premium type on light — 7.4:1 |
 
-Headings in the reference are a deep navy rather than black, and the same navy carries the footer.
-DataBro keeps both.
+Lime is the clearest case of the §1.1 rule: it is not a weak colour, it is a *dark-surface* colour.
+On the rail, on an inverse card, and in dark mode it is the strongest thing on the page.
+
+### 1.4 Surfaces and neutrals
+
+The neutrals are warm, derived from the cream so they sit *with* it rather than beside it.
+
+| Role | Light | Dark | Note |
+|---|---|---|---|
+| `surface` | `#f0ece2` | `#121212` | Page background |
+| `surface-raised` | `#ffffff` | `#1c1c1c` | Cards — they lift off the cream |
+| `surface-sunken` | `#e6e1d5` | `#0a0a0a` | Bands, code blocks, table headers |
+| `surface-inverse` | `#121212` | `#f0ece2` | **The emphasis surface** |
+| `ink` | `#121212` | `#f0ece2` | 15.9:1 |
+| `ink-muted` | `#5c574c` | `#a49e90` | 6.4:1 |
+| `ink-subtle` | `#8a8478` | `#8b8375` | 3.3:1 — **meta and captions only, never body** |
+| `ink-inverted` | `#f0ece2` | `#121212` | On `surface-inverse` |
+| `ink-on-deep` | `#f0ece2` | `#f0ece2` | On `accent-deep`; does not flip |
+| `line` | `#e0dacd` | `#2b2b2b` | Quiet by design |
+| `line-strong` | `#cec7b7` | `#3f3f3f` | Inputs, emphasis |
+
+`surface-inverse` is what replaced the gradient band. It is the device for emphasis, selection and
+promotion, and in light mode it is the only place the raw teal and the lime appear at full strength.
 
 ### 1.5 Functional colours
 
-Taken from the reference's button set.
+Conventional hues in text-safe form, each with a subtle fill so a status can be tinted without
+inventing a colour.
 
-| Role | Hex | Subtle fill | Use |
-|---|---|---|---|
-| `success` | `#2e9e6b` | `#e4f3ee` | Confirmation, "published", **category chips** |
-| `warning` | `#c2620e` | `#fff4e6` | Caution callouts |
-| `danger` | `#d13415` | `#fbe2db` | Destructive actions, errors |
-| `info` | `#0068d9` | `#e7f1ff` | Informational callouts |
-| `premium` | `#b04a0c` | `#fdeae2` | Premium badge |
+| Role | Hex | Subtle |
+|---|---|---|
+| `success` | `#15703f` | `#dcf0e4` |
+| `warning` | `#92580a` | `#fbeeda` |
+| `danger` | `#bf2718` | `#fbe0dc` |
+| `info` | `#00786a` | `#d9f6f2` |
 
-The category chip is **mint**, matching the reference: it reads as a label rather than a link, which
-keeps it from competing with the blue title beneath it.
+`info` is the accent's text-safe teal rather than a blue: a second cool hue beside the brand teal
+reads as muddy, and *informational* is the brand's own register here.
 
 ### 1.6 Rules
 
-* **Never colour-only.** The reference leans on colour for status chips; DataBro pairs every colour
-  signal with text, an icon, or an ARIA role. Callouts already do this via `role` + `data-variant`.
-* **The gradient belongs to page-header bands only.** It is a brand signature, not a surface; using
-  it elsewhere cheapens it and hurts text contrast.
-* **Category tints** (reference uses nine pastel tiles) come from the `50` step of the brand, violet
-  and functional hues — not from arbitrary new colours.
+* **Never colour-only.** Every colour signal is paired with text, an icon, or an ARIA role.
+* **No gradients.** Removed outright by ADR-0020, not re-coloured. Emphasis is `surface-inverse`.
+* **Fills get their `-on` partner.** `bg-accent` without `text-accent-on` is a bug.
+* **`-strong` for anything that is not a fill.** Text, borders, focus rings.
+* **Category tints** come from the `subtle` steps of existing hues, never from new colours.
 
 ---
 
@@ -109,17 +126,21 @@ keeps it from competing with the blue title beneath it.
 
 ### 2.1 Families
 
-The reference pairs a geometric, slightly rounded display face for headings with a neutral grotesque
-for body. DataBro keeps that structure with open-licence equivalents:
-
 | Role | Family | Rationale |
 |---|---|---|
-| Display / headings | **Plus Jakarta Sans** (600/700/800) | Geometric with friendly terminals — closest open equivalent to the reference's heading face |
-| Body / UI | **Inter** (400/500/600) | Highest legibility at small sizes; already the project default |
-| Code | **JetBrains Mono** (400/500) | Wide, unambiguous glyphs; already in use |
+| Display / headings | **Poppins** 600/700 | Geometric with a generous x-height |
+| Body / UI | **Poppins** 400/500 | One family across both roles |
+| Code | **JetBrains Mono** 400/500 | Unambiguous `0/O` and `1/l/I` — this is a coding-education product, and code blocks are the content |
 
-Both self-hosted, not fetched from Google's CDN — a third-party font request on every page is a
-privacy leak and a render-blocking dependency on the SEO-critical path.
+Self-hosted via Fontsource, not fetched from Google's CDN: a third-party font request on every page
+is both a privacy leak and a render-blocking dependency on the SEO-critical path. Poppins is not
+published as a variable font, so the four weights are imported individually rather than shipping all
+nine to every page.
+
+**Poppins for body is a deliberate trade.** It is wider and rounder than a grotesque, which costs
+efficiency at 13–15px in dense tables. The line heights in §2.2 run looser to compensate. If dense
+data screens ever start to suffer, splitting body onto a grotesque is the escape hatch — and it is a
+one-line change in the preset.
 
 ### 2.2 Scale
 
@@ -143,8 +164,8 @@ Display sizes tighten letter-spacing (`-0.02em` at `4xl`, `-0.03em` at `6xl`); b
 
 ### 2.3 Rules
 
-* Headings are **600–800 weight, `ink`, tight tracking** — matching the reference's confident,
-  heavy headings.
+* Headings are **600–700 weight, `ink`, tight tracking**. Poppins carries weight well; 800 was
+  dropped with the family change because Poppins at 700 already reads as heavy as the old face at 800.
 * Article body is `lg` (18px), not `base`. Long-form reading wants the larger size.
 * **Measure is ~68ch** for article bodies. The single most consequential number in the system.
 * Section headings on marketing pages are **centred with a muted subtitle beneath**; content pages
@@ -252,26 +273,33 @@ without borders. The reference does this consistently and it is what makes a lon
 
 ### 4.1 Radius
 
+A 12/16/24 family (ADR-0020 §5) — softer than the reference's ~6px, which is a deliberate departure.
+
 | Token | Value | Use |
 |---|---|---|
-| `sm` | 4px | Chips, small tags |
-| `md` | 6px | Buttons, inputs |
-| `card` | 8px | Cards, tables, code blocks |
-| `lg` | 12px | Feature panels, banners |
-| `full` | 9999px | Avatars, newsletter input, pill badges |
+| `control` | 12px | Buttons, inputs, chips, menu items |
+| `card` | 16px | Cards, tables, media, code blocks |
+| `panel` | 24px | The rail, modals, page frames |
+| `full` | 9999px | Avatars, search fields, pill badges |
 
-The reference is **moderately rounded, not pill-shaped** — buttons ~6px. Pills are reserved for
-badges, avatars and the newsletter field.
+`control` exists because 60 call sites were reaching for Tailwind's own 6px `rounded-md` default and
+so bypassed the radius token entirely — the one real leak in an otherwise disciplined system. There
+is no `sm` or `md`: a scale with steps nobody can tell apart invites exactly that drift.
 
 ### 4.2 Shadow
 
-Cards are separated primarily by a **1px `line` border**, with shadow as secondary reinforcement.
-This keeps a light-mode page calm.
+**Soft and diffuse** — a wide, low-opacity spread rather than a tight dark drop. On a cream ground a
+hard shadow reads as dirt. Cards are separated by their *fill* first, with a quiet hairline and the
+shadow doing the rest.
 
-| Token | Value |
+| Token | Use |
 |---|---|
-| `card` | `0 1px 2px rgb(0 0 0 / .04), 0 4px 16px -4px rgb(0 0 0 / .08)` |
-| `card-hover` | `0 2px 4px rgb(0 0 0 / .06), 0 12px 28px -8px rgb(0 0 0 / .14)` |
+| `card` | Resting cards |
+| `lift` | Hover, dropdowns, popovers |
+| `panel` | Modals, command palette |
+
+`lift` replaced `card-hover`; `panel` is new, for the overlay surfaces the expanded component set
+will need.
 
 ### 4.3 Motion
 
@@ -284,48 +312,78 @@ All of it inside `@media (prefers-reduced-motion: reduce)` guards.
 
 ### 5.1 Buttons
 
-Height 40px (`md`), padding 16px horizontal, radius `md`, weight 500–600, 150ms transitions.
+Height 40px (`md`), radius `control`, weight 500–600, 150ms transitions.
 
-| Variant | Light mode |
+Every filled variant names its own text token. `text-ink-inverted` on a teal fill would be cream on
+`#03dac6` — 1.8:1, and invisible.
+
+| Variant | Style |
 |---|---|
-| `primary` | blue `600` fill, white text; hover `700` |
-| `secondary` | violet fill, white text |
-| `soft` | blue `50` fill, blue `700` text — the reference's "light" buttons |
+| `primary` | `bg-accent` + `text-accent-on` — teal fill, near-black text |
+| `secondary` | `bg-surface-inverse` + `text-ink-inverted` — the black button |
+| `soft` | `bg-accent-subtle` + `text-accent-strong` |
 | `outline` | `line-strong` border, `ink` text, transparent fill |
 | `ghost` | No fill or border; `ink-muted` text |
-| `danger` | `danger` fill, white text |
+| `danger` | `bg-danger` + `text-ink-inverted` (passes in both themes) |
 
-Sizes: `sm` 32px, `md` 40px, `lg` 48px. The reference's `lg` on CTAs is the pattern to follow.
-Focus is always a visible 2px ring at 2px offset — never removed.
+`secondary` is the inverse surface rather than the lime. On a light page the second action is the
+black button — which is what the references do, and the only way a second fill stays legible.
+
+Sizes: `sm` 36px, `md` 40px, `lg` 48px. Focus is always a visible 2px ring at 2px offset, drawn in
+**`accent-strong`** — never removed, and never in the raw brand teal (§1.1).
 
 ### 5.2 Inputs
 
-40px height, radius `md`, 1px `line-strong` border, white fill. Focus: blue `600` border + 2px
-blue `100` ring. Labels sit **above** in `sm`/`ink-muted`. Optional leading icon (the reference's
+40px height, radius `control`, 1px `line-strong` border, `surface-raised` fill. Focus:
+`accent-strong` border + a 2px `accent-strong/30` ring. Labels sit **above** in `sm`/`ink-muted`. Optional leading icon (the reference's
 search field). Error state: `danger` border plus a message — never colour alone.
 
 ### 5.3 Cards
 
-White fill, 1px `line` border, radius `card`, `shadow-card`. Padding 24px. Hover raises to
-`shadow-card-hover`. **The card is not a link** — the title inside it is, so the accessible name is
-the title rather than the card's entire text.
+Radius `card`, padding 24px, three tones:
+
+| Tone | Style |
+|---|---|
+| `raised` | `surface-raised` fill, `line` hairline, `shadow-card` — the default |
+| `inverse` | `surface-inverse` fill, `ink-inverted` text, `shadow-lift` — emphasis |
+| `sunken` | `surface-sunken` fill, **no shadow** — it sits below, not above |
+
+`inverse` is the device that replaced the gradient band, and the only place the raw teal and the lime
+appear at full strength on a light page.
+
+**The card is not a link** — the title inside it is, so the accessible name is the title rather than
+the card's entire text content.
 
 ### 5.4 Chips and badges
 
-Radius `sm`, `xs` text, 500 weight, 8px/2px padding.
+Radius `full`, `xs` text, 600 weight. Two families, and the difference is deliberate:
+
+**Tinted** (status) — a `subtle` fill with its text-safe hue. Sits quietly in a table or beside a
+title.
 
 | Kind | Style |
 |---|---|
-| Category | mint `#e4f3ee` fill, `#2e9e6b` text |
-| Tag | white fill, `line` border, `ink-muted` text |
-| Status | Functional `50` fill + `700` text, always with a label |
-| Premium | `#fdeae2` fill, `#b04a0c` text |
+| Category | `accent-subtle` fill, `accent-strong` text |
+| Tag | `surface` fill, `line` border, `ink-muted` text |
+| Status | `{success\|warning\|danger\|info}-subtle` fill + matching text, always with a label |
+
+**Filled** (brand) — the raw colour with its `-on` partner. These shout.
+
+| Kind | Style |
+|---|---|
+| Accent | `bg-accent` + `text-accent-on` |
+| Secondary | `bg-secondary` + `text-secondary-on` — legible precisely because it is a fill |
+| Premium | `bg-premium` + `text-premium-on` |
 
 ### 5.5 Tabs
 
-Two styles, both in the reference. **Soft** — active pill has blue `50` fill and blue `700` text.
-**Underline** — active has a 2px blue `600` bottom border. Use soft for filters, underline for
-content sections.
+Two styles. **Soft** — active pill has an `accent-subtle` fill and `accent-strong` text.
+**Underline** — active has a 2px `accent` bottom border and `ink` text. Use soft for filters,
+underline for content sections.
+
+The underline is one of the few places the raw `accent` appears without text on it: as a 2px rule
+against the page it is a boundary, not a label, and it is paired with the label's weight change so
+the state never rests on colour alone.
 
 ### 5.6 Accordion
 
@@ -335,13 +393,14 @@ on open. Body is `sm`/`ink-muted`. Must be a real `<button>` with `aria-expanded
 ### 5.7 Table
 
 Radius `card` with an overflow wrapper — a wide table scrolls itself, never the page. Header row is
-`surface-sunken` (the reference's dark header is reserved for dashboards). Rows separated by 1px
+`surface-sunken`; the CMS list screens use `accent-deep` with `ink-on-deep` instead, which is the
+inverted-head pattern reserved for dashboards. Rows separated by 1px
 `line`. Cells 16px/12px padding, `sm`, `ink-muted`; first column `ink`.
 
 ### 5.8 Pagination
 
-Numbered, crawlable `<a>` elements — never buttons. Active is blue `600` fill, white text; others
-`ink-muted` with a `surface-sunken` hover. Prev/next chevrons. Accompanied by a "Showing X to Y of
+Numbered, crawlable `<a>` elements — never buttons. Active is `bg-accent` with `text-accent-on`;
+others `ink-muted` with a `surface-sunken` hover. Prev/next chevrons. Accompanied by a "Showing X to Y of
 Z" count on dashboards.
 
 ### 5.9 Alerts / callouts

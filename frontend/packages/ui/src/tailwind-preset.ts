@@ -3,54 +3,25 @@
 //
 // Two layers, deliberately:
 //
-//   1. `tokens` — raw values (the brand ramp, fonts, the type scale). Swapping the palette or the
-//      typeface is an edit to this object and nothing else.
+//   1. `tokens` — raw values (fonts, the type scale). Swapping the typeface is an edit to this
+//      object and nothing else.
 //   2. Semantic colours (`surface`, `ink`, `border`, `accent`) resolved through CSS custom
 //      properties. Components reference *meaning* — `text-ink-muted`, not `text-slate-500` — so
 //      light and dark themes come from one set of class names, and a palette change does not
 //      require touching a single component.
 //
-// The custom properties themselves live in `src/styles/tokens.css`.
+// The custom properties themselves live in `src/styles/tokens.css`, which also carries the rule
+// that shapes this whole file: **an accent is a fill, never a text colour** (ADR-0020). Hence the
+// `-on` / `-strong` pairs below. A plain `text-accent` deliberately does not exist.
 
 export const tokens = {
-  colors: {
-    /**
-     * Brand ramp, built around the reference's primary blue `#0068d9` (`600`), which was sampled
-     * from the screenshots rather than estimated (docs/DESIGN_SYSTEM.md §1.2).
-     */
-    brand: {
-      50: "#e7f1ff",
-      100: "#cfe3ff",
-      200: "#a5cbff",
-      300: "#6fabff",
-      400: "#2f88f5",
-      500: "#0d74e6",
-      600: "#0068d9",
-      700: "#0057b8",
-      800: "#084a95",
-      900: "#13293e",
-    },
-    /** The page-header gradient's violet end, used for secondary accents. */
-    violet: {
-      50: "#f0eefe",
-      100: "#e0dcfd",
-      200: "#c6bffb",
-      500: "#9274e4",
-      600: "#7a73f4",
-      700: "#645ce0",
-    },
-    /** The gradient itself, exposed for anything that needs the stops directly. */
-    gradient: {
-      from: "#e377b1",
-      via: "#9274e4",
-      to: "#7a73f4",
-    },
-  },
   fontFamily: {
-    // Display face for headings: geometric with friendly terminals, matching the reference's
-    // heading voice. Body stays on Inter for legibility at small sizes.
-    display: ["Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
-    sans: ["Inter Variable", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+    // Poppins across display and body (ADR-0020 §3). Geometric, generous x-height — which is why
+    // the line heights below run looser than Tailwind's defaults rather than tighter.
+    display: ["Poppins", "Segoe UI", "system-ui", "sans-serif"],
+    sans: ["Poppins", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
+    // Unambiguous 0/O and 1/l/I matter more here than on most platforms: this is a coding-education
+    // product and the code blocks are the content.
     mono: ["JetBrains Mono Variable", "JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
   },
 } as const;
@@ -83,36 +54,45 @@ const preset: Partial<Config> = {
   theme: {
     extend: {
       colors: {
-        // Raw ramps, for the rare case a specific step is genuinely wanted.
-        brand: { ...tokens.colors.brand },
-        violet: { ...tokens.colors.violet },
-        gradient: { ...tokens.colors.gradient },
-
-        // Semantic surfaces and text. These are what components should use.
+        // Surfaces. `inverse` is the emphasis surface — black cards and the rail in light mode,
+        // cream blocks in dark. It replaces the gradient band as the way a section shouts.
         surface: {
           DEFAULT: withAlpha("--db-surface"),
           raised: withAlpha("--db-surface-raised"),
           sunken: withAlpha("--db-surface-sunken"),
+          inverse: withAlpha("--db-surface-inverse"),
         },
         ink: {
           DEFAULT: withAlpha("--db-ink"),
           muted: withAlpha("--db-ink-muted"),
           subtle: withAlpha("--db-ink-subtle"),
           inverted: withAlpha("--db-ink-inverted"),
+          // Pairs with `accent-deep`, which is black in both themes — so unlike `inverted` it does
+          // not flip. Using `ink-inverted` on a deep band would go dark-on-black in dark mode.
+          "on-deep": withAlpha("--db-ink-on-deep"),
         },
         line: {
           DEFAULT: withAlpha("--db-border"),
           strong: withAlpha("--db-border-strong"),
         },
+
+        // Accent. `bg-accent` + `text-accent-on` for fills; `text-accent-strong` for type, borders
+        // and focus rings. There is deliberately no plain `text-accent`.
         accent: {
           DEFAULT: withAlpha("--db-accent"),
           hover: withAlpha("--db-accent-hover"),
+          on: withAlpha("--db-accent-on"),
+          strong: withAlpha("--db-accent-strong"),
           subtle: withAlpha("--db-accent-subtle"),
           deep: withAlpha("--db-accent-deep"),
         },
+
+        // Secondary is lime, and lime is a dark-surface colour. On a light ground it is only ever a
+        // filled chip with `text-secondary-on`; `secondary-strong` covers type.
         secondary: {
           DEFAULT: withAlpha("--db-secondary"),
-          hover: withAlpha("--db-secondary-hover"),
+          on: withAlpha("--db-secondary-on"),
+          strong: withAlpha("--db-secondary-strong"),
           subtle: withAlpha("--db-secondary-subtle"),
         },
 
@@ -133,9 +113,10 @@ const preset: Partial<Config> = {
           DEFAULT: withAlpha("--db-info"),
           subtle: withAlpha("--db-info-subtle"),
         },
-        // The only amber in the system, so "premium" always reads the same way.
         premium: {
           DEFAULT: withAlpha("--db-premium"),
+          on: withAlpha("--db-premium-on"),
+          strong: withAlpha("--db-premium-strong"),
           subtle: withAlpha("--db-premium-subtle"),
         },
 
@@ -159,18 +140,25 @@ const preset: Partial<Config> = {
       maxWidth: {
         // ~68 characters. The single most load-bearing number for long-form readability: much wider
         // and the eye loses the line start on the return sweep.
+        //
+        // There is no `shell` here on purpose. The shell width lives once, in `.db-shell`.
         prose: "68ch",
-        // Wider container for listings and chrome, which are scanned rather than read.
-        shell: "72rem",
       },
 
+      // A 12/16/24 family (ADR-0020 §5). `control` exists because 60 call sites were reaching for
+      // Tailwind's own 6px `rounded-md` default and so silently ignored the radius token entirely.
       borderRadius: {
-        card: "0.75rem",
+        control: "0.75rem", // 12px — buttons, inputs, chips, menu items
+        card: "1rem", // 16px — cards, tables, media
+        panel: "1.5rem", // 24px — the rail, modals, page frames
       },
 
+      // Soft and diffuse: a wide, low-opacity spread rather than a tight dark drop. On a cream
+      // ground a hard shadow reads as dirt.
       boxShadow: {
-        card: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 4px 16px -4px rgb(0 0 0 / 0.08)",
-        "card-hover": "0 2px 4px 0 rgb(0 0 0 / 0.06), 0 12px 28px -8px rgb(0 0 0 / 0.14)",
+        card: "0 1px 2px 0 rgb(18 18 18 / 0.04), 0 8px 24px -8px rgb(18 18 18 / 0.08)",
+        lift: "0 2px 6px 0 rgb(18 18 18 / 0.06), 0 18px 40px -12px rgb(18 18 18 / 0.14)",
+        panel: "0 4px 12px 0 rgb(18 18 18 / 0.08), 0 32px 64px -24px rgb(18 18 18 / 0.22)",
       },
     },
   },

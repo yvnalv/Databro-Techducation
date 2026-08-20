@@ -23,14 +23,14 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
   <div class="min-h-screen bg-surface-sunken font-sans text-ink antialiased">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-ink-inverted"
+      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-control focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-on"
     >
       {{ t("chrome.skipToContent") }}
     </a>
 
     <header class="border-b border-line bg-surface">
       <div class="mx-auto flex h-16 max-w-5xl items-center gap-6 px-4 sm:px-6">
-        <NuxtLink to="/" class="text-accent"><AppBrandMark /></NuxtLink>
+        <NuxtLink to="/" class="text-accent-strong"><AppBrandMark /></NuxtLink>
 
         <nav :aria-label="t('chrome.sectionsLabel')">
           <ul class="flex items-center gap-1">
@@ -38,10 +38,10 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
               <NuxtLink
                 to="/"
                 :aria-current="isActive('/') ? 'page' : undefined"
-                class="rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                class="rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 :class="
                   isActive('/')
-                    ? 'bg-accent-subtle text-accent'
+                    ? 'bg-accent-subtle text-accent-strong'
                     : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
                 "
               >
@@ -53,7 +53,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
                    indexable content and belongs to `site` (ADR-0015). -->
               <a
                 :href="`${publicSiteUrl}/courses`"
-                class="rounded-md px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                class="rounded-control px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               >
                 {{ t("nav.browse") }}
               </a>
@@ -68,7 +68,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
           <NuxtLink
             v-if="canAuthor"
             to="/studio"
-            class="hidden rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:block"
+            class="hidden rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong sm:block"
           >
             {{ t("chrome.openStudio") }}
           </NuxtLink>
@@ -77,7 +77,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
 
           <span class="flex items-center gap-2">
             <span
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent-strong"
               aria-hidden="true"
             >
               {{ initial }}
@@ -89,7 +89,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
 
           <button
             type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            class="rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
             @click="logout"
           >
             {{ t("chrome.signOut") }}

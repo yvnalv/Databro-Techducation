@@ -26,26 +26,26 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
 </script>
 
 <template>
-  <footer class="mt-24 bg-accent-deep text-white/70">
+  <footer class="mt-24 bg-accent-deep text-ink-on-deep/70">
     <div class="db-shell py-14">
       <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <!-- White, not the brand blue: blue-on-navy is the one place the mark loses contrast. -->
-          <NuxtLink :to="localePath('/')" class="inline-flex text-white">
-            <BrandMark class="text-white [&>rect:first-child]:fill-white [&>span:last-child]:text-white" />
+          <NuxtLink :to="localePath('/')" class="inline-flex text-ink-on-deep">
+            <BrandMark class="text-ink-on-deep [&>rect:first-child]:fill-white [&>span:last-child]:text-ink-on-deep" />
           </NuxtLink>
-          <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/65">
+          <p class="mt-4 max-w-xs text-sm leading-relaxed text-ink-on-deep/65">
             {{ t("site.description") }}
           </p>
         </div>
 
         <div>
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-white">
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink-on-deep">
             {{ t("footer.learn") }}
           </h2>
           <ul class="mt-4 space-y-2.5 text-sm">
             <li>
-              <NuxtLink :to="localePath('/')" class="text-white/65 transition-colors hover:text-white">
+              <NuxtLink :to="localePath('/')" class="text-ink-on-deep/65 transition-colors hover:text-ink-on-deep">
                 {{ t("nav.articles") }}
               </NuxtLink>
             </li>
@@ -53,7 +53,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
               <!-- Plain <a>, not NuxtLink: the feed is a Nitro route, not a Vue page, so the
                    router must not try to resolve it client-side. Not locale-prefixed either —
                    there is one English feed (see server/routes/feed.xml.ts). -->
-              <a href="/feed.xml" class="text-white/65 transition-colors hover:text-white">
+              <a href="/feed.xml" class="text-ink-on-deep/65 transition-colors hover:text-ink-on-deep">
                 {{ t("footer.rss") }}
               </a>
             </li>
@@ -61,31 +61,31 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
         </div>
 
         <div>
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-white">
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink-on-deep">
             {{ t("footer.topics") }}
           </h2>
           <ul v-if="topCategories.length" class="mt-4 space-y-2.5 text-sm">
             <li v-for="category in topCategories" :key="category.id">
               <NuxtLink
                 :to="localePath(`/categories/${category.slug}`)"
-                class="text-white/65 transition-colors hover:text-white"
+                class="text-ink-on-deep/65 transition-colors hover:text-ink-on-deep"
               >
                 {{ category.name }}
               </NuxtLink>
             </li>
           </ul>
-          <p v-else class="mt-4 text-sm text-white/50">{{ t("footer.topicsEmpty") }}</p>
+          <p v-else class="mt-4 text-sm text-ink-on-deep/50">{{ t("footer.topicsEmpty") }}</p>
         </div>
 
         <div>
-          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-white">
+          <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink-on-deep">
             {{ t("footer.contact") }}
           </h2>
           <ul class="mt-4 space-y-2.5 text-sm">
             <li>
               <a
                 href="mailto:hello@databro.id"
-                class="text-white/65 transition-colors hover:text-white"
+                class="text-ink-on-deep/65 transition-colors hover:text-ink-on-deep"
               >
                 hello@databro.id
               </a>
@@ -95,7 +95,7 @@ const topCategories = computed(() => (categories.value ?? []).slice(0, 5));
       </div>
 
       <div
-        class="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between"
+        class="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-ink-on-deep/65 sm:flex-row sm:items-center sm:justify-between"
       >
         <p>&copy; {{ new Date().getFullYear() }} {{ t("site.name") }}. {{ t("footer.rights") }}</p>
       </div>

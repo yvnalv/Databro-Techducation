@@ -32,7 +32,7 @@ const pages = computed(() => {
 });
 
 const itemClass =
-  "inline-flex h-10 min-w-10 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
+  "inline-flex h-10 min-w-10 items-center justify-center rounded-control px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2";
 </script>
 
 <template>
@@ -58,7 +58,7 @@ const itemClass =
       :class="[
         itemClass,
         page === meta.page
-          ? 'bg-accent text-ink-inverted'
+          ? 'bg-accent text-accent-on'
           : 'text-ink-muted hover:bg-surface-sunken hover:text-ink',
       ]"
     >

@@ -76,7 +76,7 @@ export function markToElement(mark: InlineMark): MarkElement {
         rel: "nofollow noopener noreferrer",
         // Underlined, not colour-only: a link must remain identifiable without colour perception.
         class:
-          "font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent",
+          "font-medium text-accent-strong underline decoration-accent-strong/40 underline-offset-2 hover:decoration-accent-strong",
         ...(mark.attrs.title ? { title: mark.attrs.title } : {}),
       },
     };

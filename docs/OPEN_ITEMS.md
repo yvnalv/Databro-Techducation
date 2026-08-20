@@ -6,7 +6,7 @@ is and what is next; this says what is owed and by whom.
 An item leaves this file only when it is done or explicitly dropped. Dropped items keep a line saying
 so — a register that quietly loses entries is worse than no register.
 
-Last reviewed: 2026-08-19.
+Last reviewed: 2026-08-20.
 
 ---
 
@@ -56,9 +56,12 @@ the record, so the next module is built with its surface rather than owing one.
 | ~~S-1~~ | ~~**Social login (Google/GitHub)**~~ | 1 | **Done — CHG-0061 (ADR-0019).** Manual OAuth behind `IExternalIdentityProvider`, link-by-verified-email (ID-3), signed state, one-time code handoff. Owner registers the OAuth apps (M-3) before a live sign-in works; the code is verified by 8 unit + 6 integration tests. |
 | S-2 | **`PATCH /me`** — profile editing | 1 | Same. Returns 405 today. |
 | ~~S-3~~ | ~~**Bookmarks**~~ | 2 | **Done (CHG-0059).** Courses and lessons; articles deliberately deferred. |
-| S-4 | **Streaks** | 2 | Untouched. |
+| ~~S-4~~ | ~~**Streaks**~~ | 2 | **Done — CHG-0062 (LN-15 … LN-19).** Advances on lesson completion, never on a visit; days are local days in `Learning:Streaks:TimeZone` (default `Asia/Jakarta`), because UTC days would silently undercount every learner east of Greenwich. The read applies decay, the write never does. 15 tests. Per-learner timezones are the upgrade path — see S-7. |
 | ~~S-5~~ | ~~**`/studio` Indonesian strings**~~ | — | **Done (CHG-0054 … CHG-0058).** All 16 studio files, 347 keys, both locales at parity. |
 | ~~S-6~~ | ~~Gate lesson completion on a passing quiz~~ | 2 | **Done — CHG-0052.** A lesson with a published quiz cannot be completed until passed, via a synchronous `IQuizGate` query (not the submit event, which would refuse a just-passed learner). Draft quizzes do not gate; a quiz added after completion does not revoke it. Learner sees a message pointing at the quiz, both locales. 5 Learning tests. |
+| S-7 | **Per-learner timezone** | 3 | Streaks currently use one platform-wide zone (LN-15). Correct for the launch audience, visibly odd for a learner outside it, whose day rolls over at an unfamiliar hour. Needs a home on the user profile first, so it is downstream of S-2. The domain already takes a day rather than an instant, so only `StreakService` changes. |
+| S-8 | **UI rework, stages B–D** | — | Stage A (tokens, type, shape, primitives) is **done — CHG-0063, ADR-0020**. Still owed: **B** icon system, logo and favicon — none exists today, and there is no `public/` directory in either app; **C** the expanded primitive set (Select, Modal, Tabs, Table, Avatar, EmptyState, Skeleton, Toast, Pagination) plus the dynamic sidebar; **D** page-level layout against the references. Individual visual defects are logged in [UI_DEFECTS.md](UI_DEFECTS.md). **C is the one that compounds** — 5 primitives against 56 page files means every new screen re-invents layout, and Phase 3 adds dozens. |
+| S-9 | **Wire a dark-mode toggle** | — | The dark token set is complete and designed (ADR-0020 §6) but unreachable: no toggle, and `prefers-color-scheme` is deliberately not wired. Check it today by setting `data-theme="dark"` on `<html>` in devtools. |
 
 ---
 
@@ -71,6 +74,7 @@ the record, so the next module is built with its surface rather than owing one.
 | O-3 | **Cross-subdomain session cookie** | Works locally only because cookies ignore port. Production needs an explicit parent `domain`, and it cannot be verified from here. |
 | ~~O-4~~ | ~~**Redis is provisioned and unused**~~ | **Addressed — CHG-0061.** Redis now backs the single-use OAuth handoff code (ADR-0019) via `IDistributedCache`. It is a real dependency of a live social sign-in; a Redis-less run falls back to an in-memory cache (tests do this). General response/read caching is still unbuilt, but the dependency is no longer inert. |
 | O-5 | **No analyzer ruleset for C#** | ESLint covers the frontend; the backend has no equivalent gate. |
+| O-8 | **No visual-regression check** | The design language now lives in one token file, which makes a palette mistake cheap to make and invisible to `lint`/`typecheck`/tests — all of which passed on a tree that had lime text at 1.0:1 until an audit script caught it. That audit ("no fill colour used as text, border or ring") is worth committing as a CI gate. |
 | O-6 | **Premium gating is reserved, not enforced** | Badge, preview and JSON-LD paywall declaration exist; the full body still renders. Correct until Billing (Phase 3), but it is a gate that looks real and is not. |
 | O-7 | **Lesson-visit call 422s for an unenrolled reader** | `LessonProgressBar` fires `POST …/enrollments/{course}/lessons/{id}/visit` on every lesson view; for a signed-in but unenrolled learner it returns 422. The UI degrades correctly to "Join course", so it is console-only noise — but decide whether the component should withhold the call until enrolled, or whether 422 is the right status for "not enrolled". Found while verifying M-2; not a quiz-surface defect. |
 
@@ -78,7 +82,7 @@ the record, so the next module is built with its surface rather than owing one.
 
 ## 6. Verification status
 
-Everything committed to date is built, linted, typechecked and tested — 346 backend, 90 frontend.
+Everything committed to date is built, linted, typechecked and tested — 364 backend, 90 frontend.
 
 CHG-0050 (the quiz surfaces) was written while the build tooling was unavailable and **held
 uncommitted until it returned**, then verified before committing. That caught one real defect (an

@@ -23,6 +23,7 @@ import type {
   AuthoringQuiz,
   Bookmark,
   BookmarkKind,
+  Streak,
   Quiz,
   QuizAttempt,
   QuizAttemptSummary,
@@ -706,6 +707,16 @@ export class ApiClient {
       `/api/v1/me/bookmarks/${encodeURIComponent(kind)}/${encodeURIComponent(targetId)}`,
       "DELETE",
     );
+  }
+
+  // ---- Streak ----
+
+  /**
+   * The learner's study streak. Read-only: a streak is earned by finishing lessons, and there is
+   * deliberately no endpoint that lets a client assert one.
+   */
+  streak(): Promise<Streak> {
+    return this.request<Streak>("/api/v1/me/streak");
   }
 
   // ---- Learning: the signed-in learner's own progress (LN-6 … LN-11) ----

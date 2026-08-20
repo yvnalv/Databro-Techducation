@@ -59,7 +59,7 @@ onMounted(() => {
     editorProps: {
       attributes: {
         class:
-          "min-h-[5rem] w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent/25",
+          "min-h-[5rem] w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent-strong/25",
       },
     },
     onUpdate: ({ editor: instance }) => {
@@ -106,11 +106,11 @@ const TOOLS = computed(() => [
         :title="tool.title"
         :aria-label="tool.title"
         :aria-pressed="isActive(tool.name)"
-        class="h-7 w-8 rounded border text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        class="h-7 w-8 rounded border text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
         :class="[
           tool.cls,
           isActive(tool.name)
-            ? 'border-accent bg-accent-subtle text-accent'
+            ? 'border-accent-strong bg-accent-subtle text-accent-strong'
             : 'border-line text-ink-muted hover:bg-surface-sunken',
         ]"
         @click="editor?.chain().focus().toggleMark(tool.name).run()"
@@ -123,10 +123,10 @@ const TOOLS = computed(() => [
         :title="t('studio.richText.link')"
         :aria-label="t('studio.richText.link')"
         :aria-pressed="isActive('link')"
-        class="h-7 rounded border px-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        class="h-7 rounded border px-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
         :class="
           isActive('link')
-            ? 'border-accent bg-accent-subtle text-accent'
+            ? 'border-accent-strong bg-accent-subtle text-accent-strong'
             : 'border-line text-ink-muted hover:bg-surface-sunken'
         "
         @click="toggleLink"

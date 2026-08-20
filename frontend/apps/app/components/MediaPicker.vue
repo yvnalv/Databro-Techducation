@@ -130,7 +130,7 @@ async function upload(event: Event) {
     <p v-if="error" class="text-sm text-danger">{{ error }}</p>
 
     <!-- Current selection -->
-    <div v-if="selected" class="flex items-start gap-3 rounded-md border border-line p-3">
+    <div v-if="selected" class="flex items-start gap-3 rounded-control border border-line p-3">
       <img
         :src="selected.variants[0]?.url ?? selected.url"
         :alt="selected.altText"
@@ -155,7 +155,7 @@ async function upload(event: Event) {
     </p>
 
     <!-- Library -->
-    <div v-if="open" class="rounded-md border border-line p-3">
+    <div v-if="open" class="rounded-control border border-line p-3">
       <div class="mb-3 flex items-center justify-between">
         <h3 class="text-sm font-semibold text-ink">{{ t("studio.media.library") }}</h3>
         <button type="button" class="text-sm text-ink-muted hover:text-ink" @click="open = false">
@@ -172,7 +172,7 @@ async function upload(event: Event) {
           v-for="asset in library"
           :key="asset.id"
           type="button"
-          class="group rounded border border-line p-1 text-left hover:border-accent"
+          class="group rounded border border-line p-1 text-left hover:border-accent-strong"
           @click="choose(asset)"
         >
           <img

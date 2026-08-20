@@ -173,6 +173,24 @@ public sealed record BookmarkDto(
 
 public sealed record CreateBookmarkRequest(string Kind, Guid TargetId);
 
+/// <summary>
+/// A learner's study streak.
+/// </summary>
+/// <param name="Current">
+/// Days in a row <b>as of today</b>, not the raw stored counter — a streak decays with time rather
+/// than with writes, so someone who last studied three days ago reads as 0 here even though nothing
+/// has written to their row since.
+/// </param>
+/// <param name="ActiveToday">
+/// Whether today already counts. What lets a UI say "done today" instead of nagging someone who has
+/// already studied.
+/// </param>
+public sealed record StreakDto(
+    int Current,
+    int Longest,
+    DateOnly? LastActiveOn,
+    bool ActiveToday);
+
 internal static class LearningMapping
 {
     public static string ToWire<TEnum>(this TEnum value) where TEnum : struct, Enum =>

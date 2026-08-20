@@ -143,7 +143,7 @@ async function retake() {
       <!-- The score banner, once there is one. -->
       <div
         v-if="submitted"
-        class="mt-4 rounded-md border px-4 py-3"
+        class="mt-4 rounded-control border px-4 py-3"
         :class="attempt.passed
           ? 'border-success/30 bg-success-subtle text-success'
           : 'border-warning/30 bg-warning-subtle text-warning'"
@@ -168,7 +168,7 @@ async function retake() {
           <ul class="mt-3 space-y-2">
             <li v-for="choice in question.choices" :key="choice.id">
               <label
-                class="flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm transition-colors"
+                class="flex cursor-pointer items-center gap-3 rounded-control border px-3 py-2 text-sm transition-colors"
                 :class="[
                   submitted && resultFor.get(question.id)?.correctChoiceIds.includes(choice.id)
                     ? 'border-success/40 bg-success-subtle'
@@ -182,7 +182,7 @@ async function retake() {
                   :name="`q-${question.id}`"
                   :checked="isSelected(question.id, choice.id)"
                   :disabled="submitted || busy"
-                  class="h-4 w-4 border-line-strong text-accent focus:ring-accent"
+                  class="h-4 w-4 border-line-strong text-accent-strong focus:ring-accent-strong"
                   @change="toggle(question.id, choice.id, question.type === 'multiplechoice')"
                 />
                 <span class="text-ink">{{ choice.text }}</span>

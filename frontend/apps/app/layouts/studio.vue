@@ -37,7 +37,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
   <div class="min-h-screen bg-surface-sunken font-sans text-ink antialiased">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-ink-inverted"
+      class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-control focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-on"
     >
       {{ t("chrome.skipToContent") }}
     </a>
@@ -46,7 +46,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
       <!-- Sidebar. Fixed width so the main column's measure does not shift between pages. -->
       <aside class="hidden w-60 shrink-0 border-r border-line bg-surface lg:block">
         <div class="flex h-16 items-center border-b border-line px-5">
-          <NuxtLink to="/studio" class="text-accent"><AppBrandMark /></NuxtLink>
+          <NuxtLink to="/studio" class="text-accent-strong"><AppBrandMark /></NuxtLink>
         </div>
 
         <nav :aria-label="t('chrome.sectionsLabel')" class="p-3">
@@ -55,10 +55,10 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
               <NuxtLink
                 :to="item.to"
                 :aria-current="isActive(item.to) ? 'page' : undefined"
-                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                class="flex items-center gap-3 rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 :class="
                   isActive(item.to)
-                    ? 'bg-accent-subtle text-accent'
+                    ? 'bg-accent-subtle text-accent-strong'
                     : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
                 "
               >
@@ -72,7 +72,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
       <div class="flex min-w-0 flex-1 flex-col">
         <header class="flex h-16 items-center justify-between gap-4 border-b border-line bg-surface px-4 sm:px-6">
           <!-- Brand repeats here only where the sidebar is hidden. -->
-          <NuxtLink to="/studio" class="text-accent lg:hidden"><AppBrandMark /></NuxtLink>
+          <NuxtLink to="/studio" class="text-accent-strong lg:hidden"><AppBrandMark /></NuxtLink>
 
           <div class="ms-auto flex items-center gap-3">
             <!-- Back to the learner side of the same app. Every editor here is also a learner, and
@@ -97,7 +97,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
 
             <span class="flex items-center gap-2">
               <span
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent-strong"
                 aria-hidden="true"
               >
                 {{ initial }}
@@ -109,7 +109,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
 
             <button
               type="button"
-              class="rounded-md px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              class="rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="logout"
             >
               {{ t("chrome.signOut") }}

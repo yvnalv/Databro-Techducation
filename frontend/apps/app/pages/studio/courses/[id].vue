@@ -260,7 +260,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
   <div>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink to="/studio/courses" class="text-sm font-medium text-accent hover:underline">← Courses</NuxtLink>
+        <NuxtLink to="/studio/courses" class="text-sm font-medium text-accent-strong hover:underline">← Courses</NuxtLink>
         <h1 class="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
           {{ isNew ? t("studio.courses.new") : title || t("studio.common.untitled") }}
         </h1>
@@ -317,7 +317,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
             <select
               id="difficulty"
               v-model="difficulty"
-              class="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -338,7 +338,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
           <div
             v-for="(module, moduleIndex) in course.modules"
             :key="module.id"
-            class="rounded-md border border-line"
+            class="rounded-control border border-line"
           >
             <div class="flex flex-wrap items-center gap-2 border-b border-line bg-surface-sunken px-3 py-2">
               <span class="font-mono text-xs text-ink-subtle">{{ module.order + 1 }}</span>
@@ -376,7 +376,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
                 <span class="font-mono text-xs text-ink-subtle">{{ lesson.order + 1 }}</span>
                 <NuxtLink
                   :to="`/studio/lessons/${lesson.contentUnitId}`"
-                  class="min-w-0 flex-1 truncate text-sm text-accent hover:underline"
+                  class="min-w-0 flex-1 truncate text-sm text-accent-strong hover:underline"
                 >
                   {{ lesson.title }}
                 </NuxtLink>
@@ -429,7 +429,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
           <div class="flex gap-2">
             <input
               v-model="newModuleTitle"
-              class="h-9 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm"
+              class="h-9 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm"
               :placeholder="t('studio.courses.newModuleTitle')"
               :aria-label="t('studio.courses.newModuleTitle')"
               @keydown.enter.prevent="addModule"
@@ -456,7 +456,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
           </p>
           <ul class="mt-2 space-y-1">
             <li v-for="lesson in unpublishedLessons" :key="lesson.id">
-              <NuxtLink :to="`/studio/lessons/${lesson.contentUnitId}`" class="text-accent hover:underline">
+              <NuxtLink :to="`/studio/lessons/${lesson.contentUnitId}`" class="text-accent-strong hover:underline">
                 {{ lesson.title }}
               </NuxtLink>
             </li>
@@ -491,7 +491,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
         </div>
 
         <p v-if="picker.bodies.length === 0" class="text-sm text-ink-muted">
-          {{ t("studio.courses.noBodies") }} <NuxtLink to="/studio/lessons/new" class="text-accent hover:underline">{{ t("studio.courses.writeOne") }}</NuxtLink>
+          {{ t("studio.courses.noBodies") }} <NuxtLink to="/studio/lessons/new" class="text-accent-strong hover:underline">{{ t("studio.courses.writeOne") }}</NuxtLink>
           {{ t("studio.courses.thenAttach") }}
         </p>
 

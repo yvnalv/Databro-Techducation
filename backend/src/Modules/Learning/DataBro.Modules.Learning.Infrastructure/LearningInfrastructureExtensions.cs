@@ -43,9 +43,16 @@ public static class LearningInfrastructureExtensions
         services.AddScoped<ILearningPathRepository, LearningPathRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<IBookmarkRepository, BookmarkRepository>();
+        services.AddScoped<ILearnerStreakRepository, LearnerStreakRepository>();
         services.AddScoped<CourseService>();
         services.AddScoped<EnrollmentService>();
         services.AddScoped<BookmarkService>();
+        // Bound to a concrete instance rather than injected as IOptions<T>: Application is meant to
+        // stay free of hosting-framework types, and a streak's timezone is fixed for the process
+        // lifetime anyway, so there is nothing for the options machinery to add.
+        services.AddSingleton(
+            configuration.GetSection(StreakOptions.SectionName).Get<StreakOptions>() ?? new StreakOptions());
+        services.AddScoped<StreakService>();
         services.AddScoped<LearningPathService>();
 
         // Learning's segment of the cross-module search results (ADR-0014).

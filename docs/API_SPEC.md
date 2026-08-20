@@ -434,6 +434,30 @@ idempotent (LN-9, LN-10). A lesson that is not in the course, or whose body is u
 a URL segment, and is **null** when that lesson has since been unpublished or dropped from the
 curriculum — a client should fall back to the course page rather than link somewhere that 404s.
 
+### Streak (learner; any authenticated user)
+```
+GET    /api/v1/me/streak                                               study streak
+```
+
+```json
+{ "success": true, "data": {
+  "current": 4, "longest": 11, "lastActiveOn": "2026-08-20", "activeToday": true } }
+```
+
+**Read-only, and deliberately so.** A streak is earned by completing lessons — it advances as a
+consequence of `POST .../complete` and there is no endpoint that lets a client assert one (LN-16).
+
+`current` is the streak **as of today**, which is not the number stored: a streak decays with the
+passage of time rather than with writes, so a learner who last studied three days ago reads 0 here
+while nothing has changed on the server since (LN-17). Clients must render `current` as given.
+Recomputing it from `lastActiveOn` in a browser would use the *visitor's* timezone rather than the
+platform's and would disagree with the server for anyone travelling.
+
+`lastActiveOn` is a **local date** (`YYYY-MM-DD`) in the platform timezone, not a timestamp — which
+day an instant belongs to is settled server-side (LN-15). `activeToday` says whether today already
+counts, so a dashboard can acknowledge someone who has already put the work in instead of nagging
+them.
+
 ## 6. Contracts & types
 
 * Request/response DTOs are the source of truth for `packages/types` and `packages/api-client`.

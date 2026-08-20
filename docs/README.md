@@ -10,6 +10,8 @@ This is the documentation index. The master project instructions live in the roo
 * Want current state / what's next? See [STATUS.md](STATUS.md).
 * Want the list of everything still owed, and by whom? See [OPEN_ITEMS.md](OPEN_ITEMS.md).
 * Setting up your machine? See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
+* Looking for the design preview or a past briefing? See [ARTIFACTS.md](ARTIFACTS.md).
+* Spotted something wrong on screen? Log it in [UI_DEFECTS.md](UI_DEFECTS.md).
 
 ## Index
 
@@ -19,6 +21,8 @@ This is the documentation index. The master project instructions live in the roo
 * [STATUS.md](STATUS.md) — where we are, what's next.
 * [OPEN_ITEMS.md](OPEN_ITEMS.md) — everything outstanding, grouped by who has to act: decisions
   awaiting the product owner, manual work, surfaces that were never built, and operational debt.
+* [ARTIFACTS.md](ARTIFACTS.md) — index of published, hosted pages: the interactive design preview
+  and the build ledger. Stable URLs; each entry says what it is for and whether it ages.
 
 ### Architecture & Technical Spine
 * [ARCHITECTURE.md](ARCHITECTURE.md) — modular monolith, clean architecture, communication.
@@ -26,8 +30,11 @@ This is the documentation index. The master project instructions live in the roo
 * [DATABASE.md](DATABASE.md) — schema conventions and Phase 1 tables.
 * [CONTENT_MODEL.md](CONTENT_MODEL.md) — the content/block/versioning engine (core domain).
 * [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md) — two-app monorepo, rendering strategy.
-* [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — colour, typography, spacing, components.
+* [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — colour, typography, spacing, components. Rendered as an
+  interactive preview — see [ARTIFACTS.md](ARTIFACTS.md).
 * [UI_PATTERNS.md](UI_PATTERNS.md) — page-level composition and what we deliberately diverge on.
+* [UI_DEFECTS.md](UI_DEFECTS.md) — visual defects found by looking at the running app. Nothing in CI
+  can see this category, so the register is the memory.
 * [SEO.md](SEO.md) — SEO as a cross-cutting concern.
 * [API_SPEC.md](API_SPEC.md) — REST conventions and Phase 1 endpoints.
 * [ERROR_HANDLING.md](ERROR_HANDLING.md) — error envelope and codes.

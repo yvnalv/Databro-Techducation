@@ -20,6 +20,7 @@ public sealed class EnrollmentService(
     ICourseRepository courses,
     ILessonContentReader bodies,
     IQuizGate quizGate,
+    StreakService streaks,
     IClock clock)
 {
     /// <summary>
@@ -116,15 +117,22 @@ public sealed class EnrollmentService(
     /// only stands in front of a completion still to be made, the same one-way stance LN-6 takes.
     /// </para>
     /// </summary>
-    public Task<Result<EnrollmentDto>> CompleteLessonAsync(
+    public async Task<Result<EnrollmentDto>> CompleteLessonAsync(
         Guid userId, string courseSlug, Guid lessonId, CancellationToken ct = default)
-        => MutateAsync(userId, courseSlug, lessonId, async (enrollment, publishedLessonIds) =>
+    {
+        // Whether this call was the one that finished the lesson, as opposed to a repeat of a
+        // completion the learner already had. Only the former is a day's work (LN-16).
+        var isNewCompletion = false;
+
+        var result = await MutateAsync(userId, courseSlug, lessonId, async (enrollment, publishedLessonIds) =>
         {
+            isNewCompletion = !enrollment.HasCompleted(lessonId);
+
             // The gate stands in front of a completion still to be made — never behind one already
             // made. Re-completing a lesson the learner has finished must stay the no-op it is
             // (CompleteLesson is idempotent), even if a quiz was added afterwards: a completion is a
             // moment that stands (LN-6), and a later quiz does not reach back and revoke it.
-            if (!enrollment.HasCompleted(lessonId)
+            if (isNewCompletion
                 && await quizGate.IsCompletionBlockedAsync(userId, lessonId, ct))
                 return Result.Failure(Error.Rule("Pass this lesson's quiz before marking it complete."));
 
@@ -132,6 +140,16 @@ public sealed class EnrollmentService(
             enrollment.TryComplete(publishedLessonIds, clock.UtcNow);
             return Result.Success();
         }, ct);
+
+        // After the completion is saved, and in its own aggregate. A streak is a consequence of the
+        // work, not a condition of it — so it is written second, and if this write were ever to fail
+        // the lesson still counts as done. The opposite ordering would let a bookkeeping detail
+        // reject work a learner has actually finished.
+        if (result.IsSuccess && isNewCompletion)
+            await streaks.RecordActivityAsync(userId, ct);
+
+        return result;
+    }
 
     /// <summary>
     /// Un-marks a lesson. Deliberately does <b>not</b> re-open a completed course — see
