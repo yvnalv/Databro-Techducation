@@ -64,7 +64,7 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
         v-model:collapsed="collapsed"
         :groups="groups"
         :labels="{ nav: t('chrome.sectionsLabel'), collapse: t('chrome.collapseNav'), expand: t('chrome.expandNav') }"
-        class="sticky top-6 hidden max-h-[calc(100vh-3rem)] lg:flex"
+        class="sticky top-6 hidden h-[calc(100vh-3rem)] lg:flex"
       />
 
       <div class="flex min-w-0 max-w-app flex-1 flex-col gap-4 lg:gap-6">

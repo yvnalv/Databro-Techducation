@@ -1,5 +1,29 @@
 # DataBro Changelog
 
+## [2026-08-21 10:47:00 UTC]
+
+CHG-0069 — Make the rail fill its frame, and give it a dark-mode fill (UI-10)
+
+Two rail defects found by looking at the running app, both in `AppRail` and shared by both shells.
+
+- **The rail shrank to its content instead of spanning the window.** It carried
+  `max-h-[calc(100vh-3rem)]`, which only caps a height — with a handful of items the panel ended
+  a third of the way down the screen, and its footer group floated in the middle rather than sitting
+  at the bottom. Changed to a fixed `h-[calc(100vh-3rem)]` (the viewport minus the shell's top and
+  bottom gutter), so the panel fills the frame and the rail's `mt-auto` footer anchors to the bottom
+  edge. Added `overflow-y-auto` so a tall nav on a short viewport scrolls inside the panel rather
+  than clipping.
+- **In dark mode the rail was a white slab.** Its fill is `surface-inverse`, which is near-black in
+  light mode but *inverts to cream* in dark mode — so the one piece of chrome meant to read as
+  emphasis became the brightest thing on the page. The fill now flips to `accent` (the brand teal) in
+  dark mode, the one brand hue that does not change across themes. Foreground was adapted to sit on
+  teal: labels are already near-black in dark mode (11.9:1 on the fill), and the two spots that would
+  otherwise disappear teal-on-teal — the logo tile and the active-item pill — drop to near-black,
+  with focus rings switched to `accent-on`.
+
+Verified live on both shells, light and dark. `DESIGN_SYSTEM.md` §3.2 documents the full-height rail
+and the dark-mode fill.
+
 ## [2026-08-21 01:27:38 UTC]
 
 CHG-0068 — Give the UI rework plan a home (S-8)

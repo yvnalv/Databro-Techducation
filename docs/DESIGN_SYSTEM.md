@@ -226,6 +226,16 @@ most-tuned value in any layout and should have exactly one definition.
 wide a page is — visible as a dashboard floating in the middle of a 1860px screen beside a CMS that
 filled it. Both now open with `.db-app-shell`.
 
+**The rail fills the frame's height.** `AppRail` is `sticky` at `h-[calc(100vh-3rem)]` — the viewport
+minus the shell's top and bottom gutter — so the panel spans the window rather than shrinking to fit
+its items, and its footer group (View site, Back to learning) anchors to the bottom edge. It scrolls
+internally (`overflow-y-auto`) so a tall nav on a short viewport stays reachable instead of clipping.
+In **dark mode the rail's fill flips from `surface-inverse` (near-black) to `accent` (the brand
+teal)**: `surface-inverse` inverts to cream there, which read as a white slab, so the rail takes the
+one brand hue that stays constant across themes. Foreground follows — labels are already near-black
+in dark mode (legible on teal at ~11.9:1), the logo tile and the active-item pill drop to near-black
+so neither vanishes teal-on-teal, and focus rings switch to `accent-on`.
+
 **How the width was chosen.** The reference was measured, not eyeballed: content occupies **1220px in
 a 1753px viewport** — a gutter of 265px each side, ratio **0.70** — and that holds across the blog
 grid, the home course cards, the element page and the footer.

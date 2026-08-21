@@ -55,13 +55,19 @@ const visibleGroups = computed(() => props.groups.filter((g) => g.items.length >
 </script>
 
 <template>
+  <!-- Light mode fills with `surface-inverse` (near-black); dark mode with the brand teal `accent`.
+       In dark mode `ink-inverted` resolves to near-black, so labels stay legible on the teal without
+       any per-item override — only the two teal-on-teal spots (the logo tile and the active pill)
+       need adjusting. `overflow-y-auto` keeps a tall nav scrollable inside its fixed-height frame. -->
   <nav
     :aria-label="labels.nav"
-    class="flex flex-col gap-6 rounded-panel bg-surface-inverse p-3 text-ink-inverted transition-[width] duration-200"
+    class="flex flex-col gap-6 overflow-y-auto rounded-panel bg-surface-inverse p-3 text-ink-inverted transition-[width] duration-200 dark:bg-accent dark:text-accent-on"
     :class="collapsed ? 'w-[68px]' : 'w-60'"
   >
     <div class="flex items-center gap-2" :class="collapsed ? 'justify-center' : 'px-2'">
-      <NuxtLink to="/" class="flex min-w-0 items-center rounded-control text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+      <!-- The tile is `currentColor`, so teal here — but teal on the dark-mode teal rail would
+           vanish, so the mark flips to near-black there. -->
+      <NuxtLink to="/" class="flex min-w-0 items-center rounded-control text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:text-ink-inverted dark:focus-visible:ring-accent-on">
         <AppBrandMark :with-wordmark="!collapsed" tone="inverted" />
       </NuxtLink>
     </div>
@@ -70,7 +76,7 @@ const visibleGroups = computed(() => props.groups.filter((g) => g.items.length >
       type="button"
       :aria-label="collapsed ? labels.expand : labels.collapse"
       :aria-expanded="!collapsed"
-      class="flex items-center gap-3 rounded-control p-2.5 text-sm font-medium text-ink-inverted/70 transition-colors hover:bg-ink-inverted/10 hover:text-ink-inverted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      class="flex items-center gap-3 rounded-control p-2.5 text-sm font-medium text-ink-inverted/70 transition-colors hover:bg-ink-inverted/10 hover:text-ink-inverted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:focus-visible:ring-accent-on"
       :class="collapsed ? 'justify-center' : ''"
       @click="emit('update:collapsed', !collapsed)"
     >
@@ -94,11 +100,13 @@ const visibleGroups = computed(() => props.groups.filter((g) => g.items.length >
           v-bind="item.href ? { href: item.href } : { to: item.to }"
           :aria-current="isActive(item) ? 'page' : undefined"
           :title="collapsed ? item.label : undefined"
-          class="flex items-center gap-3 rounded-control p-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          class="flex items-center gap-3 rounded-control p-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:focus-visible:ring-accent-on"
           :class="[
             collapsed ? 'justify-center' : '',
             isActive(item)
-              ? 'bg-accent font-semibold text-accent-on'
+              // The active pill is a teal fill on the dark rail; on the dark-mode teal rail that
+              // would disappear, so it becomes a near-black pill with cream text instead.
+              ? 'bg-accent font-semibold text-accent-on dark:bg-accent-deep dark:text-ink-on-deep'
               : 'text-ink-inverted/70 hover:bg-ink-inverted/10 hover:text-ink-inverted',
           ]"
         >
