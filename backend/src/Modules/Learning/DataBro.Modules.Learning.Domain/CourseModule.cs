@@ -96,8 +96,10 @@ public sealed class CourseModule : Entity
             .ThenBy(l => l.Order)
             .ToList();
 
-        _lessons.Clear();
-        _lessons.AddRange(sorted);
+        // Write the new sequence into Order before normalising: Normalise now sorts by Order, so the
+        // arrangement has to live there rather than in the backing list's transient position.
+        for (var i = 0; i < sorted.Count; i++)
+            sorted[i].SetOrder(i);
         Normalise();
 
         return Result.Success();
@@ -109,6 +111,13 @@ public sealed class CourseModule : Entity
     /// </summary>
     private void Normalise()
     {
+        // Renumber by each lesson's own Order, not by backing-list position: the aggregate is
+        // reloaded on every authoring call and the EF include does not order this collection, so
+        // renumbering by raw position let a later structural change reshuffle a saved section. See the
+        // fuller note on Course.NormaliseModules — the two share the invariant and the hazard.
+        var ordered = _lessons.OrderBy(l => l.Order).ToList();
+        _lessons.Clear();
+        _lessons.AddRange(ordered);
         for (var i = 0; i < _lessons.Count; i++)
             _lessons[i].SetOrder(i);
     }

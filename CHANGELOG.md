@@ -1,5 +1,33 @@
 # DataBro Changelog
 
+## [2026-08-21 10:56:00 UTC]
+
+CHG-0071 — Stop a saved curriculum reshuffling itself on the next edit (LN-21)
+
+Adding a third module to a course could reorder the first two. The intro module of a freshly-built
+eight-lesson course landed in the middle of the sequence — the ordering invariant ADR-0013 leans on,
+quietly broken.
+
+- **The cause is a normalise that trusted the backing list's position.** `Course`, `CourseModule` and
+  `LearningPath` each renumber their children's `Order` to a contiguous `0..n` after every structural
+  change. They did it by iterating the child list *as it sat in memory* — but every authoring call
+  reloads the aggregate, and the EF include (`CourseRepository.Full`) does not order the collection.
+  So on the third `AddModule`, EF materialised the two existing modules in whatever order it liked,
+  and normalisation rewrote their `Order` to match it. With random child ids the load order was not
+  the insertion order, and the saved sequence scrambled.
+- **The fix makes normalisation order by each child's own `Order`, not by list position**, and
+  realigns the backing list to agree — so a reload can no longer influence the result. `Reorder*`
+  now writes the new sequence into `Order` before normalising, since `Order` is the source of truth
+  rather than the list arrangement. Applied identically to all three aggregates, which shared the
+  bug verbatim.
+- **A regression test reproduces it at the domain level** by reversing the private child list to
+  stand in for an unordered load, then adding a child and asserting the sequence still comes from
+  `Order`. The existing ordering tests all passed because a single in-memory aggregate is never
+  reloaded, which is exactly why this got through. 24/24 Course and LearningPath domain tests pass.
+
+The already-seeded "Python for Beginners" course was repaired through the existing reorder endpoint,
+which now behaves.
+
 ## [2026-08-21 10:52:00 UTC]
 
 CHG-0070 — Resolve a lesson's images the way an article does (LN-20)

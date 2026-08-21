@@ -121,8 +121,10 @@ public sealed class Course : AggregateRoot
             .ThenBy(m => m.Order)
             .ToList();
 
-        _modules.Clear();
-        _modules.AddRange(sorted);
+        // Write the new sequence into Order before normalising: NormaliseModules now sorts by Order,
+        // so the arrangement has to live there rather than in the backing list's transient position.
+        for (var i = 0; i < sorted.Count; i++)
+            sorted[i].SetOrder(i);
         NormaliseModules();
 
         return Result.Success();
@@ -164,6 +166,15 @@ public sealed class Course : AggregateRoot
 
     private void NormaliseModules()
     {
+        // Renumber to a contiguous 0..n by each module's own Order, NOT by its position in the backing
+        // list. The aggregate is reloaded on every authoring call and the EF include does not order
+        // this collection (CourseRepository.Full), so renumbering by raw list position let a later
+        // AddModule reshuffle an already-saved curriculum. Ordering by Order first makes normalisation
+        // independent of how EF happened to materialise the rows; the backing list is realigned to
+        // match so list order and Order never disagree.
+        var ordered = _modules.OrderBy(m => m.Order).ToList();
+        _modules.Clear();
+        _modules.AddRange(ordered);
         for (var i = 0; i < _modules.Count; i++)
             _modules[i].SetOrder(i);
     }

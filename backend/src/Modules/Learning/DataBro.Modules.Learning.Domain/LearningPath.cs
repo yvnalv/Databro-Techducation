@@ -93,8 +93,10 @@ public sealed class LearningPath : AggregateRoot
             .ThenBy(c => c.Order)
             .ToList();
 
-        _courses.Clear();
-        _courses.AddRange(sorted);
+        // Write the new sequence into Order before normalising: Normalise now sorts by Order, so the
+        // arrangement has to live there rather than in the backing list's transient position.
+        for (var i = 0; i < sorted.Count; i++)
+            sorted[i].SetOrder(i);
         Normalise();
 
         return Result.Success();
@@ -129,6 +131,13 @@ public sealed class LearningPath : AggregateRoot
 
     private void Normalise()
     {
+        // Renumber by each entry's own Order, not by backing-list position: the aggregate is reloaded
+        // on every curation call and the EF include does not order this collection, so renumbering by
+        // raw position let a later AddCourse reshuffle an already-saved path. See the fuller note on
+        // Course.NormaliseModules — the same invariant and the same hazard.
+        var ordered = _courses.OrderBy(c => c.Order).ToList();
+        _courses.Clear();
+        _courses.AddRange(ordered);
         for (var i = 0; i < _courses.Count; i++)
             _courses[i].SetOrder(i);
     }

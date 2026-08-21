@@ -1,3 +1,4 @@
+using System.Reflection;
 using DataBro.Modules.Learning.Domain;
 using DataBro.Platform.SharedKernel;
 using Xunit;
@@ -54,6 +55,46 @@ public class CourseTests
 
         Assert.Equal([0, 1], course.Modules.Select(m => m.Order));
         Assert.Equal(["Two", "Three"], course.Modules.Select(m => m.Title));
+    }
+
+    [Fact]
+    public void Adding_a_module_survives_an_unordered_reload_of_the_existing_ones()
+    {
+        // The regression behind this test: every authoring call reloads the aggregate, and the EF
+        // include does not order the modules collection, so the backing list can materialise in any
+        // order. NormaliseModules used to renumber by that raw position, which let a third AddModule
+        // rewrite the first two modules' Order to whatever sequence the database happened to return —
+        // silently reshuffling a saved curriculum. Here we reproduce that by reversing the backing
+        // list to stand in for an unordered load, then adding a module: order must still come from
+        // each module's Order, not from where it sits in the list.
+        var course = NewCourse();
+        var a = course.AddModule(Guid.NewGuid(), "A");
+        var b = course.AddModule(Guid.NewGuid(), "B");
+
+        ReversePrivateList(course, "_modules");
+
+        var c = course.AddModule(Guid.NewGuid(), "C");
+
+        Assert.Equal(["A", "B", "C"], course.Modules.Select(m => m.Title));
+        Assert.Equal([0, 1, 2], course.Modules.Select(m => m.Order));
+        _ = (a, b, c);
+    }
+
+    /// <summary>
+    /// Reverses an aggregate's private child list in place, standing in for EF materialising a
+    /// collection include in an order other than by <c>Order</c> — the condition the ordering fix
+    /// hardens against and that a normal in-memory test never reproduces.
+    /// </summary>
+    private static void ReversePrivateList(object owner, string field)
+    {
+        var list = (System.Collections.IList)owner
+            .GetType()
+            .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetValue(owner)!;
+
+        var items = list.Cast<object>().Reverse().ToList();
+        list.Clear();
+        foreach (var item in items) list.Add(item);
     }
 
     [Fact]
