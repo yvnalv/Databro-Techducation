@@ -12,6 +12,11 @@
     "primaryLabel": "Utama",
     "search": "Cari"
   },
+  "theme": {
+    "label": "Tema",
+    "dark": "Mode gelap",
+    "light": "Mode terang"
+  },
   "search": {
     "placeholder": "Cari artikel",
     "submit": "Cari",

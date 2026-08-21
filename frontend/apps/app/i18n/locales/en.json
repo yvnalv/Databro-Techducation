@@ -6,7 +6,14 @@
     "languageLabel": "Language",
     "sectionsLabel": "Sections",
     "openStudio": "Studio",
-    "backToLearning": "Back to learning"
+    "backToLearning": "Back to learning",
+    "collapseNav": "Collapse menu",
+    "expandNav": "Expand menu"
+  },
+  "theme": {
+    "label": "Theme",
+    "dark": "Dark mode",
+    "light": "Light mode"
   },
   "nav": {
     "dashboard": "My learning",

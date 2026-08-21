@@ -62,7 +62,7 @@ function duration(minutes: number) {
         <li v-for="course in courses" :key="course.id">
           <NuxtLink
             :to="localePath(`/courses/${course.slug}`)"
-            class="flex h-full flex-col rounded-card border border-line bg-surface p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+            class="flex h-full flex-col rounded-card border border-line bg-surface-raised p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
           >
             <div class="flex flex-wrap items-center gap-2">
               <DbChip tone="info">{{ t(`courses.difficulty.${course.difficulty}`) }}</DbChip>

@@ -4,7 +4,17 @@
  * only asset the two apps have in common, and moving it into `@databro/ui` would make that package
  * carry brand identity as well as design system. Revisit if a third surface needs it.
  */
-withDefaults(defineProps<{ withWordmark?: boolean }>(), { withWordmark: true });
+withDefaults(
+  defineProps<{
+    withWordmark?: boolean;
+    /**
+     * `inverted` for the dark rail. The wordmark cannot simply inherit `currentColor`: the wrapper
+     * sets that to the accent so the logo mark is teal, and a teal wordmark is not the brand.
+     */
+    tone?: "default" | "inverted";
+  }>(),
+  { withWordmark: true, tone: "default" },
+);
 </script>
 
 <template>
@@ -16,7 +26,11 @@ withDefaults(defineProps<{ withWordmark?: boolean }>(), { withWordmark: true });
       <rect x="20" y="8" width="4" height="16" rx="1.5" fill="white" />
     </svg>
 
-    <span v-if="withWordmark" class="font-display text-lg font-bold tracking-tight text-ink">
+    <span
+      v-if="withWordmark"
+      class="font-display text-lg font-bold tracking-tight"
+      :class="tone === 'inverted' ? 'text-ink-inverted' : 'text-ink'"
+    >
       DataBro
     </span>
   </span>

@@ -314,7 +314,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div class="space-y-6">
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.details") }}</h2>
 
           <DbInput v-model="title" :label="t('studio.common.title')" required />
@@ -331,7 +331,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
             <select
               id="category"
               v-model="categoryId"
-              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
             >
               <option value="">{{ t("studio.articles.noCategory") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -361,12 +361,12 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
           </fieldset>
         </section>
 
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.content") }}</h2>
           <BlockEditor v-model="content" />
         </section>
 
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.seo") }}</h2>
           <DbInput v-model="metaTitle" :label="t('studio.articles.metaTitle')" :hint="t('studio.articles.metaTitleHint')" />
           <DbInput v-model="metaDescription" :label="t('studio.articles.metaDescription')" :hint="t('studio.articles.metaDescriptionHint')" />
@@ -377,7 +377,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
              worse than not offering it. -->
         <section
           v-if="!isNew && !isPublished"
-          class="space-y-4 rounded-card border border-line bg-surface p-5"
+          class="space-y-4 rounded-card border border-line bg-surface-raised p-5"
         >
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
             {{ t("studio.articles.schedule") }}
@@ -403,7 +403,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
                 id="schedule-at"
                 v-model="scheduleAt"
                 type="datetime-local"
-                class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
+                class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
               />
               <p class="mt-1.5 text-xs text-ink-subtle">
                 {{ t("studio.articles.publishAtHint") }}
@@ -417,7 +417,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
 
         <!-- Version history (CT-8). Collapsed by default and loaded on demand: most edits never
              need it, and it is one request per open rather than one per page load. -->
-        <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <div class="flex items-center justify-between">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
               {{ t("studio.articles.versionHistory") }}
@@ -472,7 +472,7 @@ useHead(() => ({ title: isNew.value ? t("studio.articles.new") : title.value || 
       <!-- Live preview through the *same* ContentRenderer the public site uses. That shared
            registry is the reason preview and production cannot drift (ADR-0007). -->
       <aside class="xl:sticky xl:top-6 xl:self-start">
-        <div class="rounded-card border border-line bg-surface">
+        <div class="rounded-card border border-line bg-surface-raised">
           <div class="border-b border-line px-4 py-2">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.articles.preview") }}</h2>
           </div>

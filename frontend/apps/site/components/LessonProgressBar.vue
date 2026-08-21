@@ -135,7 +135,7 @@ async function join() {
             }}
           </p>
           <div
-            class="mt-2 h-1.5 w-48 overflow-hidden rounded-full bg-surface"
+            class="mt-2 h-1.5 w-48 overflow-hidden rounded-full bg-surface-raised"
             role="progressbar"
             :aria-valuenow="enrollment!.percentComplete"
             aria-valuemin="0"

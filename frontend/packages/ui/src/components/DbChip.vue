@@ -33,7 +33,7 @@ const props = withDefaults(
 const TONES: Record<Tone, string> = {
   // Reads as a label rather than a link, which is what stops it competing with the title beneath.
   category: "bg-accent-subtle text-accent-strong",
-  tag: "border border-line bg-surface text-ink-muted",
+  tag: "border border-line bg-surface-raised text-ink-muted",
   accent: "bg-accent text-accent-on",
   secondary: "bg-secondary text-secondary-on",
   premium: "bg-premium text-premium-on",

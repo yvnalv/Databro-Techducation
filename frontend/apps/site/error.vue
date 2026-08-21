@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
+import { DbButton } from "@databro/ui";
 
 /**
  * Error page (docs/UI_PATTERNS.md §6).
@@ -14,6 +15,10 @@ const props = defineProps<{ error: NuxtError }>();
 
 const { t } = useI18n();
 const localePath = useLocalePath();
+
+// Resolved rather than imported: `@databro/ui` stays framework-agnostic, so the consumer
+// supplies the link component (FRONTEND_ARCHITECTURE / DbButton).
+const NuxtLink = resolveComponent("NuxtLink");
 
 const isNotFound = computed(() => props.error?.statusCode === 404);
 const title = computed(() => (isNotFound.value ? t("error.notFoundTitle") : t("error.genericTitle")));
@@ -56,13 +61,9 @@ useSeoMeta({ title: title.value, robots: "noindex,nofollow" });
         <p class="mx-auto mt-6 max-w-xl text-lg text-ink-muted">{{ message }}</p>
 
         <p class="mt-8">
-          <NuxtLink
-            :to="localePath('/')"
-            class="inline-flex h-12 items-center justify-center rounded-control bg-accent px-6 text-base font-medium text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2"
-            @click="clearError({ redirect: '/' })"
-          >
+          <DbButton :as="NuxtLink" :to="localePath('/')" size="lg" @click="clearError({ redirect: '/' })">
             {{ t("error.backHome") }}
-          </NuxtLink>
+          </DbButton>
         </p>
       </div>
     </main>

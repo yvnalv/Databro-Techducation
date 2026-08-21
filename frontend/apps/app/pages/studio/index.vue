@@ -79,7 +79,7 @@ useHead(() => ({ title: t("studio.articles.navTitle") }));
           { label: t('studio.articles.statScheduled'), value: counts.scheduled, hint: t('studio.articles.hintThisPage') },
         ]"
         :key="stat.label"
-        class="rounded-card border border-line bg-surface p-5"
+        class="rounded-card border border-line bg-surface-raised p-5"
       >
         <dt class="text-sm text-ink-muted">{{ stat.label }}</dt>
         <dd class="mt-1 font-display text-2xl font-bold text-ink">
@@ -98,7 +98,7 @@ useHead(() => ({ title: t("studio.articles.navTitle") }));
       <button type="button" class="font-semibold underline" @click="refresh()">{{ t("studio.common.retry") }}</button>
     </p>
 
-    <div v-else class="mt-6 overflow-hidden rounded-card border border-line bg-surface">
+    <div v-else class="mt-6 overflow-hidden rounded-card border border-line bg-surface-raised">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
           <!-- Dark header row: the reference reserves this for dashboards, and this is the one

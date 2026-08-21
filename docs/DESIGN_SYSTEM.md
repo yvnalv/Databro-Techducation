@@ -171,6 +171,22 @@ Display sizes tighten letter-spacing (`-0.02em` at `4xl`, `-0.03em` at `6xl`); b
 * Section headings on marketing pages are **centred with a muted subtitle beneath**; content pages
   (article, category) are **left-aligned**. The reference is consistent about this and so are we.
 
+### 2.4 Theme
+
+Light and dark, switched by `DbThemeToggle` in the site header and both app shells. The choice is
+stored in a `databro_theme` cookie shared across both apps, exactly like `databro_locale` — a
+learner who switches to dark on the catalogue should not land in a light dashboard one click later.
+
+**The theme is applied by a pre-paint script in `<head>`, never rendered into the SSR markup.**
+`site` serves ISR-cached HTML, so a `data-theme` baked in at render time would be one visitor's
+choice handed to everyone who hit the cache behind them. The script reads the cookie and stamps the
+attribute before first paint, which also removes the flash of the wrong theme that the SSR approach
+would still have had on any cached page.
+
+Following `prefers-color-scheme` automatically stays deliberately unwired
+([ADR-0020](adr/0020-design-language-and-the-contrast-rule.md) §6). The switch *is* the opt-in, and
+the default is light.
+
 ---
 
 ## 3. Spacing and layout
@@ -191,6 +207,12 @@ the article body.**
 
 `.db-shell` is a class in `tokens.css`, not a repeated utility string, because container width is the
 most-tuned value in any layout and should have exactly one definition.
+
+**All three surfaces use it.** The public site always did; the authenticated app did not. Its learner
+shell capped at `max-w-5xl` (1024px) and the CMS ran full-bleed, so the two halves of one product
+disagreed about how wide a page is — visible as a dashboard floating in the middle of a 1860px screen
+beside a CMS that filled it. Both now open with `.db-shell`, and the rail sits *inside* that frame so
+the whole app is capped together rather than the rail pinning to the viewport edge.
 
 **How the width was chosen.** The reference was measured, not eyeballed: content occupies **1220px in
 a 1753px viewport** — a gutter of 265px each side, ratio **0.70** — and that holds across the blog
@@ -283,8 +305,16 @@ A 12/16/24 family (ADR-0020 §5) — softer than the reference's ~6px, which is 
 | `full` | 9999px | Avatars, search fields, pill badges |
 
 `control` exists because 60 call sites were reaching for Tailwind's own 6px `rounded-md` default and
-so bypassed the radius token entirely — the one real leak in an otherwise disciplined system. There
-is no `sm` or `md`: a scale with steps nobody can tell apart invites exactly that drift.
+so bypassed the radius token entirely. There is no `sm` or `md`: a scale with steps nobody can tell
+apart invites exactly that drift.
+
+**One documented exception.** A checkbox keeps Tailwind's 4px `rounded`. At `rounded-control` a 16px
+box is nearly a circle, which is what a radio button looks like — and shape is the only thing
+separating the two controls. It is commented in place so the next audit does not "fix" it.
+
+Everything else is on the scale, and that is checked by allow-list rather than by remembering: the
+migration that introduced these tokens swept `rounded-md`/`sm`/`lg` and left 23 uses of bare
+`rounded` behind, because a find-and-replace only fixes the names it was given (UI-5).
 
 ### 4.2 Shadow
 
@@ -329,8 +359,17 @@ Every filled variant names its own text token. `text-ink-inverted` on a teal fil
 `secondary` is the inverse surface rather than the lime. On a light page the second action is the
 black button — which is what the references do, and the only way a second fill stays legible.
 
-Sizes: `sm` 36px, `md` 40px, `lg` 48px. Focus is always a visible 2px ring at 2px offset, drawn in
-**`accent-strong`** — never removed, and never in the raw brand teal (§1.1).
+Sizes: `sm` 36px (`px-3.5`), `md` 40px (`px-5`), `lg` 48px (`px-6`). Focus is always a visible 2px
+ring at 2px offset, drawn in **`accent-strong`** — never removed, and never in the raw brand teal
+(§1.1).
+
+**Use `DbButton`; do not re-create it.** Two pages once hand-rolled markup identical to the `lg`
+variant, which meant a change to button padding or the focus ring would have moved every button on
+the platform except those two. Both now go through the component (UI-6).
+
+Note the spacing values above are real Tailwind steps. `px-4.5` is not one — the fractional scale
+stops at `3.5` — and a class Tailwind cannot resolve emits nothing at all rather than warning, which
+is how every `md` button once shipped with no horizontal padding (UI-1).
 
 ### 5.2 Inputs
 

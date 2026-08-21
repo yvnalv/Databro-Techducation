@@ -64,7 +64,7 @@ useHead(() => ({ title: t("studio.lessons.navTitle") }));
             <th scope="col" class="px-4 py-3 font-semibold">{{ t("studio.common.published") }}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-line bg-surface">
+        <tbody class="divide-y divide-line bg-surface-raised">
           <tr v-for="lesson in lessons" :key="lesson.id" class="hover:bg-surface-sunken">
             <td class="px-4 py-3">
               <NuxtLink :to="`/studio/lessons/${lesson.id}`" class="font-medium text-accent-strong hover:underline">

@@ -99,6 +99,18 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: "en" },
+      script: [
+        {
+          // Stamps `data-theme` from the cookie **before first paint**, so there is no flash of the
+          // wrong theme. It has to be an inline head script rather than an SSR html attribute:
+          // `site` serves ISR-cached HTML, and a theme baked in at render time would be one
+          // visitor's choice served to everyone who hit the cache after them (ADR-0020 §6).
+          innerHTML:
+            '(function(){try{var m=document.cookie.match(/(?:^|; )databro_theme=(light|dark)/);' +
+            'document.documentElement.setAttribute("data-theme",m?m[1]:"light")}catch(e){}})()',
+          tagPosition: "head",
+        },
+      ],
       titleTemplate: "%s · DataBro",
       link: [
         // Feed autodiscovery. Without this tag a reader app cannot find the feed from the site URL

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { DbButton } from "@databro/ui";
+
 /**
  * Home hero (docs/UI_PATTERNS.md §4).
  *
@@ -9,6 +11,10 @@
  */
 const { t } = useI18n();
 const localePath = useLocalePath();
+
+// Resolved rather than imported: `@databro/ui` stays framework-agnostic, so the consumer
+// supplies the link component (FRONTEND_ARCHITECTURE / DbButton).
+const NuxtLink = resolveComponent("NuxtLink");
 
 const highlights = computed(() => [
   t("home.highlightOne"),
@@ -58,12 +64,12 @@ const highlights = computed(() => [
         </ul>
 
         <div class="mt-10 flex flex-wrap gap-3">
-          <NuxtLink
-            :to="localePath('/')"
-            class="inline-flex h-12 items-center justify-center rounded-control bg-accent px-6 text-base font-medium text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2"
-          >
+          <!-- Through DbButton rather than a hand-rolled copy of it: this markup duplicated the
+               `lg` variant exactly, so a change to button padding or focus ring would have moved
+               every button on the platform except this one. -->
+          <DbButton :as="NuxtLink" :to="localePath('/')" size="lg">
             {{ t("home.primaryCta") }}
-          </NuxtLink>
+          </DbButton>
         </div>
       </div>
     </div>

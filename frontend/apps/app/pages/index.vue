@@ -98,7 +98,7 @@ const courseHref = (e: Enrollment) => {
       <p class="mt-1.5 text-sm text-ink-muted">{{ t("dashboard.subtitle") }}</p>
     </header>
 
-    <p v-if="error" class="rounded-card border border-line bg-surface p-6 text-center text-ink-muted">
+    <p v-if="error" class="rounded-card border border-line bg-surface-raised p-6 text-center text-ink-muted">
       {{ t("dashboard.loadFailed") }}
     </p>
 
@@ -107,7 +107,7 @@ const courseHref = (e: Enrollment) => {
            has taken on, this says whether they are actually turning up. -->
       <section
         v-if="streak"
-        class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border border-line bg-surface p-4"
+        class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border border-line bg-surface-raised p-4"
       >
         <div class="flex items-center gap-3">
           <span class="text-2xl leading-none" aria-hidden="true">{{ streak.current > 0 ? "🔥" : "🌱" }}</span>
@@ -142,7 +142,7 @@ const courseHref = (e: Enrollment) => {
             { key: 'completed', value: stats.completed },
           ]"
           :key="stat.key"
-          class="rounded-card border border-line bg-surface p-4"
+          class="rounded-card border border-line bg-surface-raised p-4"
         >
           <dt class="text-xs font-medium uppercase tracking-wide text-ink-subtle">
             {{ t(`stats.${stat.key}`) }}
@@ -155,7 +155,7 @@ const courseHref = (e: Enrollment) => {
         <li
           v-for="enrollment in enrollments"
           :key="enrollment.id"
-          class="rounded-card border border-line bg-surface p-5"
+          class="rounded-card border border-line bg-surface-raised p-5"
         >
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
@@ -229,7 +229,7 @@ const courseHref = (e: Enrollment) => {
          before, where `v-else` bound to that section instead - so a learner with courses but no
          bookmarks was told they had not joined anything, underneath a list of the courses they had
          joined. -->
-    <div v-else class="rounded-card border border-line bg-surface p-10 text-center">
+    <div v-else class="rounded-card border border-line bg-surface-raised p-10 text-center">
       <p class="text-ink-muted">{{ t("dashboard.empty") }}</p>
       <DbButton as="a" :href="`${publicSiteUrl}/courses`" class="mt-4">
         {{ t("dashboard.emptyCta") }}
@@ -242,7 +242,7 @@ const courseHref = (e: Enrollment) => {
       <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("saved.title") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">{{ t("saved.subtitle") }}</p>
 
-      <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-surface">
+      <ul class="mt-4 divide-y divide-line rounded-card border border-line bg-surface-raised">
         <li v-for="item in saved" :key="item.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
           <span class="text-xs uppercase tracking-wide text-ink-subtle">
             {{ item.kind === "course" ? t("saved.course") : t("saved.lesson") }}

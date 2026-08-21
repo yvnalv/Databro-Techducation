@@ -49,7 +49,7 @@ onMounted(async () => {
     <div class="w-full max-w-sm text-center">
       <span class="inline-flex text-accent-strong"><AppBrandMark /></span>
 
-      <div class="mt-8 rounded-card border border-line bg-surface p-6 shadow-card">
+      <div class="mt-8 rounded-card border border-line bg-surface-raised p-6 shadow-card">
         <template v-if="state === 'working'">
           <h1 class="font-display text-xl font-bold tracking-tight text-ink">
             {{ t("verify.working") }}

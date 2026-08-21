@@ -50,7 +50,7 @@ useListingSeo({
         <li v-for="path in paths" :key="path.id">
           <NuxtLink
             :to="localePath(`/learning-paths/${path.slug}`)"
-            class="group flex h-full flex-col rounded-card border border-line bg-surface p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+            class="group flex h-full flex-col rounded-card border border-line bg-surface-raised p-6 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
           >
             <div class="flex flex-wrap items-center gap-2">
               <DbChip tone="neutral">{{ t(`courses.difficulty.${path.difficulty}`) }}</DbChip>

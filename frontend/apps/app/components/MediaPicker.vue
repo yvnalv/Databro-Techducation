@@ -134,7 +134,7 @@ async function upload(event: Event) {
       <img
         :src="selected.variants[0]?.url ?? selected.url"
         :alt="selected.altText"
-        class="h-20 w-20 rounded object-cover"
+        class="h-20 w-20 rounded-card object-cover"
       />
       <div class="min-w-0 text-sm">
         <p class="truncate font-medium text-ink">{{ selected.fileName }}</p>
@@ -172,13 +172,13 @@ async function upload(event: Event) {
           v-for="asset in library"
           :key="asset.id"
           type="button"
-          class="group rounded border border-line p-1 text-left hover:border-accent-strong"
+          class="group rounded-card border border-line p-1 text-left hover:border-accent-strong"
           @click="choose(asset)"
         >
           <img
             :src="asset.variants[0]?.url ?? asset.url"
             :alt="asset.altText"
-            class="h-20 w-full rounded object-cover"
+            class="h-20 w-full rounded-card object-cover"
           />
           <span class="mt-1 block truncate text-xs text-ink-muted">{{ asset.fileName }}</span>
         </button>

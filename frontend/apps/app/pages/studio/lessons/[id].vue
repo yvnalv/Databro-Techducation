@@ -207,7 +207,7 @@ useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div class="space-y-6">
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.details") }}</h2>
 
           <DbInput v-model="title" :label="t('studio.common.title')" required />
@@ -224,12 +224,12 @@ useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value
           </p>
         </section>
 
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.content") }}</h2>
           <BlockEditor v-model="content" />
         </section>
 
-        <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section v-if="!isNew" class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <div class="flex items-center justify-between">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
               {{ t("studio.lessons.versionHistory") }}
@@ -273,7 +273,7 @@ useHead(() => ({ title: isNew.value ? t("studio.lessons.newTitle") : title.value
       </div>
 
       <aside class="xl:sticky xl:top-6 xl:self-start">
-        <div class="rounded-card border border-line bg-surface">
+        <div class="rounded-card border border-line bg-surface-raised">
           <div class="border-b border-line px-4 py-2">
             <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.lessons.preview") }}</h2>
           </div>

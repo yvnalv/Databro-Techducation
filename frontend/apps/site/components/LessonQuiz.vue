@@ -119,7 +119,7 @@ async function retake() {
 
 <template>
   <!-- Rendered only when this lesson actually has a quiz. A heading over nothing is noise. -->
-  <section v-if="quiz" class="rounded-card border border-line bg-surface p-6">
+  <section v-if="quiz" class="rounded-card border border-line bg-surface-raised p-6">
     <div class="flex flex-wrap items-baseline justify-between gap-3">
       <h2 class="font-display text-xl font-bold tracking-tight text-ink">{{ quiz.title }}</h2>
       <span class="text-sm text-ink-subtle">

@@ -12,6 +12,11 @@
     "primaryLabel": "Primary",
     "search": "Search"
   },
+  "theme": {
+    "label": "Theme",
+    "dark": "Dark mode",
+    "light": "Light mode"
+  },
   "search": {
     "placeholder": "Search articles",
     "submit": "Search",

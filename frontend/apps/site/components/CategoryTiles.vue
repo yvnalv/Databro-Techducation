@@ -50,7 +50,7 @@ const populated = computed(() =>
 </script>
 
 <template>
-  <section v-if="populated.length" class="border-b border-line bg-surface">
+  <section v-if="populated.length" class="border-b border-line bg-surface-raised">
     <div class="db-shell py-16 sm:py-20">
       <div class="text-center">
         <h2 class="font-display text-3xl font-bold tracking-tight text-ink">

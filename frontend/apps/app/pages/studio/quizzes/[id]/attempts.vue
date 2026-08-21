@@ -83,7 +83,7 @@ useHead(() => ({ title: quiz.value ? `Attempts — ${quiz.value.title}` : "Attem
             <th scope="col" class="px-4 py-3 text-right font-semibold">Submitted</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-line bg-surface">
+        <tbody class="divide-y divide-line bg-surface-raised">
           <tr v-for="attempt in rows" :key="attempt.attemptId" class="hover:bg-surface-sunken">
             <td class="px-4 py-3 font-medium text-ink">{{ attempt.learnerName }}</td>
             <td class="px-4 py-3">

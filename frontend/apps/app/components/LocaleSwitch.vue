@@ -17,7 +17,7 @@ const options = computed(() =>
     <span class="sr-only">{{ t("chrome.languageLabel") }}</span>
     <select
       :value="locale"
-      class="h-9 rounded-control border border-line-strong bg-surface px-2 text-sm text-ink-muted focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+      class="h-9 rounded-control border border-line-strong bg-surface-raised px-2 text-sm text-ink-muted focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
       @change="setLocale(($event.target as HTMLSelectElement).value as typeof locale)"
     >
       <option v-for="l in options" :key="l.code" :value="l.code">{{ l.name }}</option>

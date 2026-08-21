@@ -1,26 +1,54 @@
 <script setup lang="ts">
+import { DbThemeToggle } from "@databro/ui";
+import type { RailGroup } from "~/components/AppRail.vue";
+
 /**
  * Learner shell — the default chrome of the authenticated app (ADR-0015).
  *
- * A top bar rather than the CMS's sidebar. A learner has two or three destinations and spends their
- * time reading; an editor navigates constantly between a dozen. Giving both the same sidebar would
- * hand the learner a permanent 240px of empty rail.
+ * Shares the rail and the frame with the CMS shell in `studio.vue`. It used to carry a top bar
+ * instead, on the reasoning that a learner has two or three destinations while an editor has a
+ * dozen, so a permanent 240px rail would be mostly empty here. A rail that collapses to 68px
+ * answers that, and one navigation model across the app is worth more than two kept in agreement.
+ *
+ * The frame is `.db-shell` — the same 1760px cap the public site uses. Before this the learner
+ * shell capped at `max-w-5xl` (1024px) and the CMS ran full-bleed, so the two halves of one app
+ * disagreed about how wide a page is.
  */
 const { t } = useI18n();
+const { theme } = useTheme();
+// `v-model:collapsed` drives the rail; the composable's own `toggle` is not needed here.
+const { collapsed } = useRail();
 const { user, logout } = useAuth();
 const { canAuthor } = useRoles();
 const config = useRuntimeConfig();
 
 const publicSiteUrl = computed(() => config.public.siteUrl as string);
 
-const route = useRoute();
-const isActive = (to: string) => (to === "/" ? route.path === "/" : route.path.startsWith(to));
+const groups = computed<RailGroup[]>(() => [
+  {
+    items: [
+      { label: t("nav.dashboard"), icon: "dashboard", to: "/" },
+      // The catalogue is the public site's, not a second copy here: browsing courses is indexable
+      // content and belongs to `site` (ADR-0015).
+      { label: t("nav.browse"), icon: "browse", href: `${publicSiteUrl.value}/courses` },
+    ],
+  },
+  // Shown only to someone who can actually author. A UX affordance, never a security boundary: the
+  // API authorises every request on its own (docs/SECURITY.md §2), and a learner who types /studio
+  // gets a UI that will not load rather than data.
+  {
+    label: canAuthor.value ? t("chrome.openStudio") : undefined,
+    items: canAuthor.value
+      ? [{ label: t("chrome.openStudio"), icon: "articles", to: "/studio", prefix: true }]
+      : [],
+  },
+]);
 
 const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpperCase() ?? "?");
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface-sunken font-sans text-ink antialiased">
+  <div class="min-h-screen bg-surface font-sans text-ink antialiased">
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-control focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-on"
@@ -28,78 +56,67 @@ const initial = computed(() => user.value?.displayName?.trim().charAt(0).toUpper
       {{ t("chrome.skipToContent") }}
     </a>
 
-    <header class="border-b border-line bg-surface">
-      <div class="mx-auto flex h-16 max-w-5xl items-center gap-6 px-4 sm:px-6">
-        <NuxtLink to="/" class="text-accent-strong"><AppBrandMark /></NuxtLink>
+    <div class="db-shell flex gap-4 py-4 lg:gap-6 lg:py-6">
+      <!-- Below `lg` the rail would eat the page. The same destinations stay reachable from the
+           header's scrolling nav row. -->
+      <AppRail
+        v-model:collapsed="collapsed"
+        :groups="groups"
+        :labels="{ nav: t('chrome.sectionsLabel'), collapse: t('chrome.collapseNav'), expand: t('chrome.expandNav') }"
+        class="sticky top-6 hidden max-h-[calc(100vh-3rem)] lg:flex"
+      />
 
-        <nav :aria-label="t('chrome.sectionsLabel')">
-          <ul class="flex items-center gap-1">
-            <li>
-              <NuxtLink
-                to="/"
-                :aria-current="isActive('/') ? 'page' : undefined"
-                class="rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
-                :class="
-                  isActive('/')
-                    ? 'bg-accent-subtle text-accent-strong'
-                    : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
-                "
+      <div class="flex min-w-0 flex-1 flex-col gap-4 lg:gap-6">
+        <header
+          class="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 rounded-panel border border-line bg-surface-raised px-4 py-3 shadow-card sm:px-5"
+        >
+          <NuxtLink to="/" class="text-accent-strong lg:hidden"><AppBrandMark /></NuxtLink>
+
+          <nav :aria-label="t('chrome.sectionsLabel')" class="-mx-1 min-w-0 overflow-x-auto lg:hidden">
+            <ul class="flex items-center gap-1 px-1">
+              <li v-for="item in groups.flatMap((g) => g.items)" :key="item.label">
+                <component
+                  :is="item.href ? 'a' : 'NuxtLink'"
+                  v-bind="item.href ? { href: item.href } : { to: item.to }"
+                  class="whitespace-nowrap rounded-control px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+                >
+                  {{ item.label }}
+                </component>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="ms-auto flex items-center gap-2 sm:gap-3">
+            <DbThemeToggle v-model="theme" :label="t('theme.dark')" />
+
+            <LocaleSwitch />
+
+            <span class="flex items-center gap-2">
+              <span
+                class="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-on"
+                aria-hidden="true"
               >
-                {{ t("nav.dashboard") }}
-              </NuxtLink>
-            </li>
-            <li>
-              <!-- The catalogue is the public site's, not a second copy here: browsing courses is
-                   indexable content and belongs to `site` (ADR-0015). -->
-              <a
-                :href="`${publicSiteUrl}/courses`"
-                class="rounded-control px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
-              >
-                {{ t("nav.browse") }}
-              </a>
-            </li>
-          </ul>
-        </nav>
+                {{ initial }}
+              </span>
+              <span class="hidden text-sm font-medium text-ink lg:block">
+                {{ user?.displayName }}
+              </span>
+            </span>
 
-        <div class="ms-auto flex items-center gap-3">
-          <!-- Shown only to someone who can actually author. A UX affordance, never a security
-               boundary: the API authorises every request on its own (docs/SECURITY.md §2), and a
-               learner who types /studio gets a UI that will not load rather than data. -->
-          <NuxtLink
-            v-if="canAuthor"
-            to="/studio"
-            class="hidden rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong sm:block"
-          >
-            {{ t("chrome.openStudio") }}
-          </NuxtLink>
-
-          <LocaleSwitch />
-
-          <span class="flex items-center gap-2">
-            <span
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent-strong"
-              aria-hidden="true"
+            <button
+              type="button"
+              class="whitespace-nowrap rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              @click="logout"
             >
-              {{ initial }}
-            </span>
-            <span class="hidden text-sm font-medium text-ink sm:block">
-              {{ user?.displayName }}
-            </span>
-          </span>
+              {{ t("chrome.signOut") }}
+            </button>
+          </div>
+        </header>
 
-          <button
-            type="button"
-            class="rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
-            @click="logout"
-          >
-            {{ t("chrome.signOut") }}
-          </button>
-        </div>
+        <main id="main" class="min-w-0 flex-1 pb-6">
+          <slot />
+        </main>
       </div>
-    </header>
-
-    <main id="main" class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-      <slot />
-    </main>
+    </div>
   </div>
 </template>

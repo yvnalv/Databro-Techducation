@@ -1,5 +1,91 @@
 # DataBro Changelog
 
+## [2026-08-20 23:42:45 UTC]
+
+CHG-0066 — One shell for the app: a collapsible rail and a shared frame (UI-2, UI-7, S-8)
+
+- **Three container widths in one product, now one (UI-7).** The learner shell capped at `max-w-5xl`
+  (1024px), the CMS ran full-bleed, and `.db-shell` (1760px) was used only by the public site — so a
+  dashboard floated in the middle of a 1860px screen beside a CMS that filled it. Both app shells now
+  open with `.db-shell`, the same cap the site uses, and the rail sits **inside** that frame so the
+  app is capped as a whole rather than the rail pinning to the viewport edge.
+- **A floating dark rail, inset from the frame edge**, replacing the CMS's bordered sidebar and the
+  learner side's top bar. It collapses to 68px of icons and back.
+- **The collapsed state lives in a cookie and is server-rendered.** A rail that springs back open on
+  every navigation would look like a control that does not work, and reading the state only on the
+  client would make the layout jump on hydration. Verified: requesting with `databro_rail=collapsed`
+  returns markup already at `w-[68px]`.
+- **Both shells share it — a reversal worth naming.** The learner side carried a top bar on the
+  reasoning that a learner has two or three destinations while an editor has a dozen, so a permanent
+  240px rail would be mostly empty. **A rail that collapses answers that objection directly**, and one
+  navigation model beats two that have to be kept in agreement. That reasoning lived only in a
+  component comment, never in ADR-0015, so nothing is superseded — but it was a real decision and it
+  has been changed deliberately, not overlooked.
+- Below `lg` the rail is hidden and its destinations move into a scrolling row in the header: at phone
+  widths a 240px rail *is* the page.
+- The rail is app chrome, not a `@databro/ui` primitive — it needs `NuxtLink`, the current route and
+  the i18n layer, none of which belong in a package that must stay framework-agnostic.
+
+- **87 card surfaces lifted off the cream ground (UI-2).** `surface` used to be `#ffffff`, so
+  `bg-surface` and `bg-surface-raised` were the same colour and the distinction never mattered;
+  ADR-0020 made `surface` the page. Classified by whether an element has an edge or elevation of its
+  own, then **the non-matches were reviewed by hand** — which is the step that mattered: it kept the
+  5 genuine page grounds on `bg-surface` and caught 5 `<tbody>` elements that the heuristic had filed
+  as "not a card" but which sit *inside* a white card and must be white too.
+
+Also: `AppBrandMark` gained a `tone` prop. Its wordmark was hardcoded `text-ink` and would have
+rendered dark-on-dark in the rail — and it cannot simply inherit `currentColor`, because the wrapper
+sets that to the accent so the logo mark is teal, and a teal wordmark is not the brand.
+
+Verified live on both shells, both locales, expanded and collapsed. Build 0/0, lint and typecheck
+clean, 364 backend and 90 frontend tests pass. `DESIGN_SYSTEM.md` §3.2 and `UI_PATTERNS.md` §7
+rewritten; UI-2 and UI-7 closed, S-8 updated.
+
+## [2026-08-20 23:24:29 UTC]
+
+CHG-0065 — A light/dark switch, and the rest of the button drift (S-9, UI-5, UI-6)
+
+- **`DbThemeToggle` ships the dark theme that ADR-0020 designed.** In the site header and both app
+  shells, in both locales. A real `role="switch"` rather than two buttons: a screen reader announces
+  "Dark mode, switch, on/off", which is exactly what the control is.
+- **The theme is applied by a pre-paint script, never rendered into the SSR markup** — the one
+  decision in this change that matters. `site` serves ISR-cached HTML, so a `data-theme` baked in at
+  render time would be **one visitor's theme served to everyone who hit the cache behind them**. A
+  four-line script in `<head>` reads the `databro_theme` cookie and stamps the attribute before
+  first paint, which also removes the flash of the wrong theme that the SSR route would still have
+  had on any cached page. Verified: the served HTML carries no `data-theme`, with or without a dark
+  cookie.
+- **The cookie is shared across both apps**, like `databro_locale`. Switching to dark on the
+  catalogue and clicking into the dashboard does not throw a light page at you.
+- `prefers-color-scheme` stays deliberately unwired (ADR-0020 §6). The switch is the opt-in; this
+  fulfils that decision rather than reversing it.
+
+- **23 radius classes were still off the scale (UI-5).** Bare `rounded` — Tailwind's 4px default —
+  survived the ADR-0020 migration because that sweep was written against the names it knew about
+  (`rounded-md`, `rounded-sm`, `rounded-lg`) and this was not one of them. 20 controls moved to
+  `rounded-control`, 3 media surfaces to `rounded-card`.
+- **One exception stays and is commented in place:** a 16px checkbox at `rounded-control` is nearly a
+  circle, which is what a radio button looks like, and shape is the only thing separating the two.
+- **Two pages were hand-rolling `DbButton` (UI-6).** The hero and the error page carried markup
+  identical to the `lg` variant, so yesterday's padding fix would have moved every button on the
+  platform except those two. Both now go through the component. `SaveButton` was half a spacing step
+  short and is now `px-3.5`, matching `sm`.
+
+**The generalisable lesson, recorded in `UI_DEFECTS.md`: a find-and-replace only fixes what it was
+told to look for.** The sweep that introduced the design language missed bare `rounded` for exactly
+that reason. The audits that caught it worked the other way round — enumerate what is *allowed* and
+flag everything else — which is why they also caught the two 1.0:1 contrast failures the rename pass
+had walked straight past. Token conformance is now listed beside class validity and contrast pairing
+as the third check worth committing to CI.
+
+Also fixed on the way: the checkbox comment was first written *inside* the element's attribute list,
+where an HTML comment is not legal. It broke the template parser, which in turn made an unrelated
+handler look unused and produced 14 lint errors in a file nothing had otherwise touched.
+
+Verified live in both apps. Build 0/0, lint and typecheck clean, 364 backend and 90 frontend tests
+pass. `DESIGN_SYSTEM.md` gains a theme section (§2.4), the documented radius exception and the
+"use `DbButton`, do not re-create it" rule; S-9 closed and UI-5/UI-6 recorded in the registers.
+
 ## [2026-08-20 15:39:27 UTC]
 
 CHG-0064 — A UI defect register, and a button with no padding

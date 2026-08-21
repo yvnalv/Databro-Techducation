@@ -127,7 +127,7 @@ useHead(() => ({
 
     <!-- Objectives before the body, because "what you will be able to do" is what tells a learner
          whether to read on. CLAUDE.md requires every lesson to declare them. -->
-    <section v-if="lesson.objectives.length" class="mt-8 rounded-card border border-line bg-surface p-5">
+    <section v-if="lesson.objectives.length" class="mt-8 rounded-card border border-line bg-surface-raised p-5">
       <h2 class="font-display text-base font-bold tracking-tight text-ink">
         {{ t("lesson.objectives") }}
       </h2>
@@ -160,7 +160,7 @@ useHead(() => ({
       <NuxtLink
         v-if="page.previous"
         :to="localePath(`/courses/${page.courseSlug}/${page.previous.slug}`)"
-        class="group rounded-card border border-line bg-surface p-4 transition-shadow hover:shadow-card"
+        class="group rounded-card border border-line bg-surface-raised p-4 transition-shadow hover:shadow-card"
       >
         <span class="text-sm text-ink-subtle">← {{ t("lesson.previous") }}</span>
         <span class="mt-1 block font-medium text-ink group-hover:text-accent-strong">
@@ -172,7 +172,7 @@ useHead(() => ({
       <NuxtLink
         v-if="page.next"
         :to="localePath(`/courses/${page.courseSlug}/${page.next.slug}`)"
-        class="group rounded-card border border-line bg-surface p-4 text-end transition-shadow hover:shadow-card sm:col-start-2"
+        class="group rounded-card border border-line bg-surface-raised p-4 text-end transition-shadow hover:shadow-card sm:col-start-2"
       >
         <span class="text-sm text-ink-subtle">{{ t("lesson.next") }} →</span>
         <span class="mt-1 block font-medium text-ink group-hover:text-accent-strong">

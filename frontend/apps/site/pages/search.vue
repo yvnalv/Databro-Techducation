@@ -121,7 +121,7 @@ useSeoMeta({
               <li v-for="hit in segment.hits" :key="hit.id">
                 <NuxtLink
                   :to="localePath(hit.path)"
-                  class="group block rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+                  class="group block rounded-card border border-line bg-surface-raised p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 >
                   <h3 class="font-display text-lg font-bold tracking-tight text-ink group-hover:text-accent-strong">
                     {{ hit.title }}

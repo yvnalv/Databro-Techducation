@@ -68,7 +68,7 @@ const output = computed(() => props.data?.output?.replace(/\s+$/, "") || null);
 
     <!-- Visually separated from the source above: output is a result, not something to copy.
          Marked up as <samp> so it is never mistaken for code or syntax-highlighted. -->
-    <div v-if="output" data-code-output class="border-t border-line bg-surface/40">
+    <div v-if="output" data-code-output class="border-t border-line bg-surface-raised/40">
       <pre
         class="overflow-x-auto px-4 py-3 font-mono text-sm leading-relaxed text-ink-muted"
       ><samp>{{ output }}</samp></pre>

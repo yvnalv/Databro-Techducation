@@ -78,6 +78,18 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: "en" },
+      script: [
+        {
+          // Stamps `data-theme` from the cookie **before first paint**, so there is no flash of the
+          // wrong theme. The same script runs on `site`, where it is load-bearing for a second
+          // reason: that app serves ISR-cached HTML, and a theme rendered into the markup would be
+          // one visitor's choice served to everyone who hit the cache after them (ADR-0020 §6).
+          innerHTML:
+            '(function(){try{var m=document.cookie.match(/(?:^|; )databro_theme=(light|dark)/);' +
+            'document.documentElement.setAttribute("data-theme",m?m[1]:"light")}catch(e){}})()',
+          tagPosition: "head",
+        },
+      ],
       titleTemplate: "%s · DataBro",
     },
   },

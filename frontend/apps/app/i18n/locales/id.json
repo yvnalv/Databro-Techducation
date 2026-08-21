@@ -6,7 +6,14 @@
     "languageLabel": "Bahasa",
     "sectionsLabel": "Bagian",
     "openStudio": "Studio",
-    "backToLearning": "Kembali ke pembelajaran"
+    "backToLearning": "Kembali ke pembelajaran",
+    "collapseNav": "Ciutkan menu",
+    "expandNav": "Bentangkan menu"
+  },
+  "theme": {
+    "label": "Tema",
+    "dark": "Mode gelap",
+    "light": "Mode terang"
   },
   "nav": {
     "dashboard": "Pembelajaran saya",

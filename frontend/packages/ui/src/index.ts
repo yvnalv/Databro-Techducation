@@ -11,6 +11,7 @@ export { default as tailwindPreset, tokens } from "./tailwind-preset";
 export { default as DbButton } from "./components/DbButton.vue";
 export { default as DbCard } from "./components/DbCard.vue";
 export { default as DbChip } from "./components/DbChip.vue";
+export { default as DbThemeToggle } from "./components/DbThemeToggle.vue";
 export { default as DbInput } from "./components/DbInput.vue";
 export { default as DbAccordion } from "./components/DbAccordion.vue";
 export type { AccordionItem } from "./components/DbAccordion.vue";

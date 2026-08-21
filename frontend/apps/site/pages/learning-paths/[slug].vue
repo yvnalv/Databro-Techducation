@@ -112,7 +112,7 @@ useHead(() => ({
           <li v-for="(course, index) in path.courses" :key="course.id">
             <NuxtLink
               :to="localePath(`/courses/${course.slug}`)"
-              class="group flex gap-4 rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              class="group flex gap-4 rounded-card border border-line bg-surface-raised p-5 transition-shadow hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
             >
               <span
                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-sm font-bold text-accent-strong"

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { DbThemeToggle } from "@databro/ui";
+
 /**
  * Site header (docs/UI_PATTERNS.md §1.1).
  *
@@ -7,6 +9,7 @@
  */
 const { t, locale, locales, setLocale } = useI18n();
 const localePath = useLocalePath();
+const { theme } = useTheme();
 
 const switchableLocales = computed(() =>
   locales.value.map((l) =>
@@ -22,7 +25,7 @@ const navigation = computed(() => [
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur">
+  <header class="sticky top-0 z-40 border-b border-line bg-surface-raised/85 backdrop-blur">
     <div class="db-shell flex h-16 items-center justify-between gap-6">
       <NuxtLink
         :to="localePath('/')"
@@ -56,11 +59,13 @@ const navigation = computed(() => [
           {{ t("nav.search") }}
         </NuxtLink>
 
+          <DbThemeToggle v-model="theme" :label="t('theme.dark')" />
+
         <label class="flex items-center">
           <span class="sr-only">{{ t("nav.languageLabel") }}</span>
           <select
             :value="locale"
-            class="h-9 rounded-control border border-line-strong bg-surface px-2 text-sm text-ink-muted focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+            class="h-9 rounded-control border border-line-strong bg-surface-raised px-2 text-sm text-ink-muted focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
             @change="setLocale(($event.target as HTMLSelectElement).value as typeof locale)"
           >
             <option v-for="l in switchableLocales" :key="l.code" :value="l.code">

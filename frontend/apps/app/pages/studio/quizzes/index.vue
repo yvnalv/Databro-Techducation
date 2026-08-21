@@ -63,7 +63,7 @@ useHead(() => ({ title: t("studio.quizzes.navTitle") }));
             <th scope="col" class="px-4 py-3 text-right font-semibold">{{ t("studio.quizzes.colPassMark") }}</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-line bg-surface">
+        <tbody class="divide-y divide-line bg-surface-raised">
           <tr v-for="quiz in quizzes" :key="quiz.id" class="hover:bg-surface-sunken">
             <td class="px-4 py-3">
               <NuxtLink :to="`/studio/quizzes/${quiz.id}`" class="font-medium text-accent-strong hover:underline">

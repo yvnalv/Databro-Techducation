@@ -169,7 +169,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
 
     <div class="mt-6 grid gap-6 xl:grid-cols-2">
       <!-- Categories -->
-      <section class="rounded-card border border-line bg-surface">
+      <section class="rounded-card border border-line bg-surface-raised">
         <header class="border-b border-line px-5 py-3">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">
             {{ t("studio.taxonomy.categories") }}
@@ -190,7 +190,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
                   <select
                     :id="`parent-${category.id}`"
                     v-model="categoryDraft.parentId"
-                    class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
+                    class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
                   >
                     <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
                     <option v-for="c in parentOptions(category.id)" :key="c.id" :value="c.id">
@@ -244,7 +244,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
             <select
               id="new-parent"
               v-model="newCategory.parentId"
-              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
             >
               <option value="">{{ t("studio.taxonomy.topLevel") }}</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -255,7 +255,7 @@ useHead(() => ({ title: t("studio.taxonomy.navTitle") }));
       </section>
 
       <!-- Tags -->
-      <section class="rounded-card border border-line bg-surface">
+      <section class="rounded-card border border-line bg-surface-raised">
         <header class="border-b border-line px-5 py-3">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.taxonomy.tags") }}</h2>
         </header>

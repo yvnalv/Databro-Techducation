@@ -296,7 +296,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div class="space-y-6">
-        <section class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.details") }}</h2>
 
           <DbInput v-model="title" :label="t('studio.common.title')" required />
@@ -317,7 +317,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
             <select
               id="difficulty"
               v-model="difficulty"
-              class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm"
+              class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -327,7 +327,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
         </section>
 
         <!-- Curriculum -->
-        <section v-if="course" class="space-y-4 rounded-card border border-line bg-surface p-5">
+        <section v-if="course" class="space-y-4 rounded-card border border-line bg-surface-raised p-5">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.curriculum") }}</h2>
 
           <p v-if="course.modules.length === 0" class="text-sm text-ink-muted">
@@ -346,21 +346,21 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
 
               <button
                 type="button"
-                class="h-7 w-7 rounded border border-line text-xs text-ink-muted hover:bg-surface disabled:opacity-40"
+                class="h-7 w-7 rounded-control border border-line text-xs text-ink-muted hover:bg-surface-raised disabled:opacity-40"
                 :disabled="busy || moduleIndex === 0"
                 :aria-label="`Move ${module.title} up`"
                 @click="moveModule(moduleIndex, -1)"
               >↑</button>
               <button
                 type="button"
-                class="h-7 w-7 rounded border border-line text-xs text-ink-muted hover:bg-surface disabled:opacity-40"
+                class="h-7 w-7 rounded-control border border-line text-xs text-ink-muted hover:bg-surface-raised disabled:opacity-40"
                 :disabled="busy || moduleIndex === course.modules.length - 1"
                 :aria-label="`Move ${module.title} down`"
                 @click="moveModule(moduleIndex, 1)"
               >↓</button>
               <button
                 type="button"
-                class="h-7 w-7 rounded border border-line text-xs text-danger hover:bg-danger-subtle"
+                class="h-7 w-7 rounded-control border border-line text-xs text-danger hover:bg-danger-subtle"
                 :disabled="busy"
                 :aria-label="`Remove ${module.title}`"
                 @click="removeModule(module.id, module.lessons.length)"
@@ -389,7 +389,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
                      asking every lesson on load whether it has one. -->
                 <button
                   type="button"
-                  class="rounded border border-line px-2 py-1 text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+                  class="rounded-control border border-line px-2 py-1 text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
                   :disabled="busy"
                   :aria-label="t('studio.courses.quizFor', { title: lesson.title })"
                   @click="openQuiz(lesson.id, lesson.title)"
@@ -397,21 +397,21 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
 
                 <button
                   type="button"
-                  class="h-7 w-7 rounded border border-line text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+                  class="h-7 w-7 rounded-control border border-line text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
                   :disabled="busy || lessonIndex === 0"
                   :aria-label="`Move ${lesson.title} up`"
                   @click="moveLesson(module.id, lessonIndex, -1)"
                 >↑</button>
                 <button
                   type="button"
-                  class="h-7 w-7 rounded border border-line text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+                  class="h-7 w-7 rounded-control border border-line text-xs text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
                   :disabled="busy || lessonIndex === module.lessons.length - 1"
                   :aria-label="`Move ${lesson.title} down`"
                   @click="moveLesson(module.id, lessonIndex, 1)"
                 >↓</button>
                 <button
                   type="button"
-                  class="h-7 w-7 rounded border border-line text-xs text-danger hover:bg-danger-subtle"
+                  class="h-7 w-7 rounded-control border border-line text-xs text-danger hover:bg-danger-subtle"
                   :disabled="busy"
                   :aria-label="`Remove ${lesson.title}`"
                   @click="removeLesson(module.id, lesson.id)"
@@ -429,7 +429,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
           <div class="flex gap-2">
             <input
               v-model="newModuleTitle"
-              class="h-9 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm"
+              class="h-9 flex-1 rounded-control border border-line-strong bg-surface-raised px-3 text-sm"
               :placeholder="t('studio.courses.newModuleTitle')"
               :aria-label="t('studio.courses.newModuleTitle')"
               @keydown.enter.prevent="addModule"
@@ -463,7 +463,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
           </ul>
         </section>
 
-        <section class="rounded-card border border-line bg-surface p-5 text-sm">
+        <section class="rounded-card border border-line bg-surface-raised p-5 text-sm">
           <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-ink">{{ t("studio.courses.atAGlance") }}</h2>
           <dl class="mt-3 grid grid-cols-2 gap-y-2">
             <dt class="text-ink-muted">{{ t("studio.courses.modules") }}</dt>
@@ -482,7 +482,7 @@ useHead(() => ({ title: isNew.value ? t("studio.courses.new") : title.value || t
 
     <!-- Lesson picker -->
     <div v-if="picker" class="fixed inset-0 z-50 flex items-start justify-center bg-ink/40 p-4 pt-20">
-      <div class="max-h-[70vh] w-full max-w-2xl overflow-y-auto rounded-card border border-line bg-surface p-5">
+      <div class="max-h-[70vh] w-full max-w-2xl overflow-y-auto rounded-card border border-line bg-surface-raised p-5">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="font-display text-base font-semibold text-ink">{{ t("studio.courses.attachBody") }}</h2>
           <button type="button" class="text-sm text-ink-muted hover:text-ink" @click="picker = null">

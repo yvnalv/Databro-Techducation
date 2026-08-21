@@ -200,12 +200,23 @@ sidebar + main split.
   edit/delete icon buttons in tinted squares. Footer has "Showing 1 to 8 of 20 entries" and numbered
   pagination.
 
-DataBro CMS mapping (**shell, auth and article list implemented**; editor next):
+DataBro mapping (**implemented**):
 
-* Same sidebar + main shell, **without** the gradient/overlap flourish — the CMS is a tool, and the
-  overlap costs vertical space on the surface where density matters.
-* Sidebar nav: Dashboard, Articles, Taxonomy, Media, Settings. Active item = teal `50` fill, teal
-  `700` text.
+* **A floating dark rail, inset from the frame edge**, rather than a full-height bordered sidebar —
+  the signature move in the reference set. It collapses to 68px of icons and back, and the choice
+  persists in the `databro_rail` cookie so the state survives navigation and is server-rendered
+  (no width jump on hydration).
+* **Both shells use it.** The learner side previously had a top bar, on the reasoning that a learner
+  has two or three destinations while an editor has a dozen, so a permanent 240px rail would be
+  mostly empty. A rail that collapses answers that directly, and one navigation model beats two that
+  have to be kept in agreement. What differs between the shells is what the rail *contains*, which
+  is the only thing that should.
+* **Without** the gradient/overlap flourish — the CMS is a tool, and the overlap costs vertical space
+  on the surface where density matters. (Gradients are gone platform-wide anyway, per ADR-0020.)
+* Active item = `accent` fill with `accent-on` text. Counts ride as lime `secondary` badges, which is
+  legible precisely because the rail is dark (DESIGN_SYSTEM §1.3).
+* Below `lg` the rail is hidden and its destinations move into a scrolling row in the header — at
+  phone widths a 240px rail is the page.
 * Stat cards map to: total articles, published, drafts.
 * The data table is the **article list**: title, status chip, category, author, updated, actions.
   Dark header row adopted here (its one sanctioned use, per DESIGN_SYSTEM §5.7).

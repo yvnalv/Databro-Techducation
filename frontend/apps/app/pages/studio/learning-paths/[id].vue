@@ -171,7 +171,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
       {{ formError }}
     </p>
 
-    <section class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <h1 class="font-display text-xl font-bold tracking-tight text-ink">
         {{ isNew ? t("studio.paths.newTitle") : t("studio.paths.editTitle") }}
       </h1>
@@ -192,7 +192,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           <select
             v-model="difficulty"
             :disabled="busy"
-            class="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+            class="h-10 w-full rounded-control border border-line-strong bg-surface-raised px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           >
             <option value="beginner">{{ t("studio.common.beginner") }}</option>
             <option value="intermediate">{{ t("studio.common.intermediate") }}</option>
@@ -219,7 +219,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
 
     <!-- The sequence only exists once the path does: a course cannot be attached to something with
          no id yet, and showing a disabled picker would just be a puzzle. -->
-    <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.paths.sequence") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
         {{ t("studio.paths.sequenceHint") }}
@@ -257,7 +257,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy || index === 0"
               :aria-label="t('studio.paths.moveUp', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              class="rounded-control px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="move(index, -1)"
             >
               ↑
@@ -266,7 +266,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy || index === courses.length - 1"
               :aria-label="t('studio.paths.moveDown', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              class="rounded-control px-2 py-1 text-sm text-ink-muted hover:bg-surface-sunken disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="move(index, 1)"
             >
               ↓
@@ -275,7 +275,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
               type="button"
               :disabled="busy"
               :aria-label="t('studio.paths.removeFrom', { title: course.title })"
-              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              class="rounded-control px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="run((api) => api.removeCourseFromPath(pathId, course.id))"
             >
               {{ t("studio.common.remove") }}
@@ -296,7 +296,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
           v-model="picked"
           :disabled="busy || available.length === 0"
           :aria-label="t('studio.paths.courseToAdd')"
-          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface-raised px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
         >
           <option value="">
             {{ available.length ? t("studio.paths.chooseCourse") : t("studio.paths.allAdded") }}
@@ -311,7 +311,7 @@ useHead(() => ({ title: isNew.value ? t("studio.paths.newTitle") : title.value |
       </div>
     </section>
 
-    <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section v-if="!isNew" class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.common.publishing") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
         {{ t("studio.paths.publishHint") }}

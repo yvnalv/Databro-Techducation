@@ -51,7 +51,7 @@ useHead({ title: t("forgot.title") });
            and wording that implied otherwise would leak what the API withholds. -->
       <div
         v-if="sent"
-        class="mt-8 rounded-card border border-line bg-surface p-6 text-center shadow-card"
+        class="mt-8 rounded-card border border-line bg-surface-raised p-6 text-center shadow-card"
       >
         <p class="text-sm leading-relaxed text-ink-muted">{{ t("forgot.maybeSent") }}</p>
         <DbButton :as="'a'" href="/login" variant="outline" class="mt-5">
@@ -61,7 +61,7 @@ useHead({ title: t("forgot.title") });
 
       <form
         v-else
-        class="mt-8 space-y-4 rounded-card border border-line bg-surface p-6 shadow-card"
+        class="mt-8 space-y-4 rounded-card border border-line bg-surface-raised p-6 shadow-card"
         @submit.prevent="submit"
       >
         <DbInput

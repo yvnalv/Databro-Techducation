@@ -144,7 +144,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
       {{ formError }}
     </p>
 
-    <section class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <h1 class="font-display text-xl font-bold tracking-tight text-ink">{{ t("studio.quizzes.details") }}</h1>
 
       <div class="mt-5 space-y-4">
@@ -157,7 +157,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
             min="0"
             max="100"
             :disabled="busy"
-            class="h-10 w-32 rounded-control border border-line-strong bg-surface px-3 text-sm tabular-nums text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+            class="h-10 w-32 rounded-control border border-line-strong bg-surface-raised px-3 text-sm tabular-nums text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           />
         </label>
       </div>
@@ -171,7 +171,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
       </DbButton>
     </section>
 
-    <section class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <div class="flex flex-wrap items-baseline justify-between gap-3">
         <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.quizzes.questions") }}</h2>
         <span class="text-sm text-ink-subtle">{{ quiz.totalPoints }} points total</span>
@@ -194,7 +194,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
             <button
               type="button"
               :disabled="busy"
-              class="rounded px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+              class="rounded-control px-2 py-1 text-sm text-danger hover:bg-danger-subtle disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               @click="run((api) => api.removeQuestion(quizId, question.id))"
             >
               {{ t("studio.common.remove") }}
@@ -209,6 +209,9 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
 
           <ul class="mt-3 space-y-2">
             <li v-for="choice in question.choices" :key="choice.id" class="flex items-center gap-3">
+              <!-- The checkbox keeps Tailwind's 4px `rounded`, deliberately off the 12/16/24 scale:
+                   `rounded-control` on a 16px box is nearly a circle, which is what a radio button
+                   looks like. Shape is the only thing separating the two controls here. -->
               <input
                 v-if="question.type === 'multiplechoice'"
                 type="checkbox"
@@ -239,7 +242,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
                 type="button"
                 :disabled="busy"
                 :aria-label="t('studio.quizzes.removeChoice', { choice: choice.text })"
-                class="rounded px-2 py-0.5 text-xs text-ink-subtle hover:bg-surface-sunken hover:text-danger disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+                class="rounded-control px-2 py-0.5 text-xs text-ink-subtle hover:bg-surface-sunken hover:text-danger disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
                 @click="run((api) => api.removeChoice(quizId, question.id, choice.id))"
               >
                 ✕
@@ -253,7 +256,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
               type="text"
               :placeholder="t('studio.quizzes.addChoice')"
               :disabled="busy"
-              class="h-9 min-w-48 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+              class="h-9 min-w-48 flex-1 rounded-control border border-line-strong bg-surface-raised px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
               @keyup.enter="addChoice(question.id)"
             />
             <DbButton
@@ -278,14 +281,14 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
           type="text"
           :placeholder="t('studio.quizzes.newQuestion')"
           :disabled="busy"
-          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+          class="h-10 min-w-56 flex-1 rounded-control border border-line-strong bg-surface-raised px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
           @keyup.enter="addQuestion"
         />
         <select
           v-model="newType"
           :disabled="busy"
           :aria-label="t('studio.quizzes.questionType')"
-          class="h-10 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
+          class="h-10 rounded-control border border-line-strong bg-surface-raised px-3 text-sm text-ink focus:border-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong/25"
         >
           <option value="singlechoice">{{ t("studio.quizzes.typeSingle") }}</option>
           <option value="multiplechoice">{{ t("studio.quizzes.typeMultiple") }}</option>
@@ -295,7 +298,7 @@ useHead(() => ({ title: title.value || t("studio.quizzes.docTitle") }));
       </div>
     </section>
 
-    <section class="mt-6 rounded-card border border-line bg-surface p-6">
+    <section class="mt-6 rounded-card border border-line bg-surface-raised p-6">
       <h2 class="font-display text-lg font-bold tracking-tight text-ink">{{ t("studio.common.publishing") }}</h2>
       <p class="mt-1 text-sm text-ink-muted">
         {{ t("studio.quizzes.publishHint") }}

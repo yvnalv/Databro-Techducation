@@ -69,7 +69,7 @@ useHead({ title: t("reset.title") });
 
       <div
         v-if="done"
-        class="mt-8 rounded-card border border-line bg-surface p-6 text-center shadow-card"
+        class="mt-8 rounded-card border border-line bg-surface-raised p-6 text-center shadow-card"
       >
         <p class="text-sm leading-relaxed text-ink-muted">{{ t("reset.doneBody") }}</p>
         <DbButton :as="'a'" href="/login" class="mt-5">{{ t("reset.signIn") }}</DbButton>
@@ -78,7 +78,7 @@ useHead({ title: t("reset.title") });
       <!-- Reached without a link: say so plainly rather than showing a form that cannot work. -->
       <div
         v-else-if="!hasLink"
-        class="mt-8 rounded-card border border-line bg-surface p-6 text-center shadow-card"
+        class="mt-8 rounded-card border border-line bg-surface-raised p-6 text-center shadow-card"
       >
         <p class="text-sm leading-relaxed text-ink-muted">{{ t("reset.noLink") }}</p>
         <DbButton :as="'a'" href="/forgot-password" variant="outline" class="mt-5">
@@ -88,7 +88,7 @@ useHead({ title: t("reset.title") });
 
       <form
         v-else
-        class="mt-8 space-y-4 rounded-card border border-line bg-surface p-6 shadow-card"
+        class="mt-8 space-y-4 rounded-card border border-line bg-surface-raised p-6 shadow-card"
         @submit.prevent="submit"
       >
         <p
