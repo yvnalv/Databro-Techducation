@@ -12,6 +12,7 @@ This is the documentation index. The master project instructions live in the roo
 * Setting up your machine? See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 * Looking for the design preview or a past briefing? See [ARTIFACTS.md](ARTIFACTS.md).
 * Spotted something wrong on screen? Log it in [UI_DEFECTS.md](UI_DEFECTS.md).
+* Picking up the UI work? [UI_REWORK.md](UI_REWORK.md) says which stage is next and what is in it.
 
 ## Index
 
@@ -35,6 +36,8 @@ This is the documentation index. The master project instructions live in the roo
 * [UI_PATTERNS.md](UI_PATTERNS.md) — page-level composition and what we deliberately diverge on.
 * [UI_DEFECTS.md](UI_DEFECTS.md) — visual defects found by looking at the running app. Nothing in CI
   can see this category, so the register is the memory.
+* [UI_REWORK.md](UI_REWORK.md) — the staged plan for the visual rework: what stage A delivered, and
+  what B (icons, logo, favicon), C (primitives) and D (page layout) contain.
 * [SEO.md](SEO.md) — SEO as a cross-cutting concern.
 * [API_SPEC.md](API_SPEC.md) — REST conventions and Phase 1 endpoints.
 * [ERROR_HANDLING.md](ERROR_HANDLING.md) — error envelope and codes.

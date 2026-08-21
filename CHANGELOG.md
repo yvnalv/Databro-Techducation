@@ -1,5 +1,29 @@
 # DataBro Changelog
 
+## [2026-08-21 01:27:38 UTC]
+
+CHG-0068 — Give the UI rework plan a home (S-8)
+
+The *changes* were documented as they landed — ADR-0020, `DESIGN_SYSTEM`, `UI_PATTERNS`,
+`UI_DEFECTS`, `ARTIFACTS` and six changelog entries. The **plan** was not: it lived as a single
+cramped row in `OPEN_ITEMS.md`, which is a register of what is owed, not a sequence of what to do
+next.
+
+- **`docs/UI_REWORK.md` is new.** Stage A marked done with what it delivered; stages B, C and D
+  broken into numbered tasks with the file-level facts behind each — 8 files carrying hand-written
+  SVG, no `public/` directory in either app, 6 primitives against 28 page files, and the nine
+  missing primitives listed with where each is currently being hand-rolled.
+- **It also carries the four verification checks**, each annotated with the defect that got past the
+  others. That list only makes sense in one place, and a plan is where someone about to start a
+  stage will actually look.
+- **Corrected a claim that had already gone stale.** S-8 still described "the shared 1760px frame",
+  which CHG-0067 replaced a commit later: the app frame is now full-bleed with a 16/20/24px gutter,
+  and 1760px caps the content column instead. One commit was all it took for a summary written in
+  the wrong place to stop being true — which is the argument for the detail living somewhere it can
+  be maintained.
+
+Indexed from `docs/README.md`. Docs only; no code changed.
+
 ## [2026-08-21 00:51:54 UTC]
 
 CHG-0067 — Make the rail clickable, and give the app its own frame (UI-8, UI-9)
