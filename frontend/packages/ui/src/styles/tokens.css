@@ -187,6 +187,38 @@
 }
 
 /*
+ * The **app** frame — deliberately not `.db-shell`.
+ *
+ * A content site centres its column and can afford a wide gutter. An application does not: its rail
+ * is chrome, and chrome belongs against the edge of the window. Running the authenticated app
+ * through `.db-shell` put the rail ~90px from the viewport edge (a 40px gutter plus half of whatever
+ * the 1760px cap left over), which reads as a page floating inside the browser rather than an app
+ * filling it.
+ *
+ * So the frame is full-bleed with a small gutter — 16 / 20 / 24px, matching Material 3's body
+ * margins (16dp compact, 24dp expanded) and the inset in the reference set. The *content* is still
+ * capped, by `max-w-app` on the column beside the rail, so a card grid cannot sprawl on an ultrawide
+ * display. Chrome hugs the window; content stays readable.
+ */
+.db-app-shell {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .db-app-shell {
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .db-app-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+/*
  * Article body rhythm.
  *
  * Vertical spacing lives on the container rather than on each block, so every block type gets

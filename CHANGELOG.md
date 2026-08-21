@@ -1,5 +1,40 @@
 # DataBro Changelog
 
+## [2026-08-21 00:51:54 UTC]
+
+CHG-0067 — Make the rail clickable, and give the app its own frame (UI-8, UI-9)
+
+Two defects in the rail that shipped in CHG-0066, both found by looking at the running app.
+
+- **Every rail item rendered and none of them navigated (UI-8).** The cause is worth writing down:
+  `resolveComponent("NuxtLink")` was called **inside a template expression**, where it does not
+  resolve. Vue falls back to treating the name as a native tag and emits a literal `<nuxtlink>`
+  element — which renders its children, so the icon, label and active state all looked perfect, and
+  is inert, so clicking did nothing. `:is="'NuxtLink'"` as a bare string fails identically, which is
+  why the mobile nav row was broken too. Resolved in `setup` instead, where it works. Verified by
+  count: **4 literal `<nuxtlink>` elements before, 0 after**, and every rail item is now a real
+  `<a href>`.
+- **Nothing could have caught this but a person clicking.** It rendered, so no test failed; the class
+  names were all valid, so no audit fired; the markup type-checked. `UI_DEFECTS.md` now lists a
+  fourth detector — fetch a page and assert it contains no lowercase custom tag the app never
+  defined — which is the only one of the four that needs the app actually running.
+
+- **The rail sat ~90px from the window edge (UI-9).** The app was running through the *site's*
+  `.db-shell`: a 40px gutter plus half of whatever the 1760px cap left over. That reads as a page
+  floating inside the browser rather than an application filling it.
+- **A content site and an application do not want the same frame.** A site centres its column and can
+  afford a wide gutter; an app cannot, because its rail is chrome and chrome belongs against the edge
+  of the window. New `.db-app-shell`: full-bleed, **16 / 20 / 24px** gutter — Material 3's body
+  margins are 16dp compact and 24dp expanded, and the reference set's rail sits at about the same
+  inset. The content column keeps a cap (`max-w-app`, 1760px) so a card grid cannot sprawl on an
+  ultrawide display. Chrome hugs the window; content stays readable.
+
+Also: the learner rail labelled a group "Studio" whose only item was also called "Studio". A heading
+that repeats its only child is noise, so the group label is gone.
+
+Verified live on both shells. Build 0/0, lint and typecheck clean, 364 backend and 90 frontend tests
+pass. `DESIGN_SYSTEM.md` §3.2 now documents both shells and why they differ.
+
 ## [2026-08-20 23:42:45 UTC]
 
 CHG-0066 — One shell for the app: a collapsible rail and a shared frame (UI-2, UI-7, S-8)

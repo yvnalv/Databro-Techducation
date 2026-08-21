@@ -202,17 +202,29 @@ the article body.**
 
 | Container | Width | Gutter | Use |
 |---|---|---|---|
-| `.db-shell` | fluid, max **1760px** | 16 / 24 / 40px | Listings, chrome, marketing, dashboards |
+| `.db-shell` | fluid, max **1760px** | 16 / 24 / 40px | The public **site**: listings, chrome, marketing |
+| `.db-app-shell` | fluid, **no cap** | 16 / 20 / 24px | The authenticated **app** frame |
+| `max-w-app` | **1760px** | — | The app's content column, beside the rail |
 | `max-w-prose` | ~68ch (~680px) | 16 / 24px | **Article body only** |
+
+**A content site and an application do not want the same frame.** A site centres its column and can
+afford a wide gutter. An app cannot: its rail is *chrome*, and chrome belongs against the edge of the
+window. Running the app through `.db-shell` put the rail about **90px** in from the viewport edge — a
+40px gutter plus half of whatever the 1760px cap left over — which read as a page floating inside the
+browser rather than an app filling it.
+
+So the app frame is full-bleed with a small gutter, at **16 / 20 / 24px**: Material 3's body margins
+are 16dp compact and 24dp expanded, and the reference set's rail sits at about the same inset. The
+*content* is still capped, by `max-w-app` on the column beside the rail, so a card grid cannot sprawl
+on an ultrawide display. **Chrome hugs the window; content stays readable.**
 
 `.db-shell` is a class in `tokens.css`, not a repeated utility string, because container width is the
 most-tuned value in any layout and should have exactly one definition.
 
-**All three surfaces use it.** The public site always did; the authenticated app did not. Its learner
-shell capped at `max-w-5xl` (1024px) and the CMS ran full-bleed, so the two halves of one product
-disagreed about how wide a page is — visible as a dashboard floating in the middle of a 1860px screen
-beside a CMS that filled it. Both now open with `.db-shell`, and the rail sits *inside* that frame so
-the whole app is capped together rather than the rail pinning to the viewport edge.
+**The app's two shells agree with each other.** They did not before: the learner shell capped at
+`max-w-5xl` (1024px) and the CMS ran full-bleed, so the two halves of one product disagreed about how
+wide a page is — visible as a dashboard floating in the middle of a 1860px screen beside a CMS that
+filled it. Both now open with `.db-app-shell`.
 
 **How the width was chosen.** The reference was measured, not eyeballed: content occupies **1220px in
 a 1753px viewport** — a gutter of 265px each side, ratio **0.70** — and that holds across the blog

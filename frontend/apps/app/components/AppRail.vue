@@ -38,6 +38,13 @@ const props = defineProps<{
 const emit = defineEmits<{ "update:collapsed": [value: boolean] }>();
 
 const route = useRoute();
+// Resolved here in `setup`, NOT inline in the template. `resolveComponent("NuxtLink")` inside a
+// template expression does not resolve: Vue falls back to treating the name as a native tag and
+// renders a literal `<nuxtlink>` element, which displays its children and is not a link. The same
+// is true of `:is="'NuxtLink'"` as a bare string. Both shipped once and produced a rail whose items
+// looked perfect and did nothing on click.
+const NuxtLink = resolveComponent("NuxtLink");
+
 
 const isActive = (item: RailItem) => {
   if (!item.to) return false;
@@ -83,7 +90,7 @@ const visibleGroups = computed(() => props.groups.filter((g) => g.items.length >
 
       <template v-for="item in group.items" :key="item.label">
         <component
-          :is="item.href ? 'a' : resolveComponent('NuxtLink')"
+          :is="item.href ? 'a' : NuxtLink"
           v-bind="item.href ? { href: item.href } : { to: item.to }"
           :aria-current="isActive(item) ? 'page' : undefined"
           :title="collapsed ? item.label : undefined"

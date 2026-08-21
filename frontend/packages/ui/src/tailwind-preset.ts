@@ -141,8 +141,12 @@ const preset: Partial<Config> = {
         // ~68 characters. The single most load-bearing number for long-form readability: much wider
         // and the eye loses the line start on the return sweep.
         //
-        // There is no `shell` here on purpose. The shell width lives once, in `.db-shell`.
+        // There is no `shell` here on purpose. The site shell width lives once, in `.db-shell`.
         prose: "68ch",
+        // The cap on the app's content column, beside the rail. The frame itself is full-bleed
+        // (`.db-app-shell`) so the rail sits against the window edge; this is what stops a card grid
+        // stretching to absurd widths on an ultrawide display.
+        app: "1760px",
       },
 
       // A 12/16/24 family (ADR-0020 §5). `control` exists because 60 call sites were reaching for
