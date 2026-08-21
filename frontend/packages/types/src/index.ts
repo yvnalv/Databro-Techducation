@@ -411,6 +411,13 @@ export interface LessonPage {
   /** Neighbours cross module boundaries: a learner moves through one sequence. */
   previous?: LessonLink | null;
   next?: LessonLink | null;
+  /**
+   * Every media id this lesson's blocks reference, resolved to a renderable ref and keyed by id.
+   * Shipped with the lesson so the renderer needs no second request — the same shape an Article's
+   * `media` map carries. Only the lesson on this page is resolved, not its neighbours. An id missing
+   * from the map is one whose asset is gone; render a placeholder, not a broken image.
+   */
+  media?: Record<string, MediaRef>;
 }
 
 /** A course card. No curriculum, because a card does not render one. */

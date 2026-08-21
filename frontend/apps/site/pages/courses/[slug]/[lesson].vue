@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentRenderer, DbChip, codeHighlighterFor } from "@databro/ui";
+import { ContentRenderer, DbChip, codeHighlighterFor, mediaResolverFor } from "@databro/ui";
 import type { LessonPage } from "@databro/types";
 
 /**
@@ -45,6 +45,10 @@ const page = computed(() => data.value!.page);
 const lesson = computed(() => page.value.lesson);
 
 const highlightCode = computed(() => codeHighlighterFor(data.value!.highlighted));
+
+// Resolves an image block's mediaId to a renderable asset over the map the API ships with the page —
+// the same wiring an article uses. Without it a lesson image falls back to a placeholder box.
+const resolveMedia = computed(() => mediaResolverFor(page.value.media ?? {}));
 
 const path = computed(() => `/courses/${page.value.courseSlug}/${lesson.value.slug}`);
 const origin = config.public.siteUrl.replace(/\/$/, "");
@@ -137,7 +141,11 @@ useHead(() => ({
     </section>
 
     <div class="mt-8">
-      <ContentRenderer :document="{ version: 1, blocks: lesson.blocks }" :highlight-code="highlightCode" />
+      <ContentRenderer
+        :document="{ version: 1, blocks: lesson.blocks }"
+        :highlight-code="highlightCode"
+        :resolve-media="resolveMedia"
+      />
     </div>
 
     <!-- Between the body and the progress control: check what you read, then mark it done. Renders

@@ -270,6 +270,11 @@ resolved from Content. A lesson whose body is unpublished is omitted entirely, a
 nothing in it is omitted with it (LN-2). The join is one batch call however many lessons there are —
 a per-lesson lookup would be an N+1 on a learner's hottest page.
 
+**The single-lesson response carries a resolved `media` map** keyed by media id, exactly like an
+article — covering the image blocks in that one lesson's body, so the renderer resolves an image with
+a lookup rather than a request per figure. Only the lesson on the page is resolved, not its prev/next
+neighbours: those are links, and a link renders no images.
+
 The lesson read is **nested under its course** because the course is what gives a lesson prev/next,
 a breadcrumb and a progress context: the same body reached through two courses is two positions in
 two sequences, and the URL should say which. It is a separate read rather than a client-side pick out

@@ -12,6 +12,7 @@ namespace DataBro.Modules.Learning.Application;
 public sealed class CourseService(
     ICourseRepository courses,
     ILessonContentReader bodies,
+    IMediaDirectory media,
     IClock clock)
 {
     // ---- Reads ----
@@ -80,7 +81,42 @@ public sealed class CourseService(
             ordered.Count,
             lesson,
             Link(ordered, index - 1),
-            Link(ordered, index + 1));
+            Link(ordered, index + 1),
+            // Only this lesson's body is resolved — the neighbours are links, and a link has no images.
+            await ResolveMediaAsync(lesson.Blocks, ct));
+    }
+
+    /// <summary>
+    /// Resolves the media ids an image block carries into renderable refs, in one batch call. Mirrors
+    /// how Content resolves article images (ADR-0008): a lesson and an article are one primitive, so a
+    /// lesson body must render its images the same way. Returns an empty map when the body carries
+    /// none, so the common text-only lesson costs no media query.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, MediaRefDto>> ResolveMediaAsync(
+        IReadOnlyList<ContentBlockView> blocks, CancellationToken ct)
+    {
+        var mediaIds = blocks
+            .Where(b => string.Equals(b.Type, "image", StringComparison.OrdinalIgnoreCase))
+            .Select(b => b.Data?["mediaId"]?.ToString())
+            .Where(id => Guid.TryParse(id, out _))
+            .Select(id => Guid.Parse(id!))
+            .Distinct()
+            .ToArray();
+
+        if (mediaIds.Length == 0)
+            return new Dictionary<string, MediaRefDto>();
+
+        var resolved = await media.GetMediaAsync(mediaIds, ct);
+        return resolved.ToDictionary(
+            entry => entry.Key.ToString(),
+            entry => new MediaRefDto(
+                entry.Value.Url,
+                entry.Value.AltText,
+                entry.Value.Width,
+                entry.Value.Height,
+                entry.Value.Variants
+                    .Select(v => new MediaVariantRefDto(v.Name, v.Url, v.Width, v.Height))
+                    .ToList()));
     }
 
     public async Task<PagedResult<CourseSummaryDto>> ListPublishedAsync(

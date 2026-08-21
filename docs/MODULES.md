@@ -104,7 +104,8 @@ symmetry with `IUserDirectory` and batch-shaped for the same reason (ADR-0008): 
 carry a dozen figures, and a per-item lookup would be an N+1 on the cached public read path.
 
 Consumed by: **Content**, which resolves the media ids in its image blocks and `og:image` and ships
-the resolved map with the article DTO.
+the resolved map with the article DTO; and **Learning**, which resolves the image blocks in a lesson
+body and ships the map with the lesson-page DTO.
 
 Not built yet: no `MediaUploaded` event (nothing consumes one, and the outbox does not exist), no
 orphan sweep — deleting an asset is a soft delete that deliberately leaves the stored objects, since
@@ -192,7 +193,10 @@ Structured learning over the Content engine ([ADR-0013](adr/0013-learning-curric
 Owns: `learning_paths`, `path_courses`, `courses`, `course_modules`, `lessons`, `enrollments`,
 `lesson_progress`.
 
-Consumes (contract): **`ILessonContentReader`** from Content, for lesson bodies.
+Consumes (contracts): **`ILessonContentReader`** from Content, for lesson bodies; **`IMediaDirectory`**
+from Media, to resolve the image blocks in a lesson body. The lesson-page read ships the resolved
+`media` map the same way an article does — a lesson and an article are one content primitive, so a
+lesson renders its images through the same contract rather than a placeholder (ADR-0008, ADR-0012).
 
 Provides (contract): **`IModuleSearch`** — the courses segment of cross-module search (ADR-0014).
 

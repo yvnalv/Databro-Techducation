@@ -95,6 +95,26 @@ public sealed record UpdateLearningPathRequest(string Title, string Summary, str
 /// <summary>A neighbouring lesson, as a prev/next link needs it. No body — it is a link.</summary>
 public sealed record LessonLinkDto(Guid Id, string Slug, string Title);
 
+/// <summary>One rendered size of an image, mirroring <see cref="MediaVariantSummary"/> for the wire.</summary>
+public sealed record MediaVariantRefDto(string Name, string Url, int Width, int Height);
+
+/// <summary>
+/// An image a lesson block references, resolved to something an <c>&lt;img&gt;</c> can render.
+///
+/// <para>
+/// Fetched through <see cref="IMediaDirectory"/> (ADR-0008), the same contract Content uses for
+/// article images — a lesson and an article are one content primitive, so a lesson body must resolve
+/// its media the same way. Shaped identically to Content's own <c>MediaRefDto</c> rather than shared:
+/// the two live in different modules and must not depend on one another.
+/// </para>
+/// </summary>
+public sealed record MediaRefDto(
+    string Url,
+    string AltText,
+    int Width,
+    int Height,
+    IReadOnlyList<MediaVariantRefDto> Variants);
+
 /// <summary>
 /// One lesson as its own page: the body, plus enough of the curriculum around it to navigate.
 ///
@@ -120,7 +140,14 @@ public sealed record LessonPageDto(
     int TotalLessons,
     LessonDto Lesson,
     LessonLinkDto? Previous,
-    LessonLinkDto? Next);
+    LessonLinkDto? Next,
+    /// <summary>
+    /// Every media id the lesson body references, resolved to a renderable ref and keyed by id as a
+    /// string — the shape the renderer's media resolver expects. Only the lesson on this page is
+    /// resolved, not its neighbours: prev/next are links, and a link renders no images. An id absent
+    /// from the map is one whose asset is gone; the renderer shows a placeholder, not a broken image.
+    /// </summary>
+    IReadOnlyDictionary<string, MediaRefDto> Media);
 
 /// <summary>
 /// A learner's progress in one course — the shape behind both a dashboard card and a course page's

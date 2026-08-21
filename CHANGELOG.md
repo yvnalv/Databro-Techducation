@@ -1,5 +1,27 @@
 # DataBro Changelog
 
+## [2026-08-21 10:52:00 UTC]
+
+CHG-0070 — Resolve a lesson's images the way an article does (LN-20)
+
+An image block in a lesson body rendered as a placeholder box, never the image. Articles resolve
+their media and lessons did not, even though the two are one content primitive (ADR-0012) — so the
+one renderer behaved differently depending on which primitive fed it.
+
+- **The lesson-page read now ships a resolved `media` map.** `CourseService.GetLessonPageAsync`
+  collects the image ids from the lesson's blocks and resolves them through **`IMediaDirectory`** —
+  the same Platform contract Content already uses, and whose own docs anticipated this ("Content
+  today … Learning later", ADR-0008). Only the lesson on the page is resolved, not its prev/next
+  neighbours: those are links, and a link renders no images. A body with no images costs no media
+  query. `LessonPageDto` carries the map as `MediaRefDto`, shaped identically to Content's but
+  declared in Learning — the two modules must not depend on one another.
+- **The site lesson page wires the resolver.** `[lesson].vue` passes `:resolve-media` over the
+  shipped map, so `ContentRenderer` resolves an `<img>` instead of falling back to the placeholder.
+  `LessonPage` in `@databro/types` gained the `media` field to match.
+
+Verified live: the lesson SSR now serves the real asset URL from object storage. `MODULES.md` and
+`API_SPEC.md` document the new consumer and the lesson-page `media` map.
+
 ## [2026-08-21 10:47:00 UTC]
 
 CHG-0069 — Make the rail fill its frame, and give it a dark-mode fill (UI-10)
